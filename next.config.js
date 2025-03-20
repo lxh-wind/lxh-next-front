@@ -3,6 +3,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 const isProd =
   process.env.APP_ENV === "production" || process.env.APP_ENV === "staging";
+
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
@@ -16,7 +17,6 @@ const nextConfig = {
       {
         source: "/api/:slug*",
         destination: `http://${process.env.PROXY_DOMAIN}.yishou.com/api/:slug*`,
-        // destination: `http://${process.env.PROXY_DOMAIN}.yishouapp.com/api/:slug*`, // 对外网联调，使用test.yishouapp.com
       },
     ];
   },
@@ -28,10 +28,6 @@ const nextConfig = {
       : false,
   },
   transpilePackages: ["openid-client"],
-  // Add experimental configuration for ESM packages
-  experimental: {
-    serverComponentsExternalPackages: ["@kubernetes/client-node"],
-  },
 };
 
 module.exports = withBundleAnalyzer(nextConfig);
