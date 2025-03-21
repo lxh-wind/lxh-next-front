@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Inter } from 'next/font/google';
+import ClientLayout from '@/components/layout/ClientLayout';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,12 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning className={inter.className}>
-      <body
-        className="min-h-screen bg-background font-sans antialiased"
-      >
-        <ThemeProvider>
+      <body className="min-h-screen font-sans antialiased">
+        <ClientLayout>
           {children}
-        </ThemeProvider>
+        </ClientLayout>
       </body>
     </html>
   );

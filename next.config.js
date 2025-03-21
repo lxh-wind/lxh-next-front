@@ -27,7 +27,33 @@ const nextConfig = {
         }
       : false,
   },
-  transpilePackages: ["openid-client"],
+  transpilePackages: [
+    "openid-client", 
+    "antd", 
+    "@ant-design/icons", 
+    "@ant-design/cssinjs", 
+    "@ant-design/nextjs-registry",
+    "rc-util"
+  ],
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@ant-design/cssinjs': '@ant-design/cssinjs/es',
+      '@ant-design/nextjs-registry': '@ant-design/nextjs-registry/es',
+    };
+
+    // 处理 ES 模块导入问题
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    return config;
+  },
 };
 
 module.exports = withBundleAnalyzer(nextConfig);
