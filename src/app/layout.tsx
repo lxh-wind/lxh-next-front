@@ -26,11 +26,11 @@ export default function RootLayout({
         className="min-h-screen bg-background font-sans antialiased"
       >
         <ThemeProvider>
-          <div className="fixed top-4 right-4 z-50">
+          {/* <div className="fixed top-4 right-4 z-50">
             <Link href="/dashboard">
               <Button>进入管理系统</Button>
             </Link>
-          </div>
+          </div> */}
           {children}
         </ThemeProvider>
       </body>
