@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -24,11 +23,9 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
     try {
       // 模拟登录请求
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      
       // 登录成功后跳转到仪表盘
       router.push('/dashboard')
     } catch (error) {
@@ -43,7 +40,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-2">
-            <h2 className="text-3xl font-bold text-center">LXH Admin</h2>
+            <h2 className="text-3xl font-bold text-center">Next Admin</h2>
           </div>
           <CardTitle className="text-2xl text-center">登录</CardTitle>
           <CardDescription className="text-center">

@@ -2,7 +2,18 @@
 
 import * as React from "react"
 import { cn } from "@/lib/cn"
-import { useState } from "react"
+import { useState, createContext, useContext } from "react"
+
+// 创建一个 context 来管理下拉菜单的状态
+const DropdownMenuContext = createContext<{
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  align: "left" | "right" | "end";
+}>({
+  isOpen: false,
+  setIsOpen: () => {},
+  align: "left"
+})
 
 interface DropdownMenuProps {
   children?: React.ReactNode
@@ -16,53 +27,69 @@ export function DropdownMenu({
   align = "left",
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const toggleDropdown = () => setIsOpen(!isOpen);
-
-  // 如果提供了trigger，就使用这种模式
-  if (trigger) {
-    return (
+  
+  return (
+    <DropdownMenuContext.Provider value={{ isOpen, setIsOpen, align }}>
       <div className="relative inline-block text-left">
-        <div onClick={toggleDropdown}>
-          {trigger}
-        </div>
-        {isOpen && (
-          <DropdownMenuContent align={align}>
-            {children}
-          </DropdownMenuContent>
+        {trigger ? (
+          // 如果提供了 trigger，使用它来触发下拉菜单
+          <div onClick={() => setIsOpen(!isOpen)}>
+            {trigger}
+          </div>
+        ) : (
+          // 否则，假设 children 中有 DropdownMenuTrigger
+          children
         )}
       </div>
-    )
-  }
+    </DropdownMenuContext.Provider>
+  )
+}
 
-  // 否则使用之前的模式
+interface DropdownMenuTriggerProps {
+  children: React.ReactNode
+  asChild?: boolean
+}
+
+export function DropdownMenuTrigger({ 
+  children,
+  asChild = false 
+}: DropdownMenuTriggerProps) {
+  const { setIsOpen, isOpen } = useContext(DropdownMenuContext);
+  
   return (
-    <div className="relative inline-block text-left">
+    <div onClick={() => setIsOpen(!isOpen)}>
       {children}
     </div>
   )
 }
 
-interface DropdownMenuContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  align?: "left" | "right" | "end"
+interface DropdownMenuContentProps {
+  children: React.ReactNode
   className?: string
+  align?: "left" | "right" | "end"
 }
 
-export function DropdownMenuContent({
+export function DropdownMenuContent({ 
   children,
-  align = "left",
   className,
-  ...props
+  align: contentAlign,
 }: DropdownMenuContentProps) {
+  const { isOpen, align: contextAlign } = useContext(DropdownMenuContext);
+  const finalAlign = contentAlign || contextAlign;
+  
+  if (!isOpen) return null;
+  
   return (
     <div
       className={cn(
-        "absolute z-10 mt-2 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none",
-        (align === "right" || align === "end") ? "right-0" : "left-0",
+        "absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        finalAlign === "left" && "left-0",
+        finalAlign === "right" && "right-0",
+        finalAlign === "end" && "right-0",
         className
       )}
-      {...props}
     >
-      <div className="py-1">{children}</div>
+      {children}
     </div>
   )
 }
@@ -108,27 +135,5 @@ export function DropdownMenuLabel({
       className={cn("px-3 py-2 text-sm font-semibold text-gray-900", className)}
       {...props}
     />
-  )
-}
-
-interface DropdownMenuTriggerProps {
-  asChild?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
-
-export function DropdownMenuTrigger({
-  asChild = false,
-  children,
-  className,
-  ...props
-}: DropdownMenuTriggerProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      className={cn("inline-flex items-center justify-center", className)}
-      {...props}
-    >
-      {children}
-    </button>
   )
 } 
