@@ -18,7 +18,7 @@ interface DataItem {
 const dataSource: DataItem[] = [
   {
     key: '1',
-    name: '张三',
+    name: '张三22',
     age: 32,
     address: '北京市朝阳区',
     tags: ['开发', '前端'],
