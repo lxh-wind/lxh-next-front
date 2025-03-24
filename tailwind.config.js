@@ -30,6 +30,18 @@ module.exports = {
   			md: '0.375rem',
   			sm: '0.25rem'
   		},
+      keyframes: {
+        float: {
+          '0%': { transform: 'translateY(0px) translateX(0px)' },
+          '25%': { transform: 'translateY(-10px) translateX(10px)' },
+          '50%': { transform: 'translateY(0px) translateX(20px)' },
+          '75%': { transform: 'translateY(10px) translateX(10px)' },
+          '100%': { transform: 'translateY(0px) translateX(0px)' },
+        },
+      },
+      animation: {
+        float: 'float 8s ease-in-out infinite',
+      },
   	}
   },
   corePlugins: {
