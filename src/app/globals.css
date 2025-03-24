@@ -84,3 +84,46 @@ body {
   animation-duration: 0.3s;
   animation-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
+
+@layer components {
+  /* Customer Service Page Styles */
+  .customer-service-tabs .ant-tabs-nav::before {
+    border-bottom: none !important;
+  }
+  
+  .customer-service-tabs .ant-tabs-nav-list {
+    width: 100%;
+    display: flex;
+  }
+  
+  .customer-service-tabs .ant-tabs-tab {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  
+  .customer-service-tabs .ant-tabs-ink-bar {
+    height: 3px;
+    border-radius: 1.5px;
+  }
+  
+  .customer-service-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    font-weight: 500;
+    color: #f43f5e;
+  }
+  
+  .customer-service-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+    color: #666;
+  }
+  
+  .customer-service-tabs .ant-tabs-ink-bar {
+    background: #f43f5e;
+  }
+  
+  .customer-service-tabs .ant-tabs-content-holder {
+    padding-top: 4px;
+  }
+}
