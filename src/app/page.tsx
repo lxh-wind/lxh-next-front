@@ -17,7 +17,7 @@ export default function Home() {
             cover={
               <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 text-white text-center">
                 <MobileOutlined style={{ fontSize: 48 }} />
-                <h3 className="mt-4 text-xl">H5 - 营销活动</h3>
+                <h3 className="mt-4 text-xl">H5 -- 营销活动</h3>
               </div>
             }
           >
