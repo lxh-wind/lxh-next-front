@@ -44,9 +44,9 @@ const PageSettings: React.FC<PageSettingsProps> = ({ pageInfo, onUpdatePageInfo 
       // 外观设置
       bgMode,
       bgColor,
-      bgImage,
+      bgImage: bgImage || '',
       bgRepeat,
-      shareImage,
+      shareImage: shareImage || '',
       // 布局设置
       layoutMode,
       containerPadding,
@@ -256,7 +256,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ pageInfo, onUpdatePageInfo 
                   onUpdatePageInfo({
                     bgMode,
                     bgColor,
-                    bgImage,
+                    bgImage: bgImage || '',
                     bgRepeat
                   });
                   message.success('外观设置已更新');

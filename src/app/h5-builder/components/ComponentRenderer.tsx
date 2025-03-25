@@ -33,7 +33,7 @@ export function renderComponentContent(component: ComponentType) {
     case 'button':
       return (
         <Button 
-          type={component.props.type} 
+          type={(component.props.buttonType as "link" | "text" | "primary" | "default" | "dashed") || 'default'} 
           style={{ ...component.props.style }}
         >
           {component.props.text}

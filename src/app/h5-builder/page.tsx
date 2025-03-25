@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { savePage, publishPage, previewPage, previewLuckyWheel } from './utils/store';
 import { ComponentType, PageInfo } from './components/types';
+import CommonOperations from '@/app/components/CommonOperations';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
@@ -40,6 +41,48 @@ const DEVICE_SIZES = [
   { name: 'PC', width: 1200, height: 764, icon: <LaptopOutlined /> },
   { name: 'A4', width: 595, height: 842, icon: <FileTextOutlined /> },
 ];
+
+// 生成复杂ID的函数
+const generateComplexId = (componentType: string) => {
+  // 生成UUID v4
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+  
+  // 生成时间戳
+  const timestamp = new Date().getTime();
+  
+  // 生成格式化的时间字符串
+  const date = new Date();
+  const formattedDate = date.toISOString().replace(/[:\-\.]/g, '');
+  
+  return `${componentType}-${uuid}-${timestamp}-${formattedDate}`;
+};
+
+// 添加一个转换函数，将 PageData 转换为 PageInfo
+const convertPageDataToPageInfo = (pageData: any): PageInfo => {
+  return {
+    id: pageData.id,
+    title: pageData.title || '',
+    description: pageData.description || '',
+    components: pageData.components || [],
+    published: pageData.published || false,
+    publishUrl: pageData.publishedUrl || '',
+    tags: pageData.tags || [],
+    // 如果后端返回的数据没有这些字段，则使用默认值
+    bgMode: pageData.bgMode || 'color',
+    bgColor: pageData.bgColor || '#FFFFFF',
+    bgImage: pageData.bgImage || null,
+    bgRepeat: pageData.bgRepeat || 'no-repeat',
+    shareImage: pageData.shareImage || null,
+    layoutMode: pageData.layoutMode || 'auto',
+    containerPadding: pageData.containerPadding || 0,
+    componentGap: pageData.componentGap || 0,
+    containerWidth: pageData.containerWidth || 100,
+  };
+};
 
 export default function H5Builder() {
   const router = useRouter();
@@ -90,7 +133,7 @@ export default function H5Builder() {
   // 添加组件
   const handleAddComponent = useCallback((component: any) => {
     const newComponent = {
-      id: `component-${Date.now()}`,
+      id: generateComplexId(component.type),
       ...component
     };
     
@@ -132,7 +175,7 @@ export default function H5Builder() {
     if (component) {
       const newComponent = {
         ...component,
-        id: `component-${Date.now()}`,
+        id: generateComplexId(component.type),
       };
       
       // 记录历史状态
@@ -232,7 +275,7 @@ export default function H5Builder() {
       };
       
       const savedData = await savePage(pageToSave);
-      setPageInfo(savedData);
+      setPageInfo(convertPageDataToPageInfo(savedData));
       messageApi.success('保存成功');
       setIsSaveModalOpen(false);
     } catch (error) {
@@ -253,11 +296,7 @@ export default function H5Builder() {
     setLoading(true);
     try {
       const publishedData = await publishPage(pageInfo.id);
-      setPageInfo({
-        ...pageInfo,
-        published: true,
-        publishUrl: publishedData.publishedUrl,
-      });
+      setPageInfo(convertPageDataToPageInfo(publishedData));
       messageApi.success('发布成功');
       Modal.success({
         title: '页面发布成功',
@@ -388,6 +427,70 @@ export default function H5Builder() {
     router.back();
   };
 
+  // 处理下载JSON文件
+  const handleDownloadJson = useCallback(() => {
+    const data = {
+      pageInfo,
+      components
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${pageInfo.title || '未命名页面'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    messageApi.success('JSON文件下载成功');
+  }, [pageInfo, components]);
+
+  // 处理上传JSON文件
+  const handleUploadJson = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (data.pageInfo && data.components) {
+            // 确保上传的数据符合PageInfo类型
+            setPageInfo(convertPageDataToPageInfo(data.pageInfo));
+            setComponents(data.components);
+            messageApi.success('JSON文件导入成功');
+          } else {
+            messageApi.error('无效的JSON文件格式');
+          }
+        } catch (error) {
+          messageApi.error('JSON文件解析失败');
+        }
+      }
+    };
+    input.click();
+  }, []);
+
+  // 处理清空画布
+  const handleClearCanvas = useCallback(() => {
+    Modal.confirm({
+      title: '确认清空画布？',
+      content: '此操作将删除画布上的所有组件，且不可恢复',
+      onOk: () => {
+        setComponents([]);
+        setSelectedComponent(null);
+        messageApi.success('画布已清空');
+      }
+    });
+  }, []);
+
+  // 添加一个测试函数来验证 ID 生成
+  const testIdGeneration = useCallback(() => {
+    const testId = generateComplexId('test');
+    messageApi.info(`新生成的复杂ID: ${testId}`);
+  }, []);
+
   return (
     <div className="h-full flex flex-col">
       {contextHolder}
@@ -397,9 +500,15 @@ export default function H5Builder() {
         <div className="flex items-center">
           <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>返回</Button>
           <span className="text-xl font-medium ml-4">H5营销页面制作</span>
+          <Button onClick={testIdGeneration} className="ml-4">测试ID生成</Button>
         </div>
         
         <div className="flex items-center gap-2">
+          <CommonOperations
+            onDownloadJson={handleDownloadJson}
+            onUploadJson={handleUploadJson}
+            onClearCanvas={handleClearCanvas}
+          />
           <Button icon={<UndoOutlined />} disabled={!canUndo} onClick={handleUndo}>撤销</Button>
           <Button icon={<RedoOutlined />} disabled={!canRedo} onClick={handleRedo}>重做</Button>
           <Divider type="vertical" />
@@ -461,6 +570,7 @@ export default function H5Builder() {
               onDeleteComponent={handleDeleteComponent}
               onDuplicateComponent={handleDuplicateComponent}
               onUpdateComponentsOrder={handleUpdateComponentsOrder}
+              onAddComponent={handleAddComponent}
               zoom={zoom}
               canvasSize={canvasSize}
               containerPadding={pageInfo.containerPadding}

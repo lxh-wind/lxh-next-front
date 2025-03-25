@@ -16,6 +16,7 @@ interface CanvasProps {
   onDeleteComponent?: (id: string) => void;
   onDuplicateComponent?: (id: string) => void;
   onUpdateComponentsOrder?: (startIndex: number, endIndex: number) => void;
+  onAddComponent?: (component: any) => void;
   zoom: number;
   canvasSize?: { width: number; height: number };
   // 页面布局设置
@@ -39,6 +40,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onDeleteComponent,
   onDuplicateComponent,
   onUpdateComponentsOrder,
+  onAddComponent,
   zoom,
   canvasSize = { width: 375, height: 667 }, // 默认尺寸
   containerPadding = 16,
@@ -166,17 +168,12 @@ const Canvas: React.FC<CanvasProps> = ({
       try {
         const componentData = JSON.parse(e.dataTransfer.getData('componentType'));
         
-        if (componentData) {
-          const id = `component-${Date.now()}`;
-          const newComponent = {
-            id,
-            ...componentData,
-            props: { ...componentData.defaultProps }
-          };
+        if (componentData && onAddComponent) {
+          // 直接调用 onAddComponent 而不是生成 ID
+          onAddComponent(componentData);
           
-          if (onSelectComponent) {
-            onSelectComponent(newComponent);
-          }
+          // 获取新添加的组件（会是数组中的最后一个）
+          // 组件添加后的处理逻辑，如果需要的话
         }
       } catch (error) {
         console.error('Failed to add dragged component:', error);
@@ -231,21 +228,21 @@ const Canvas: React.FC<CanvasProps> = ({
     
     components.forEach(component => {
       // 获取组件在画布中的位置 - 从props.style中获取
-      const top = parseInt(component.props?.style?.marginTop || 0, 10);
+      const top = component.props?.style?.marginTop || 0;
       
       // 估计组件高度 - 根据组件类型确定默认高度
       let height;
       
-      // 特殊组件类型的高度调整
+      // 根据组件类型设置默认高度
       switch (component.type) {
         case 'image':
-          height = parseInt(component.props?.style?.height || 200, 10);
+          height = component.props?.style?.height || 200;
           break;
         case 'text':
-          height = parseInt(component.props?.style?.height || 40, 10);
+          height = component.props?.style?.height || 40;
           break;
         case 'button':
-          height = parseInt(component.props?.style?.height || 40, 10);
+          height = component.props?.style?.height || 40;
           break;
         case 'carousel':
           height = 200;
@@ -278,10 +275,10 @@ const Canvas: React.FC<CanvasProps> = ({
           height = 80; // 默认高度
       }
       
-      // 考虑内边距和外边距
-      const paddingTop = parseInt(component.props?.style?.paddingTop || 0, 10);
-      const paddingBottom = parseInt(component.props?.style?.paddingBottom || 0, 10);
-      const marginBottom = parseInt(component.props?.style?.marginBottom || 0, 10);
+      // 计算组件底部位置，考虑padding和margin
+      const paddingTop = component.props?.style?.paddingTop || 0;
+      const paddingBottom = component.props?.style?.paddingBottom || 0;
+      const marginBottom = component.props?.style?.marginBottom || 0;
       
       // 计算组件底部位置 (top + height + margins & paddings)
       const bottom = top + height + marginBottom + paddingTop + paddingBottom;
@@ -307,7 +304,7 @@ const Canvas: React.FC<CanvasProps> = ({
     transformOrigin: 'top center',
     transition: 'transform 0.3s ease',
     width: canvasSize.width,
-    height: canvasSize.height,
+    minHeight: canvasSize.height,
     // 应用页面布局设置
     padding: containerPadding && `${containerPadding}px`,
     maxWidth: containerWidth && `${containerWidth}%`,

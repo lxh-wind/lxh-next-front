@@ -73,9 +73,7 @@ export default function ComponentPanel({ onAddComponent }: ComponentPanelProps) 
   );
 
   const handleAddComponent = (componentType: any) => {
-    const id = Date.now().toString();
     onAddComponent({
-      id,
       ...componentType,
       props: { ...componentType.defaultProps }
     });
