@@ -63,13 +63,15 @@ export default function H5Builder() {
   
   // 模态框状态
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
-  const [showRulers, setShowRulers] = useState<boolean>(true);
   
   // 撤销重做历史记录
   const historyRef = useRef<ComponentType[][]>([]);
   const historyIndexRef = useRef<number>(-1);
   const [canUndo, setCanUndo] = useState<boolean>(false);
   const [canRedo, setCanRedo] = useState<boolean>(false);
+  
+  // 添加一个临时状态用于存储对话框中选择的尺寸，但尚未应用
+  const [tempCanvasSize, setTempCanvasSize] = useState({ width: 375, height: 667 });
   
   // 添加组件
   const handleAddComponent = useCallback((component: any) => {
@@ -315,8 +317,11 @@ export default function H5Builder() {
 
   // 处理画布尺寸修改
   const handleCanvasSizeChange = (width: number, height: number) => {
-    setCanvasSize({ width, height });
-    setShowCanvasSizeModal(false);
+    // 更新临时选中的尺寸，但不立即应用
+    setTempCanvasSize({ width, height });
+    // 更新自定义尺寸输入框的值
+    setCustomWidth(width.toString());
+    setCustomHeight(height.toString());
   };
 
   // 应用自定义尺寸
@@ -324,11 +329,37 @@ export default function H5Builder() {
     const width = parseInt(customWidth, 10);
     const height = parseInt(customHeight, 10);
     if (width > 0 && height > 0) {
-      setCanvasSize({ width, height });
-      setShowCanvasSizeModal(false);
+      setTempCanvasSize({ width, height });
     } else {
       messageApi.error('请输入有效的宽度和高度');
     }
+  };
+
+  // 确认并应用所选尺寸
+  const confirmCanvasSize = () => {
+    setCanvasSize(tempCanvasSize);
+    setShowCanvasSizeModal(false);
+    messageApi.success('画布尺寸已更新');
+  };
+
+  // 打开画布尺寸模态框时，确保自定义尺寸字段显示当前画布尺寸，并重置临时尺寸为当前尺寸
+  const openCanvasSizeModal = () => {
+    setTempCanvasSize(canvasSize);
+    setCustomWidth(canvasSize.width.toString());
+    setCustomHeight(canvasSize.height.toString());
+    setShowCanvasSizeModal(true);
+  };
+
+  // 检查当前选择的尺寸是否为预设设备尺寸之一
+  const isCustomTempSize = () => {
+    return !DEVICE_SIZES.some(
+      device => device.width === tempCanvasSize.width && device.height === tempCanvasSize.height
+    );
+  };
+
+  // 取消时重置临时尺寸
+  const handleCancelCanvasSize = () => {
+    setShowCanvasSizeModal(false);
   };
 
   const handleBack = () => {
@@ -353,7 +384,7 @@ export default function H5Builder() {
           
           <Button 
             icon={<MobileOutlined />}
-            onClick={() => setShowCanvasSizeModal(true)}
+            onClick={openCanvasSizeModal}
           >
             画布尺寸
           </Button>
@@ -431,33 +462,124 @@ export default function H5Builder() {
       <Modal
         title="设置画布尺寸"
         open={showCanvasSizeModal}
-        onCancel={() => setShowCanvasSizeModal(false)}
-        footer={null}
-        width={700}
+        onCancel={handleCancelCanvasSize}
+        footer={[
+          <Button key="cancel" onClick={handleCancelCanvasSize}>
+            取消
+          </Button>,
+          <Button 
+            key="confirm" 
+            type="primary" 
+            onClick={confirmCanvasSize}
+            disabled={tempCanvasSize.width === canvasSize.width && tempCanvasSize.height === canvasSize.height}
+          >
+            确认更改
+          </Button>
+        ]}
+        width={750}
       >
         <div className="mb-8">
+          {/* 当前画布尺寸信息 */}
+          <div className="mb-6 bg-gray-50 px-4 py-3 rounded-md border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="font-medium mr-2">当前尺寸:</span>
+                <span className="font-mono">{canvasSize.width} × {canvasSize.height} px</span>
+              </div>
+              <div>
+                <span className="text-gray-500 text-sm">
+                  {!DEVICE_SIZES.some(
+                    device => device.width === canvasSize.width && device.height === canvasSize.height
+                  ) ? '自定义尺寸' : 
+                    DEVICE_SIZES.find(device => 
+                      device.width === canvasSize.width && device.height === canvasSize.height
+                    )?.name
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 选择后的尺寸预览 */}
+          {(tempCanvasSize.width !== canvasSize.width || tempCanvasSize.height !== canvasSize.height) && (
+            <div className="mb-6 bg-blue-50 px-4 py-3 rounded-md border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-medium mr-2 text-blue-600">选择的新尺寸:</span>
+                  <span className="font-mono text-blue-600">{tempCanvasSize.width} × {tempCanvasSize.height} px</span>
+                </div>
+                <div>
+                  <span className="text-blue-500 text-sm">
+                    {isCustomTempSize() ? '自定义尺寸' : 
+                      DEVICE_SIZES.find(device => 
+                        device.width === tempCanvasSize.width && device.height === tempCanvasSize.height
+                      )?.name
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <h3 className="mb-4 font-semibold">预设设备尺寸</h3>
           <Row gutter={[16, 16]} className="mb-4">
-            {DEVICE_SIZES.map((device) => (
-              <Col span={8} key={device.name}>
-                <Card 
-                  hoverable
-                  className={canvasSize.width === device.width && canvasSize.height === device.height ? 'border-blue-500 bg-blue-50' : ''}
-                  onClick={() => handleCanvasSizeChange(device.width, device.height)}
-                >
-                  <div className="flex items-center">
-                    <div className="text-2xl mr-3">{device.icon}</div>
-                    <div>
-                      <div className="font-medium">{device.name}</div>
-                      <div className="text-gray-500">{device.width} × {device.height}</div>
+            {DEVICE_SIZES.map((device) => {
+              const isSelected = tempCanvasSize.width === device.width && tempCanvasSize.height === device.height;
+              const isCurrent = canvasSize.width === device.width && canvasSize.height === device.height;
+              return (
+                <Col span={8} key={device.name}>
+                  <Card 
+                    hoverable
+                    className={`transition-all duration-300 ${
+                      isSelected 
+                        ? 'border-blue-500 bg-blue-50 shadow-md transform scale-105' 
+                        : isCurrent 
+                          ? 'border-green-500 bg-green-50'
+                          : 'border border-gray-200'
+                    }`}
+                    onClick={() => handleCanvasSizeChange(device.width, device.height)}
+                  >
+                    <div className="flex items-center">
+                      <div className={`text-2xl mr-3 ${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : ''}`}>
+                        {device.icon}
+                      </div>
+                      <div>
+                        <div className={`font-medium ${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : ''}`}>
+                          {device.name}
+                        </div>
+                        <div className={`${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : 'text-gray-500'}`}>
+                          {device.width} × {device.height}
+                        </div>
+                      </div>
+                      <div className="ml-auto">
+                        {isSelected && (
+                          <span className="bg-blue-500 text-white text-xs py-1 rounded flex justify-center w-[50px]">已选择</span>
+                        )}
+                        {isCurrent && !isSelected && (
+                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded w-[100px]">当前</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              </Col>
-            ))}
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
 
+          <Divider />
+
           <div className="mt-8">
-            <h3 className="mb-4">自定义尺寸</h3>
+            <h3 className="mb-4 font-semibold flex items-center">
+              <span>自定义尺寸</span>
+              {isCustomTempSize() && (
+                <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded flex justify-center w-[50px]">已选择</span>
+              )}
+              {!DEVICE_SIZES.some(
+                device => device.width === canvasSize.width && device.height === canvasSize.height
+              ) && !isCustomTempSize() && (
+                <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded">当前</span>
+              )}
+            </h3>
             <div className="flex items-center gap-2">
               <span>宽:</span>
               <Input 
@@ -466,6 +588,7 @@ export default function H5Builder() {
                 onChange={(e) => setCustomWidth(e.target.value)}
                 style={{ width: 120 }}
                 addonAfter="px"
+                className={isCustomTempSize() ? "border-blue-300" : ""}
               />
               <span>高:</span>
               <Input 
@@ -474,8 +597,14 @@ export default function H5Builder() {
                 onChange={(e) => setCustomHeight(e.target.value)}
                 style={{ width: 120 }}
                 addonAfter="px"
+                className={isCustomTempSize() ? "border-blue-300" : ""}
               />
-              <Button type="primary" onClick={applyCustomSize}>更新画布尺寸</Button>
+              <Button 
+                type="primary" 
+                onClick={applyCustomSize}
+              >
+                使用此尺寸
+              </Button>
             </div>
           </div>
         </div>
