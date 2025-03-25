@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 4. 安装依赖
-RUN npm install
+RUN npm install -g pm2 && npm install
 
 # 5. 复制项目代码
 COPY . .
@@ -22,5 +22,5 @@ ENV NODE_ENV=production
 # 8. 暴露端口（Next.js 默认运行在 3000 端口）
 EXPOSE 3000
 
-# 9. 启动 Next.js
-CMD ["npm", "start"]
+# 9. 启动 Next.js（使用 pm2-runtime 代替 npm start）
+CMD ["pm2-runtime", "start", "npm", "--", "start"]
