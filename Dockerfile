@@ -22,5 +22,5 @@ ENV NODE_ENV=production
 # 暴露端口
 EXPOSE 3000
 
-# 启动应用使用 pm2-runtime
+# 启动应用
 CMD ["npm", "start"]
