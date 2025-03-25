@@ -21,7 +21,7 @@ import {
 } from '@ant-design/icons';
 import { savePage, publishPage, previewPage, previewLuckyWheel } from './utils/store';
 import { ComponentType, PageInfo } from './components/types';
-import CommonOperations from '@/app/components/CommonOperations';
+import CommonOperations from '@/components/CommonOperations';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
