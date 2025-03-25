@@ -1,26 +1,29 @@
-# 1. 使用 Node.js 作为基础镜像
+# 使用 Node.js 作为基础镜像
 FROM node:18
 
-# 2. 设置工作目录
+# 设置工作目录
 WORKDIR /app
 
-# 3. 复制 package.json 和 package-lock.json
+# 复制 package.json 和 package-lock.json
 COPY package*.json ./
 
-# 4. 安装依赖
-RUN npm install -g pm2 && npm install
+# 安装依赖
+RUN npm install
 
-# 5. 复制项目代码
+# 复制项目代码
 COPY . .
 
-# 6. 构建 Next.js 应用
+# 构建 Next.js 应用
 RUN npm run build
 
-# 7. 设置环境变量（生产模式）
+# 设置环境变量（生产模式）
 ENV NODE_ENV=production
 
-# 8. 暴露端口（Next.js 默认运行在 3000 端口）
+# 安装 pm2
+RUN npm install pm2 -g
+
+# 暴露端口
 EXPOSE 3000
 
-# 9. 启动 Next.js（使用 pm2-runtime 代替 npm start）
+# 启动应用使用 pm2-runtime
 CMD ["pm2-runtime", "start", "npm", "--", "start"]
