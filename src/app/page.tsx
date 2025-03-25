@@ -23,7 +23,7 @@ export default function Home() {
             }
           >
             <Card.Meta
-              title="H5营销活动构建器"
+              title="H5活动构建器"
               description="可视化低代码构建平台，快速创建电商营销H5页面，无需代码"
             />
             <div className="mt-4">
