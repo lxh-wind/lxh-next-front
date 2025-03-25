@@ -385,7 +385,11 @@ export default function H5Builder() {
         
         {/* 中间画布区域 */}
         <Content className="bg-gray-100 overflow-auto p-0 relative">
-          <ZoomablePaneWithRulers zoom={zoom} onZoomChange={setZoom}>
+          <ZoomablePaneWithRulers 
+            zoom={zoom} 
+            onZoomChange={setZoom}
+            isPropertyPanelOpen={!!selectedComponent}
+          >
             <Canvas
               components={components}
               selectedComponentId={selectedComponent?.id}
@@ -399,13 +403,25 @@ export default function H5Builder() {
           </ZoomablePaneWithRulers>
         </Content>
         
-        {/* 右侧属性面板 */}
-        <Sider width={300} theme="light" className="border-l border-gray-200 overflow-auto">
-          {renderComponentActions()}
-          <PropertyPanel
-            selectedComponent={selectedComponent}
-            onUpdateComponent={handleUpdateComponent}
-          />
+        {/* 右侧属性面板 - 根据是否选中组件决定宽度 */}
+        <Sider 
+          width={selectedComponent ? 300 : 0} 
+          theme="light" 
+          className="border-l border-gray-200 overflow-auto transition-all duration-300"
+          style={{ 
+            minWidth: selectedComponent ? '300px' : '0px',
+            maxWidth: selectedComponent ? '300px' : '0px',
+          }}
+        >
+          {selectedComponent && (
+            <>
+              {renderComponentActions()}
+              <PropertyPanel
+                selectedComponent={selectedComponent}
+                onUpdateComponent={handleUpdateComponent}
+              />
+            </>
+          )}
         </Sider>
       </Layout>
       

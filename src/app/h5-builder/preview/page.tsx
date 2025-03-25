@@ -1,9 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Button, Empty, Spin } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Button, Empty, Spin, Result } from 'antd';
+import { ArrowLeftOutlined, CloseOutlined } from '@ant-design/icons';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { ComponentType } from '../components/types';
+import dynamic from 'next/dynamic';
+
+// 动态导入抽奖转盘组件以避免SSR问题
+const LuckyWheel = dynamic(() => import('../components/marketing/LuckyWheel'), { ssr: false });
 
 // 用于渲染不同类型组件的助手组件
 const ComponentRenderer = ({ component }: { component: any }) => {
@@ -300,51 +305,34 @@ const ComponentRenderer = ({ component }: { component: any }) => {
   }
 };
 
-export default function PreviewPage() {
-  const [pageData, setPageData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+// 创建一个客户端组件来处理搜索参数
+function PreviewContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const [components, setComponents] = useState<ComponentType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // 尝试从URL参数获取预览数据
-    const dataParam = searchParams.get('data');
+    const dataParam = searchParams?.get('data');
     
     if (dataParam) {
       try {
         const decodedData = decodeURIComponent(dataParam);
         const parsedData = JSON.parse(decodedData);
-        // 如果是数组，直接作为组件列表处理
-        if (Array.isArray(parsedData)) {
-          setPageData({ components: parsedData });
-        } else {
-          // 否则假设是包含components属性的对象
-          setPageData(parsedData);
-        }
-      } catch (err) {
-        console.error('解析URL预览数据失败', err);
-        // 如果URL参数解析失败，尝试从sessionStorage获取
-        loadFromSessionStorage();
+        setComponents(parsedData.components || []);
+        setError(null);
+      } catch (error) {
+        console.error('Failed to parse preview data:', error);
+        setError('预览数据解析失败');
       }
     } else {
-      // 没有URL参数，尝试从sessionStorage获取
-      loadFromSessionStorage();
+      setError('未提供预览数据');
     }
     
     setLoading(false);
   }, [searchParams]);
-
-  const loadFromSessionStorage = () => {
-    const previewData = sessionStorage.getItem('h5_preview_data');
-    
-    if (previewData) {
-      try {
-        setPageData(JSON.parse(previewData));
-      } catch (err) {
-        console.error('解析预览数据失败', err);
-      }
-    }
-  };
 
   const handleBack = () => {
     router.back();
@@ -352,64 +340,56 @@ export default function PreviewPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" />
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" tip="加载预览..." />
       </div>
     );
   }
 
-  if (!pageData || !pageData.components || pageData.components.length === 0) {
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Empty description="没有预览内容" />
-        <Button onClick={handleBack} icon={<ArrowLeftOutlined />} className="mt-4">
-          返回编辑
-        </Button>
-      </div>
+      <Result
+        status="warning"
+        title="预览失败"
+        subTitle={error}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="preview-container">
       {/* 顶部操作栏 */}
-      <div className="sticky top-0 z-10 bg-white shadow px-4 py-2 flex items-center justify-between">
-        <Button onClick={handleBack} icon={<ArrowLeftOutlined />}>
-          返回编辑
-        </Button>
-        <div className="text-sm font-medium">
-          移动端预览
-        </div>
-        <div style={{ width: 24 }} />
+      <div className="fixed top-0 left-0 w-full bg-white shadow-md px-4 py-2 z-10 flex justify-between items-center">
+        <Button type="text" icon={<ArrowLeftOutlined />} onClick={handleBack}>返回编辑器</Button>
+        <div className="text-lg font-medium">页面预览</div>
+        <Button type="text" icon={<CloseOutlined />} onClick={handleBack} />
       </div>
       
-      {/* 移动设备模拟框 */}
-      <div className="max-w-md mx-auto my-4 bg-white rounded-lg shadow overflow-hidden">
-        {/* 手机顶部状态栏模拟 */}
-        <div className="h-8 bg-gray-800 flex items-center justify-between px-4">
-          <div className="text-white text-xs">12:00</div>
-          <div className="flex space-x-1">
-            <div className="w-3 h-3 rounded-full bg-white opacity-70"></div>
-            <div className="w-3 h-3 rounded-full bg-white opacity-70"></div>
-            <div className="w-3 h-3 rounded-full bg-white opacity-70"></div>
-          </div>
-        </div>
-        
-        {/* 页面内容 */}
-        <div className="min-h-[500px] overflow-auto">
-          {pageData.components.map((component: any, index: number) => (
-            <div key={index} className="mb-4">
+      {/* 预览内容 */}
+      <div className="preview-content pt-14 pb-8 px-4 max-w-md mx-auto">
+        {components.length === 0 ? (
+          <Empty description="没有可预览的内容" />
+        ) : (
+          components.map((component) => (
+            <div key={component.id} className="mb-4">
               <ComponentRenderer component={component} />
             </div>
-          ))}
-        </div>
-        
-        {/* 底部模拟 */}
-        <div className="h-8 bg-gray-100 border-t"></div>
-      </div>
-      
-      <div className="max-w-md mx-auto px-4 mb-8 text-center text-xs text-gray-500">
-        此预览仅供参考，实际效果可能因设备不同而有所差异
+          ))
+        )}
       </div>
     </div>
+  );
+}
+
+// 主页面组件使用 Suspense 包裹 PreviewContent
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" tip="加载中..." />
+      </div>
+    }>
+      <PreviewContent />
+    </Suspense>
   );
 } 

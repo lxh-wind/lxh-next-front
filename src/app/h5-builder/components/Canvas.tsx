@@ -431,20 +431,36 @@ const Canvas: React.FC<CanvasProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     
-    if (dragIndex === null || !onUpdateComponentsOrder) return;
-    
-    const target = e.target as HTMLElement;
-    const dropComponent = target.closest('[data-index]');
-    
-    if (dropComponent) {
-      const dropIndex = parseInt(dropComponent.getAttribute('data-index') || '0', 10);
+    try {
+      // 获取拖拽的组件数据
+      const componentData = JSON.parse(e.dataTransfer.getData('componentType'));
       
-      if (dragIndex !== dropIndex) {
-        onUpdateComponentsOrder(dragIndex, dropIndex);
+      if (componentData) {
+        // 创建新组件并添加到画布
+        const id = `component-${Date.now()}`;
+        const newComponent = {
+          id,
+          ...componentData,
+          props: { ...componentData.defaultProps }
+        };
+        
+        if (onSelectComponent) {
+          onSelectComponent(newComponent);
+        }
+        
+        // 获取鼠标在画布中的相对位置
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          // 这里可以根据鼠标位置设置组件的定位
+          // 如果你的组件支持定位属性的话
+        }
       }
+    } catch (error) {
+      console.error('Failed to add dragged component:', error);
     }
-    
-    setDragIndex(null);
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
@@ -454,24 +470,110 @@ const Canvas: React.FC<CanvasProps> = ({
     setDragIndex(null);
   };
 
-  // 根据传入的canvasSize设置画布尺寸
+  // 计算画布高度 - 根据内容自适应增加
+  const calculateCanvasHeight = () => {
+    // 基础高度，如果没有组件则使用默认高度
+    const baseHeight = canvasSize.height;
+    
+    if (components.length === 0) {
+      return baseHeight;
+    }
+
+    // 计算所有组件占据的总高度
+    let maxComponentBottom = 0;
+    
+    components.forEach(component => {
+      // 获取组件在画布中的位置 - 从props.style中获取
+      const top = parseInt(component.props?.style?.marginTop || 0, 10);
+      
+      // 估计组件高度 - 根据组件类型确定默认高度
+      let height;
+      
+      // 特殊组件类型的高度调整
+      switch (component.type) {
+        case 'image':
+          height = parseInt(component.props?.style?.height || 200, 10);
+          break;
+        case 'text':
+          height = parseInt(component.props?.style?.height || 40, 10);
+          break;
+        case 'button':
+          height = parseInt(component.props?.style?.height || 40, 10);
+          break;
+        case 'carousel':
+          height = 200;
+          break;
+        case 'productList':
+          height = 300;
+          break;
+        case 'countdown':
+          height = 100;
+          break;
+        case 'coupon':
+          height = 150 + (component.props?.coupons?.length || 1) * 70;
+          break;
+        case 'luckyWheel':
+          height = 350;
+          break;
+        case 'checkinCalendar':
+          height = 250;
+          break;
+        case 'memberBenefits':
+          height = 250;
+          break;
+        case 'surveyForm':
+          height = 200 + (component.props?.questions?.length || 1) * 100;
+          break;
+        case 'teamBuying':
+          height = 350;
+          break;
+        default:
+          height = 80; // 默认高度
+      }
+      
+      // 考虑内边距和外边距
+      const paddingTop = parseInt(component.props?.style?.paddingTop || 0, 10);
+      const paddingBottom = parseInt(component.props?.style?.paddingBottom || 0, 10);
+      const marginBottom = parseInt(component.props?.style?.marginBottom || 0, 10);
+      
+      // 计算组件底部位置 (top + height + margins & paddings)
+      const bottom = top + height + marginBottom + paddingTop + paddingBottom;
+      
+      console.log(`组件: ${component.type}, ID: ${component.id}, 顶部: ${top}, 高度: ${height}, 底部: ${bottom}`);
+      
+      // 更新最大底部位置
+      if (bottom > maxComponentBottom) {
+        maxComponentBottom = bottom;
+      }
+    });
+    
+    // 添加底部边距并确保最小高度不小于基础高度
+    const calculatedHeight = Math.max(baseHeight, maxComponentBottom + 100);
+    console.log(`计算画布高度: ${calculatedHeight}px (基础高度: ${baseHeight}px, 最大组件底部: ${maxComponentBottom}px)`);
+    
+    return calculatedHeight;
+  };
+
+  // 根据传入的canvasSize设置画布尺寸，但高度会自适应
   const canvasStyle = {
     width: `${canvasSize.width}px`,
-    height: `${canvasSize.height}px`,
+    height: `${calculateCanvasHeight()}px`,
     minHeight: `${canvasSize.height}px`,
     position: 'relative' as const,
     background: '#ffffff',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-    overflow: 'hidden' as const,
   };
 
   return (
     <div 
       className="canvas-container relative"
-      style={canvasStyle}
+      style={{
+        ...canvasStyle,
+        minHeight: `${calculateCanvasHeight()}px`, // 确保顶层容器也使用计算后的高度
+      }}
     >
       {/* 组件渲染区域 */}
-      <div className="component-area" style={{ height: `${canvasSize.height}px`, overflow: 'hidden' }}>
+      <div className="component-area" style={{ minHeight: `${calculateCanvasHeight()}px` }}>
         <div 
           className="relative w-full h-full bg-white"
           ref={containerRef}
@@ -479,15 +581,9 @@ const Canvas: React.FC<CanvasProps> = ({
           onDrop={handleDrop}
         >
           {/* 画布内容 */}
-          <div className="relative" style={{ height: `${canvasSize.height}px` }}>
-            {/* 辅助指示：水平和垂直中心线 */}
-            <div className="absolute inset-0 pointer-events-none opacity-20">
-              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-blue-500 transform -translate-x-1/2"></div>
-              <div className="absolute top-1/2 left-0 right-0 h-px bg-blue-500 transform -translate-y-1/2"></div>
-            </div>
-            
+          <div className="relative w-full" style={{ minHeight: `${calculateCanvasHeight()}px` }}>
             {components.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="h-full flex flex-col items-center justify-center text-gray-400">
                 <p>从左侧拖入组件到这里</p>
               </div>
             ) : (

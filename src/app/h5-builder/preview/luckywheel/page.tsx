@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Spin, Card, Result, message } from 'antd';
-import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Spin, Result, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 

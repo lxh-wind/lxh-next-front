@@ -1,7 +1,7 @@
 'use client';
 
-import { Form, Input, InputNumber, ColorPicker, Select, Switch, Tabs, Button, Slider } from 'antd';
-import { useState, useEffect } from 'react';
+import { Form, Input, InputNumber, ColorPicker, Select, Switch, Tabs, Slider } from 'antd';
+import { useEffect } from 'react';
 import { PropertyPanelProps } from './types';
 import dynamic from 'next/dynamic';
 
