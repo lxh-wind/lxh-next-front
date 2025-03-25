@@ -331,6 +331,10 @@ export default function H5Builder() {
     }
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <div className="h-full flex flex-col">
       {contextHolder}
@@ -338,10 +342,8 @@ export default function H5Builder() {
       {/* 顶部导航栏 */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center">
-          <Link href="/" className="mr-4">
-            <Button icon={<ArrowLeftOutlined />}>返回</Button>
-          </Link>
-          <span className="text-xl font-medium">H5营销页面制作</span>
+          <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>返回</Button>
+          <span className="text-xl font-medium ml-4">H5营销页面制作</span>
         </div>
         
         <div className="flex items-center gap-2">

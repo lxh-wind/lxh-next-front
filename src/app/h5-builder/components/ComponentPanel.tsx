@@ -124,12 +124,6 @@ export default function ComponentPanel({ onAddComponent }: ComponentPanelProps) 
             </div>
           )}
         </div>
-        
-        <div className="mt-4 text-center">
-          <button className="px-4 py-1 border border-dashed border-blue-400 text-blue-500 rounded-md text-sm hover:bg-blue-50 transition-colors">
-            添加更多
-          </button>
-        </div>
       </div>
     </div>
   );

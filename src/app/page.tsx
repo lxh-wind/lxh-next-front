@@ -5,7 +5,6 @@ import {  Button, Card, Row, Col } from "antd";
 import { MobileOutlined } from "@ant-design/icons";
 import Link from "next/link";
 
-
 export default function Home() {
   return (
     <main className="min-h-screen p-8">
