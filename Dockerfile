@@ -19,11 +19,8 @@ RUN npm run build
 # 设置环境变量（生产模式）
 ENV NODE_ENV=production
 
-# 安装 pm2
-RUN npm install pm2 -g
-
 # 暴露端口
 EXPOSE 3000
 
 # 启动应用使用 pm2-runtime
-CMD ["pm2-runtime", "start", "npm", "--", "start"]
+CMD ["npm", "start"]
