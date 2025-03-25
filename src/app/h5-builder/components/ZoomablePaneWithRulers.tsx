@@ -243,65 +243,59 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
     
     // 添加原点指示器（0,0位置）
     const origin = document.createElement('div');
-    origin.className = 'absolute top-0 left-0 w-6 h-6 bg-gray-200 z-20 flex items-center justify-center';
+    origin.className = 'absolute top-0 left-0 w-6 h-6 bg-white z-20 flex items-center justify-center text-gray-400';
     origin.style.left = '0px';
     origin.style.top = '0px';
     origin.textContent = '0';
     hRuler.parentElement?.appendChild(origin);
-
-    // 水平刻度 - 从0开始，精确对齐画布左边缘
-    for (let i = 0; i <= 1200; i += scaleStep) {
+    
+    // 生成水平刻度
+    for (let i = 0; i <= 3000; i += scaleStep) {
+      const scaledPos = i * scaleFactor;
       const tick = document.createElement('div');
-      tick.className = 'absolute top-0 border-l border-gray-400';
       
-      // 位置计算：考虑到刻度尺的起点应该与画布内容的原点对齐
-      const position = i * scaleFactor;
-      tick.style.left = `${position}px`;
-      
-      if (i % 100 === 0) {
-        // 大刻度
-        tick.style.height = '14px';
+      // 主要刻度（每50像素）
+      if (i % 50 === 0) {
+        tick.className = 'absolute top-0 h-full border-r border-gray-200';
+        tick.style.left = `${scaledPos}px`;
+        
+        // 添加刻度值
         const label = document.createElement('div');
-        label.className = 'text-[8px] text-gray-600 absolute';
-        label.style.top = '14px';
-        label.style.left = '2px';
-        label.innerText = `${i}`;
-        tick.appendChild(label);
-      } else if (i % 50 === 0) {
-        // 中刻度
-        tick.style.height = '10px';
-      } else {
-        // 小刻度
-        tick.style.height = '6px';
+        label.className = 'absolute top-0 text-xs text-gray-400';
+        label.style.left = `${scaledPos + 2}px`;
+        label.textContent = i.toString();
+        hRuler.appendChild(label);
+      } 
+      // 中等刻度（每10像素）
+      else if (i % 10 === 0) {
+        tick.className = 'absolute top-0 h-3 border-r border-gray-100';
+        tick.style.left = `${scaledPos}px`;
       }
       
       hRuler.appendChild(tick);
     }
     
-    // 垂直刻度 - 从0开始，精确对齐画布顶部边缘
-    for (let i = 0; i <= 1200; i += scaleStep) {
+    // 生成垂直刻度
+    for (let i = 0; i <= 3000; i += scaleStep) {
+      const scaledPos = i * scaleFactor;
       const tick = document.createElement('div');
-      tick.className = 'absolute left-0 border-t border-gray-400';
       
-      // 位置计算：考虑到刻度尺的起点应该与画布内容的原点对齐
-      const position = i * scaleFactor;
-      tick.style.top = `${position}px`;
-      
-      if (i % 100 === 0) {
-        // 大刻度
-        tick.style.width = '14px';
+      // 主要刻度（每50像素）
+      if (i % 50 === 0) {
+        tick.className = 'absolute left-0 w-full border-b border-gray-200';
+        tick.style.top = `${scaledPos}px`;
+        
+        // 添加刻度值
         const label = document.createElement('div');
-        label.className = 'text-[8px] text-gray-600 absolute rotate-90 origin-top-left';
-        label.style.left = '14px';
-        label.style.top = '0px';
-        label.innerText = `${i}`;
-        tick.appendChild(label);
-      } else if (i % 50 === 0) {
-        // 中刻度
-        tick.style.width = '10px';
-      } else {
-        // 小刻度
-        tick.style.width = '6px';
+        label.className = 'absolute left-0 text-xs text-gray-400';
+        label.style.top = `${scaledPos + 2}px`;
+        label.textContent = i.toString();
+        vRuler.appendChild(label);
+      } 
+      // 中等刻度（每10像素）
+      else if (i % 10 === 0) {
+        tick.className = 'absolute left-0 w-3 border-b border-gray-100';
+        tick.style.top = `${scaledPos}px`;
       }
       
       vRuler.appendChild(tick);
@@ -375,7 +369,7 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   return (
     <div className="relative flex flex-col h-full">
       {/* 水平刻度尺 */}
-      <div className="relative h-6 ml-6 border-b border-gray-300 bg-gray-50 z-10">
+      <div className="relative h-6 ml-6 bg-white z-10">
         <div
           ref={rulerHorizontalRef}
           className="absolute top-0 left-0 h-full w-full overflow-hidden"
@@ -384,7 +378,7 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
       
       <div className="flex flex-1 min-h-0">
         {/* 垂直刻度尺 */}
-        <div className="relative w-6 border-r border-gray-300 bg-gray-50 z-10">
+        <div className="relative w-6 bg-white z-10">
           <div
             ref={rulerVerticalRef}
             className="absolute top-0 left-0 h-full w-full overflow-hidden"
@@ -394,10 +388,11 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
         {/* 画布容器 - 改为auto允许滚动 */}
         <div 
           ref={containerRef}
-          className="flex-1 relative bg-gray-100 min-h-0 overflow-auto"
+          className="flex-1 relative min-h-0 overflow-auto"
           style={{ 
             backgroundSize: '20px 20px',
-            backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.01) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.01) 1px, transparent 1px)',
+            backgroundColor: '#f9fafc',
             cursor: isDragging ? 'grabbing' : 'grab',
             padding: '24px' // 添加内边距，使内容不贴边
           }}
@@ -417,12 +412,13 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
             >
               <div 
                 ref={childrenRef}
-                className="relative inline-block origin-top-left shadow-lg"
+                className="relative inline-block origin-top-left"
                 style={{ 
                   transform: `scale(${zoom / 100})`,
                   transformOrigin: 'top left',
                   margin: '0',
-                  backgroundColor: 'white'
+                  borderRadius: '4px',
+                  filter: 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.05))'
                 }}
               >
                 {children}

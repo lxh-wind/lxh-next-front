@@ -314,24 +314,38 @@ function PreviewContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 尝试从URL参数获取预览数据
-    const dataParam = searchParams?.get('data');
-    
-    if (dataParam) {
-      try {
-        const decodedData = decodeURIComponent(dataParam);
-        const parsedData = JSON.parse(decodedData);
+    // 尝试从会话存储中获取预览数据
+    try {
+      const previewDataStr = sessionStorage.getItem('h5_preview_data');
+      
+      if (previewDataStr) {
+        const parsedData = JSON.parse(previewDataStr);
         setComponents(parsedData.components || []);
         setError(null);
-      } catch (error) {
-        console.error('Failed to parse preview data:', error);
-        setError('预览数据解析失败');
+      } else {
+        // 如果没有找到会话存储中的数据，尝试从URL参数获取预览数据
+        const dataParam = searchParams?.get('data');
+        
+        if (dataParam) {
+          try {
+            const decodedData = decodeURIComponent(dataParam);
+            const parsedData = JSON.parse(decodedData);
+            setComponents(parsedData.components || []);
+            setError(null);
+          } catch (error) {
+            console.error('Failed to parse preview data from URL:', error);
+            setError('预览数据解析失败');
+          }
+        } else {
+          setError('未提供预览数据');
+        }
       }
-    } else {
-      setError('未提供预览数据');
+    } catch (error) {
+      console.error('Failed to parse preview data from sessionStorage:', error);
+      setError('预览数据加载失败');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   }, [searchParams]);
 
   const handleBack = () => {

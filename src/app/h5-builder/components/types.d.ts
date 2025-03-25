@@ -51,4 +51,17 @@ export interface PageInfo {
   components: ComponentType[];
   published?: boolean;
   publishUrl?: string;
+  
+  // 外观设置
+  bgMode?: 'color' | 'image' | 'gradient';
+  bgColor?: string;
+  bgImage?: string | null;
+  bgRepeat?: string;
+  shareImage?: string | null;
+  
+  // 布局设置
+  layoutMode?: 'auto' | 'free';
+  containerPadding?: number;
+  componentGap?: number;
+  containerWidth?: number;
 } 

@@ -16,7 +16,8 @@ import {
   RedoOutlined,
   TabletOutlined,
   LaptopOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import { savePage, publishPage, previewPage, previewLuckyWheel } from './utils/store';
 import { ComponentType, PageInfo } from './components/types';
@@ -25,6 +26,7 @@ import { ComponentType, PageInfo } from './components/types';
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
 const Canvas = dynamic(() => import('./components/Canvas'), { ssr: false });
 const PropertyPanel = dynamic(() => import('./components/PropertyPanel'), { ssr: false });
+const PageSettings = dynamic(() => import('./components/PageSettings'), { ssr: false });
 const ZoomablePaneWithRulers = dynamic(() => import('./components/ZoomablePaneWithRulers'), {
   ssr: false,
 });
@@ -49,6 +51,17 @@ export default function H5Builder() {
     title: '未命名页面',
     description: '',
     components: [],
+    // 外观设置
+    bgMode: 'color',
+    bgColor: '#FFFFFF',
+    bgImage: '',
+    bgRepeat: 'no-repeat',
+    shareImage: '',
+    // 布局设置
+    layoutMode: 'auto',
+    containerPadding: 0,
+    componentGap: 0,
+    containerWidth: 100,
   });
   
   // 画布状态
@@ -63,6 +76,7 @@ export default function H5Builder() {
   
   // 模态框状态
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isPageSettingsOpen, setIsPageSettingsOpen] = useState<boolean>(false);
   
   // 撤销重做历史记录
   const historyRef = useRef<ComponentType[][]>([]);
@@ -362,6 +376,14 @@ export default function H5Builder() {
     setShowCanvasSizeModal(false);
   };
 
+  // 更新页面信息
+  const handleUpdatePageInfo = (updates: Partial<PageInfo>) => {
+    setPageInfo(prev => ({
+      ...prev,
+      ...updates
+    }));
+  };
+
   const handleBack = () => {
     router.back();
   };
@@ -381,6 +403,13 @@ export default function H5Builder() {
           <Button icon={<UndoOutlined />} disabled={!canUndo} onClick={handleUndo}>撤销</Button>
           <Button icon={<RedoOutlined />} disabled={!canRedo} onClick={handleRedo}>重做</Button>
           <Divider type="vertical" />
+          
+          <Button 
+            icon={<SettingOutlined />}
+            onClick={() => setIsPageSettingsOpen(true)}
+          >
+            页面设置
+          </Button>
           
           <Button 
             icon={<MobileOutlined />}
@@ -417,7 +446,9 @@ export default function H5Builder() {
         </Sider>
         
         {/* 中间画布区域 */}
-        <Content className="bg-gray-100 overflow-auto p-0 relative">
+        <Content 
+          className="overflow-auto p-0 relative"
+        >
           <ZoomablePaneWithRulers 
             zoom={zoom} 
             onZoomChange={setZoom}
@@ -432,6 +463,14 @@ export default function H5Builder() {
               onUpdateComponentsOrder={handleUpdateComponentsOrder}
               zoom={zoom}
               canvasSize={canvasSize}
+              containerPadding={pageInfo.containerPadding}
+              componentGap={pageInfo.componentGap}
+              containerWidth={pageInfo.containerWidth}
+              layoutMode={pageInfo.layoutMode}
+              bgMode={pageInfo.bgMode}
+              bgColor={pageInfo.bgColor}
+              bgImage={pageInfo.bgImage}
+              bgRepeat={pageInfo.bgRepeat}
             />
           </ZoomablePaneWithRulers>
         </Content>
@@ -457,6 +496,21 @@ export default function H5Builder() {
           )}
         </Sider>
       </Layout>
+      
+      {/* 页面设置模态框 */}
+      <Modal
+        title="页面设置"
+        open={isPageSettingsOpen}
+        onCancel={() => setIsPageSettingsOpen(false)}
+        footer={null}
+        width={800}
+        bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}
+      >
+        <PageSettings 
+          pageInfo={pageInfo}
+          onUpdatePageInfo={handleUpdatePageInfo}
+        />
+      </Modal>
       
       {/* 画布尺寸设置模态框 */}
       <Modal
