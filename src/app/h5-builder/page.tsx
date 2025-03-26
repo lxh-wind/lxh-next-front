@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Layout, message, Modal, Input, Button, Tooltip, Form, Card, Row, Col, Divider, Select } from 'antd';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -20,8 +20,20 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { savePage, publishPage, previewPage, previewLuckyWheel } from './utils/store';
-import { ComponentType, PageInfo } from './components/types';
+import { PageInfo } from './components/types';
 import CommonOperations from '@/components/CommonOperations';
+import { useAtom } from 'jotai';
+import {
+  pageInfoAtom,
+  componentsAtom,
+  selectedComponentAtom,
+  zoomAtom,
+  canvasSizeAtom,
+  historyAtom,
+  historyIndexAtom,
+  canUndoAtom,
+  canRedoAtom,
+} from './store/atoms';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
@@ -89,45 +101,24 @@ export default function H5Builder() {
   const [messageApi, contextHolder] = message.useMessage();
   const { Content, Sider } = Layout;
   
-  // 页面状态
-  const [pageInfo, setPageInfo] = useState<PageInfo>({
-    title: '未命名页面',
-    description: '',
-    components: [],
-    // 外观设置
-    bgMode: 'color',
-    bgColor: '#FFFFFF',
-    bgImage: '',
-    bgRepeat: 'no-repeat',
-    shareImage: '',
-    // 布局设置
-    layoutMode: 'auto',
-    containerPadding: 0,
-    componentGap: 0,
-    containerWidth: 100,
-  });
+  // 使用 Jotai atoms
+  const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
+  const [components, setComponents] = useAtom(componentsAtom);
+  const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
+  const [zoom, setZoom] = useAtom(zoomAtom);
+  const [canvasSize, setCanvasSize] = useAtom(canvasSizeAtom);
+  const [history, setHistory] = useAtom(historyAtom);
+  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
+  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   
-  // 画布状态
-  const [components, setComponents] = useState<ComponentType[]>([]);
-  const [selectedComponent, setSelectedComponent] = useState<ComponentType | null>(null);
+  // 本地状态
   const [loading, setLoading] = useState<boolean>(false);
-  const [zoom, setZoom] = useState<number>(100);
-  const [canvasSize, setCanvasSize] = useState({ width: 375, height: 667 });
   const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
   const [customWidth, setCustomWidth] = useState('375');
   const [customHeight, setCustomHeight] = useState('667');
-  
-  // 模态框状态
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isPageSettingsOpen, setIsPageSettingsOpen] = useState<boolean>(false);
-  
-  // 撤销重做历史记录
-  const historyRef = useRef<ComponentType[][]>([]);
-  const historyIndexRef = useRef<number>(-1);
-  const [canUndo, setCanUndo] = useState<boolean>(false);
-  const [canRedo, setCanRedo] = useState<boolean>(false);
-  
-  // 添加一个临时状态用于存储对话框中选择的尺寸，但尚未应用
   const [tempCanvasSize, setTempCanvasSize] = useState({ width: 375, height: 667 });
   
   // 添加组件
@@ -137,16 +128,18 @@ export default function H5Builder() {
       ...component
     };
     
-    // 记录历史状态
-    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-    newHistory.push([...components]);
-    historyRef.current = newHistory;
-    historyIndexRef.current = newHistory.length - 1;
-    
-    setComponents(prev => [...prev, newComponent]);
+    // 更新历史状态
+    setHistory(prev => ({
+      past: [...prev.past, prev.present],
+      present: [...prev.present, newComponent],
+      future: [],
+    }));
+    setHistoryIndex(prev => prev + 1);
     setCanUndo(true);
     setCanRedo(false);
-  }, [components]);
+    
+    setComponents(prev => [...prev, newComponent]);
+  }, []);
   
   // 选择组件
   const handleSelectComponent = useCallback((component: any) => {
@@ -155,31 +148,29 @@ export default function H5Builder() {
   
   // 删除组件
   const handleDeleteComponent = useCallback((id: string) => {
-    // 记录历史状态
-    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-    newHistory.push([...components]);
-    historyRef.current = newHistory;
-    historyIndexRef.current = newHistory.length - 1;
+    // 更新历史状态
+    setHistory(prev => ({
+      past: [...prev.past, prev.present],
+      present: prev.present.filter(comp => comp.id !== id),
+      future: [],
+    }));
+    setHistoryIndex(prev => prev + 1);
+    setCanUndo(true);
+    setCanRedo(false);
     
     setComponents(prev => prev.filter(comp => comp.id !== id));
     if (selectedComponent && selectedComponent.id === id) {
       setSelectedComponent(null);
     }
-    setCanUndo(true);
-    setCanRedo(false);
-  }, [components, selectedComponent]);
+  }, [selectedComponent]);
   
   // 复制组件
   const handleDuplicateComponent = useCallback((id: string) => {
     const component = components.find(comp => comp.id === id);
     if (component) {
-      // 深度复制组件
       const newComponent = JSON.parse(JSON.stringify(component));
-      
-      // 生成新的组件ID
       newComponent.id = generateComplexId(component.type);
       
-      // 如果组件有内部ID（比如优惠券列表中的优惠券ID），也需要更新
       if (newComponent.props?.coupons) {
         newComponent.props.coupons = newComponent.props.coupons.map((coupon: any) => ({
           ...coupon,
@@ -187,26 +178,32 @@ export default function H5Builder() {
         }));
       }
       
-      // 记录历史状态
-      const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-      newHistory.push([...components]);
-      historyRef.current = newHistory;
-      historyIndexRef.current = newHistory.length - 1;
-      
-      setComponents(prev => [...prev, newComponent]);
+      // 更新历史状态
+      setHistory(prev => ({
+        past: [...prev.past, prev.present],
+        present: [...prev.present, newComponent],
+        future: [],
+      }));
+      setHistoryIndex(prev => prev + 1);
       setCanUndo(true);
       setCanRedo(false);
+      
+      setComponents(prev => [...prev, newComponent]);
     }
   }, [components]);
   
   // 更新组件属性
   const handleUpdateComponent = useCallback((id: string, props: any) => {
-    // 记录历史状态（仅在不频繁更新的属性变更时）
+    // 仅在不频繁更新的属性变更时记录历史
     if (Object.keys(props).some(key => !['style.marginTop', 'style.marginBottom'].includes(key))) {
-      const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-      newHistory.push([...components]);
-      historyRef.current = newHistory;
-      historyIndexRef.current = newHistory.length - 1;
+      setHistory(prev => ({
+        past: [...prev.past, prev.present],
+        present: prev.present.map(comp => 
+          comp.id === id ? { ...comp, props: { ...comp.props, ...props } } : comp
+        ),
+        future: [],
+      }));
+      setHistoryIndex(prev => prev + 1);
       setCanUndo(true);
       setCanRedo(false);
     }
@@ -219,50 +216,69 @@ export default function H5Builder() {
       )
     );
     
-    // 同步更新选中的组件
     if (selectedComponent && selectedComponent.id === id) {
       setSelectedComponent(prev => 
         prev ? { ...prev, props: { ...prev.props, ...props } } : null
       );
     }
-  }, [components, selectedComponent]);
-
+  }, [selectedComponent]);
+  
   // 更新组件顺序
   const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
-    // 记录历史状态
-    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-    newHistory.push([...components]);
-    historyRef.current = newHistory;
-    historyIndexRef.current = newHistory.length - 1;
-    
-    const result = Array.from(components);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    
-    setComponents(result);
+    // 更新历史状态
+    setHistory(prev => ({
+      past: [...prev.past, prev.present],
+      present: (() => {
+        const result = Array.from(prev.present);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        return result;
+      })(),
+      future: [],
+    }));
+    setHistoryIndex(prev => prev + 1);
     setCanUndo(true);
     setCanRedo(false);
-  }, [components]);
+    
+    setComponents(prev => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+  }, []);
   
   // 撤销操作
   const handleUndo = useCallback(() => {
-    if (historyIndexRef.current > 0) {
-      historyIndexRef.current -= 1;
-      setComponents(historyRef.current[historyIndexRef.current]);
-      setCanUndo(historyIndexRef.current > 0);
+    if (historyIndex > 0) {
+      setHistory(prev => ({
+        past: prev.past.slice(0, -1),
+        present: prev.past[prev.past.length - 1],
+        future: [prev.present, ...prev.future],
+      }));
+      setHistoryIndex(prev => prev - 1);
+      setCanUndo(historyIndex > 1);
       setCanRedo(true);
+      
+      setComponents(history.past[history.past.length - 1]);
     }
-  }, []);
+  }, [history, historyIndex]);
   
   // 重做操作
   const handleRedo = useCallback(() => {
-    if (historyIndexRef.current < historyRef.current.length - 1) {
-      historyIndexRef.current += 1;
-      setComponents(historyRef.current[historyIndexRef.current]);
+    if (history.future.length > 0) {
+      setHistory(prev => ({
+        past: [...prev.past, prev.present],
+        present: prev.future[0],
+        future: prev.future.slice(1),
+      }));
+      setHistoryIndex(prev => prev + 1);
       setCanUndo(true);
-      setCanRedo(historyIndexRef.current < historyRef.current.length - 1);
+      setCanRedo(history.future.length > 1);
+      
+      setComponents(history.future[0]);
     }
-  }, []);
+  }, [history]);
   
   // 同步组件到页面信息
   useEffect(() => {
@@ -272,25 +288,35 @@ export default function H5Builder() {
     }));
   }, [components]);
   
+  // 更新页面信息
+  const handleUpdatePageInfo = useCallback((updates: Partial<PageInfo>) => {
+    setPageInfo(prev => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
+  
   // 保存页面
   const handleSave = async (values: any) => {
-    setLoading(true);
-    
     try {
-      const pageToSave = {
+      setLoading(true);
+      const pageData = {
         ...pageInfo,
         ...values,
         components,
       };
       
-      const savedData = await savePage(pageToSave);
-      setPageInfo(convertPageDataToPageInfo(savedData));
+      const savedData = await savePage(pageData);
       messageApi.success('保存成功');
-      setIsSaveModalOpen(false);
+      setPageInfo(prev => ({
+        ...prev,
+        id: savedData.id,
+      }));
     } catch (error) {
       messageApi.error('保存失败');
     } finally {
       setLoading(false);
+      setIsSaveModalOpen(false);
     }
   };
   
@@ -298,26 +324,18 @@ export default function H5Builder() {
   const handlePublish = async () => {
     if (!pageInfo.id) {
       messageApi.warning('请先保存页面');
-      setIsSaveModalOpen(true);
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
       const publishedData = await publishPage(pageInfo.id);
-      setPageInfo(convertPageDataToPageInfo(publishedData));
       messageApi.success('发布成功');
-      Modal.success({
-        title: '页面发布成功',
-        content: (
-          <div>
-            <p>您的H5页面已成功发布，可通过以下链接访问：</p>
-            <a href={publishedData.publishedUrl} target="_blank" rel="noreferrer">
-              {publishedData.publishedUrl}
-            </a>
-          </div>
-        ),
-      });
+      setPageInfo(prev => ({
+        ...prev,
+        published: true,
+        publishUrl: publishedData.publishedUrl,
+      }));
     } catch (error) {
       messageApi.error('发布失败');
     } finally {
@@ -327,84 +345,107 @@ export default function H5Builder() {
   
   // 预览页面
   const handlePreview = () => {
-    const previewUrl = previewPage(pageInfo);
-    window.open(previewUrl, '_blank');
-  };
-  
-  // 预览选中组件（如果是抽奖转盘）
-  const handlePreviewComponent = () => {
-    if (selectedComponent && selectedComponent.type === 'luckyWheel') {
-      // 直接预览抽奖转盘组件
-      const previewUrl = previewLuckyWheel(selectedComponent.props);
-      window.open(previewUrl, '_blank');
+    if (!pageInfo.id) {
+      messageApi.warning('请先保存页面');
+      return;
     }
+    previewPage(pageInfo.id);
   };
   
-  // 保存模态框
+  // 预览组件
+  const handlePreviewComponent = () => {
+    if (!selectedComponent) {
+      messageApi.warning('请先选择组件');
+      return;
+    }
+    previewLuckyWheel(selectedComponent);
+  };
+  
+  // 显示保存模态框
   const showSaveModal = () => {
     setIsSaveModalOpen(true);
   };
   
-  // 关闭保存模态框
+  // 取消保存
   const handleCancelSave = () => {
     setIsSaveModalOpen(false);
   };
 
-  // 在组件面板中添加预览按钮
+  // 渲染组件操作按钮
   const renderComponentActions = () => {
-    if (!selectedComponent) return null;
-
-    const actions = [];
-
-    // 对于抽奖转盘组件，添加单独预览按钮
-    if (selectedComponent.type === 'luckyWheel') {
-      actions.push(
-        <Button 
-          key="preview-component" 
-          icon={<EyeOutlined />} 
-          onClick={handlePreviewComponent}
-          size="small"
-        >
-          预览转盘
-        </Button>
-      );
-    }
-
-    return actions.length > 0 ? (
-      <div className="flex justify-end mb-4 px-4">
-        {actions}
+    return (
+      <div className="component-actions flex items-center gap-2">
+        <Tooltip title="撤销">
+          <Button
+            icon={<UndoOutlined />}
+            onClick={handleUndo}
+            disabled={!canUndo}
+          >
+            撤销
+          </Button>
+        </Tooltip>
+        <Tooltip title="重做">
+          <Button
+            icon={<RedoOutlined />}
+            onClick={handleRedo}
+            disabled={!canRedo}
+          >
+            重做
+          </Button>
+        </Tooltip>
+        <Tooltip title="保存">
+          <Button
+            icon={<SaveOutlined />}
+            onClick={showSaveModal}
+          >
+            保存
+          </Button>
+        </Tooltip>
+        <Tooltip title="预览">
+          <Button
+            icon={<EyeOutlined />}
+            onClick={handlePreview}
+          >
+            预览
+          </Button>
+        </Tooltip>
+        <Tooltip title="发布">
+          <Button
+            icon={<SendOutlined />}
+            onClick={handlePublish}
+          />
+        </Tooltip>
+        <Tooltip title="页面设置">
+          <Button
+            icon={<SettingOutlined />}
+            onClick={() => setIsPageSettingsOpen(true)}
+          />
+        </Tooltip>
       </div>
-    ) : null;
+    );
   };
 
-  // 处理画布尺寸修改
+  // 处理画布尺寸变更
   const handleCanvasSizeChange = (width: number, height: number) => {
-    // 更新临时选中的尺寸，但不立即应用
     setTempCanvasSize({ width, height });
-    // 更新自定义尺寸输入框的值
-    setCustomWidth(width.toString());
-    setCustomHeight(height.toString());
   };
 
   // 应用自定义尺寸
   const applyCustomSize = () => {
-    const width = parseInt(customWidth, 10);
-    const height = parseInt(customHeight, 10);
-    if (width > 0 && height > 0) {
+    const width = parseInt(customWidth);
+    const height = parseInt(customHeight);
+    if (width && height) {
       setTempCanvasSize({ width, height });
-    } else {
-      messageApi.error('请输入有效的宽度和高度');
     }
   };
 
-  // 确认并应用所选尺寸
+  // 确认画布尺寸
   const confirmCanvasSize = () => {
     setCanvasSize(tempCanvasSize);
     setShowCanvasSizeModal(false);
-    messageApi.success('画布尺寸已更新');
   };
 
-  // 打开画布尺寸模态框时，确保自定义尺寸字段显示当前画布尺寸，并重置临时尺寸为当前尺寸
+  // 打开画布尺寸模态框
   const openCanvasSizeModal = () => {
     setTempCanvasSize(canvasSize);
     setCustomWidth(canvasSize.width.toString());
@@ -412,28 +453,21 @@ export default function H5Builder() {
     setShowCanvasSizeModal(true);
   };
 
-  // 检查当前选择的尺寸是否为预设设备尺寸之一
+  // 检查是否为自定义尺寸
   const isCustomTempSize = () => {
     return !DEVICE_SIZES.some(
-      device => device.width === tempCanvasSize.width && device.height === tempCanvasSize.height
+      size => size.width === tempCanvasSize.width && size.height === tempCanvasSize.height
     );
   };
 
-  // 取消时重置临时尺寸
+  // 取消画布尺寸设置
   const handleCancelCanvasSize = () => {
     setShowCanvasSizeModal(false);
   };
 
-  // 更新页面信息
-  const handleUpdatePageInfo = (updates: Partial<PageInfo>) => {
-    setPageInfo(prev => ({
-      ...prev,
-      ...updates
-    }));
-  };
-
+  // 返回上一页
   const handleBack = () => {
-    router.back();
+    router.push('/h5-list');
   };
 
   // 处理下载JSON文件
@@ -518,16 +552,8 @@ export default function H5Builder() {
             onUploadJson={handleUploadJson}
             onClearCanvas={handleClearCanvas}
           />
-          <Button icon={<UndoOutlined />} disabled={!canUndo} onClick={handleUndo}>撤销</Button>
-          <Button icon={<RedoOutlined />} disabled={!canRedo} onClick={handleRedo}>重做</Button>
+          {renderComponentActions()}
           <Divider type="vertical" />
-          
-          <Button 
-            icon={<SettingOutlined />}
-            onClick={() => setIsPageSettingsOpen(true)}
-          >
-            页面设置
-          </Button>
           
           <Button 
             icon={<MobileOutlined />}
@@ -539,20 +565,6 @@ export default function H5Builder() {
           <Link href="/h5-builder/templates">
             <Button icon={<FolderOutlined />}>模板</Button>
           </Link>
-          
-          <Tooltip title="预览">
-            <Button icon={<EyeOutlined />} onClick={handlePreview}>预览</Button>
-          </Tooltip>
-          
-          <Tooltip title="保存">
-            <Button icon={<SaveOutlined />} onClick={showSaveModal}>保存</Button>
-          </Tooltip>
-          
-          <Tooltip title="发布">
-            <Button type="primary" icon={<SendOutlined />} onClick={handlePublish}>
-              发布
-            </Button>
-          </Tooltip>
         </div>
       </div>
       
@@ -605,13 +617,10 @@ export default function H5Builder() {
           }}
         >
           {selectedComponent && (
-            <>
-              {renderComponentActions()}
-              <PropertyPanel
-                selectedComponent={selectedComponent}
-                onUpdateComponent={handleUpdateComponent}
-              />
-            </>
+            <PropertyPanel
+              selectedComponent={selectedComponent}
+              onUpdateComponent={handleUpdateComponent}
+            />
           )}
         </Sider>
       </Layout>

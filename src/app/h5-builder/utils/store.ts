@@ -42,6 +42,13 @@ export interface VersionInfo {
   components: any[];
 }
 
+// API 响应类型
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 // 存储键前缀
 const PAGE_KEY_PREFIX = 'h5_page_';
 const VERSION_KEY_PREFIX = 'h5_version_';
@@ -93,42 +100,35 @@ const updatePageList = (page: PageData) => {
   }
 };
 
+// 生成唯一ID
+const generateId = () => {
+  return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 // 保存页面
 export const savePage = async (pageData: Partial<PageData>): Promise<PageData> => {
-  // 在实际应用中，这里应该是API调用
-  // 这里使用localStorage模拟
-  
   try {
-    const now = new Date().toISOString();
-    const page: PageData = {
-      id: pageData.id || `page_${Date.now()}`,
+    // 模拟 API 调用
+    const savedData: PageData = {
+      id: pageData.id || generateId(),
       title: pageData.title || '未命名页面',
       description: pageData.description || '',
-      tags: pageData.tags || [],
       components: pageData.components || [],
-      updatedAt: now,
-      createdAt: pageData.createdAt || now,
-      userId: 'current_user',
       published: pageData.published || false,
-      version: (pageData.version || 0) + 1
+      publishedUrl: pageData.publishedUrl || '',
+      tags: pageData.tags || [],
+      createdAt: pageData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: (pageData.version || 0) + 1,
     };
-    
-    // 保存页面数据
-    localStorage.setItem(`${PAGE_KEY_PREFIX}${page.id}`, JSON.stringify(page));
-    
-    // 保存新版本
-    saveVersion(page);
-    
-    // 更新页面列表
-    updatePageList(page);
-    
-    // 模拟异步请求
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(page), 300);
-    });
+
+    // 保存到 localStorage
+    localStorage.setItem(PAGE_KEY_PREFIX + savedData.id, JSON.stringify(savedData));
+    updatePageList(savedData);
+
+    return savedData;
   } catch (error) {
-    console.error('保存页面失败', error);
-    throw new Error('保存页面失败');
+    throw new Error('保存失败');
   }
 };
 
@@ -164,32 +164,26 @@ export const deletePage = (pageId: string): boolean => {
 // 发布页面
 export const publishPage = async (pageId: string): Promise<PageData> => {
   try {
-    const page = loadPage(pageId);
-    if (!page) {
+    const pageData = loadPage(pageId);
+    if (!pageData) {
       throw new Error('页面不存在');
     }
-    
-    // 更新发布状态
-    const publishedPage: PageData = {
-      ...page,
+
+    // 模拟发布过程
+    const publishedData: PageData = {
+      ...pageData,
       published: true,
       publishedAt: new Date().toISOString(),
-      publishedUrl: `/h5/${pageId}` // 实际应用中，这应该是一个真实的URL
+      publishedUrl: `https://example.com/h5/${pageId}`,
     };
-    
-    // 保存更新后的页面
-    localStorage.setItem(`${PAGE_KEY_PREFIX}${pageId}`, JSON.stringify(publishedPage));
-    
-    // 更新页面列表
-    updatePageList(publishedPage);
-    
-    // 模拟异步请求
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(publishedPage), 300);
-    });
+
+    // 保存发布状态
+    localStorage.setItem(PAGE_KEY_PREFIX + pageId, JSON.stringify(publishedData));
+    updatePageList(publishedData);
+
+    return publishedData;
   } catch (error) {
-    console.error('发布页面失败', error);
-    throw new Error('发布页面失败');
+    throw new Error('发布失败');
   }
 };
 
