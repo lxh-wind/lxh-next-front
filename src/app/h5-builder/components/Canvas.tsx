@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Modal, Button } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
 import { ComponentType } from './types';
 import ComponentItem from './ComponentItem';
 import { renderComponentContent } from './ComponentRenderer';
@@ -35,8 +34,6 @@ const Canvas: React.FC<CanvasProps> = ({
   components,
   selectedComponentId,
   onSelectComponent,
-  onRemoveComponent,
-  onUpdateComponentPosition,
   onDeleteComponent,
   onDuplicateComponent,
   onUpdateComponentsOrder,
@@ -44,9 +41,7 @@ const Canvas: React.FC<CanvasProps> = ({
   zoom,
   canvasSize = { width: 375, height: 667 }, // 默认尺寸
   containerPadding = 16,
-  componentGap = 12,
   containerWidth = 100,
-  layoutMode = 'auto',
   // 页面背景设置
   bgMode,
   bgColor,
@@ -381,19 +376,6 @@ const Canvas: React.FC<CanvasProps> = ({
                 <p>从左侧拖入组件到这里</p>
               </div>
             )}
-            
-            {/* 悬浮按钮 - 预览 */}
-            <div 
-              className="absolute z-50 bottom-4 right-4 bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg"
-              onClick={() => {
-                // 将当前页面数据保存到sessionStorage
-                sessionStorage.setItem('h5_preview_data', JSON.stringify({ components }));
-                // 打开预览页面
-                window.open('/h5-builder/preview', '_blank');
-              }}
-            >
-              <EyeOutlined />
-            </div>
           </div>
         </div>
       </div>
