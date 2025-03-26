@@ -11,6 +11,8 @@ interface ZoomablePaneWithRulersProps {
   isPropertyPanelOpen?: boolean;
 }
 
+const DEFAULT_CANVAS_POSITION  = { x:350, y: 50 };
+
 const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   children,
   zoom = 100,
@@ -28,7 +30,7 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   // 画布位置状态
-  const [canvasPosition, setCanvasPosition] = useState({ x: 0, y: 0 });
+  const [canvasPosition, setCanvasPosition] = useState(DEFAULT_CANVAS_POSITION);
   
   // 实际画布尺寸，用于计算居中位置
   const [canvasSize, setCanvasSize] = useState({ width: 375, height: 667 });
@@ -372,10 +374,20 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
             onClick={handleZoomIn}
             title="放大 (+20%)"
           />
+          <Button
+            icon={<ExpandOutlined />} 
+            shape="circle" 
+            size="small"
+            className='mx-3'
+            onClick={() => {
+              setCanvasPosition(DEFAULT_CANVAS_POSITION)
+            }}
+            title="重置"
+          />
           <Button 
             onClick={handleZoomReset}
             size="small"
-            className="font-mono my-1 mx-3"
+            className="font-mono mr-3"
             title="重置缩放"
           >
             {zoom}%
