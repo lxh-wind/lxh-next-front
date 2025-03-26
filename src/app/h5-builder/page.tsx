@@ -173,10 +173,19 @@ export default function H5Builder() {
   const handleDuplicateComponent = useCallback((id: string) => {
     const component = components.find(comp => comp.id === id);
     if (component) {
-      const newComponent = {
-        ...component,
-        id: generateComplexId(component.type),
-      };
+      // 深度复制组件
+      const newComponent = JSON.parse(JSON.stringify(component));
+      
+      // 生成新的组件ID
+      newComponent.id = generateComplexId(component.type);
+      
+      // 如果组件有内部ID（比如优惠券列表中的优惠券ID），也需要更新
+      if (newComponent.props?.coupons) {
+        newComponent.props.coupons = newComponent.props.coupons.map((coupon: any) => ({
+          ...coupon,
+          id: generateComplexId('coupon')
+        }));
+      }
       
       // 记录历史状态
       const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);

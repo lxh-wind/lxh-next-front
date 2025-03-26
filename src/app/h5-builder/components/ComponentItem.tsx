@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Button } from 'antd';
-import { DeleteOutlined, DragOutlined, CopyOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { Dropdown } from 'antd';
+import { DeleteOutlined, CopyOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import { ComponentType } from './types';
 import { renderComponentContent } from './ComponentRenderer';
 
@@ -37,86 +38,52 @@ const ComponentItem: React.FC<ComponentItemProps> = ({
   isFirst,
   isLast
 }) => {
-  return (
-    <div 
-      className={`relative min-h-[20px] ${
-        isSelected ? 'outline outline-1 outline-blue-400 bg-blue-50' : ''
-      }`}
-      onClick={onSelect}
-      draggable
-      onDragStart={(e) => onDragStart(e, index)}
-      onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
-      data-index={index}
-    >
-      {isSelected && (
-        <div className="absolute -top-3 -right-3 z-10 flex gap-1">
-          <Button 
-            type="primary" 
-            size="small" 
-            icon={<DragOutlined />} 
-            className="flex items-center justify-center bg-blue-500"
-            onClick={(e) => {
-              e.stopPropagation();
-              // 拖动手柄
-            }}
-          />
-          {!isFirst && onMoveUp && (
-            <Button 
-              type="primary" 
-              size="small" 
-              icon={<ArrowUpOutlined />} 
-              className="flex items-center justify-center bg-blue-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveUp();
-              }}
-              title="上移"
-            />
-          )}
-          {!isLast && onMoveDown && (
-            <Button 
-              type="primary" 
-              size="small" 
-              icon={<ArrowDownOutlined />} 
-              className="flex items-center justify-center bg-blue-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveDown();
-              }}
-              title="下移"
-            />
-          )}
-          {onDuplicate && (
-            <Button 
-              type="primary" 
-              size="small" 
-              icon={<CopyOutlined />} 
-              className="flex items-center justify-center bg-green-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate();
-              }}
-            />
-          )}
-          <Button 
-            type="primary" 
-            danger 
-            size="small" 
-            icon={<DeleteOutlined />} 
-            className="flex items-center justify-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          />
-        </div>
-      )}
+  const items: MenuProps['items'] = [
+    ...(!isFirst && onMoveUp ? [{
+      key: 'moveUp',
+      label: '上移',
+      icon: <ArrowUpOutlined />,
+      onClick: onMoveUp
+    }] : []),
+    ...(!isLast && onMoveDown ? [{
+      key: 'moveDown',
+      label: '下移',
+      icon: <ArrowDownOutlined />,
+      onClick: onMoveDown
+    }] : []),
+    ...(onDuplicate ? [{
+      key: 'duplicate',
+      label: '复制',
+      icon: <CopyOutlined />,
+      onClick: onDuplicate
+    }] : []),
+    {
+      key: 'delete',
+      label: '删除',
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: onDelete
+    }
+  ];
 
-      <div>
-        {renderComponentContent(component)}
+  return (
+    <Dropdown menu={{ items }} trigger={['contextMenu']}>
+      <div 
+        className={`relative min-h-[20px] ${
+          isSelected ? 'outline outline-1 outline-blue-400 bg-blue-50' : ''
+        }`}
+        onClick={onSelect}
+        draggable
+        onDragStart={(e) => onDragStart(e, index)}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        data-index={index}
+      >
+        <div>
+          {renderComponentContent(component)}
+        </div>
       </div>
-    </div>
+    </Dropdown>
   );
 };
 
