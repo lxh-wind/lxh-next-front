@@ -380,7 +380,8 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
             size="small"
             className='mx-3'
             onClick={() => {
-              setCanvasPosition(DEFAULT_CANVAS_POSITION)
+              setCanvasPosition(DEFAULT_CANVAS_POSITION);
+              handleZoomReset();
             }}
             title="重置"
           />
