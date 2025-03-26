@@ -295,9 +295,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
   // 根据缩放比例计算样式
   const zoomStyle = {
-    transform: `scale(${zoom / 100})`,
-    transformOrigin: 'top center',
-    transition: 'transform 0.3s ease',
     width: canvasSize.width,
     minHeight: canvasSize.height,
     // 应用页面布局设置
@@ -321,9 +318,6 @@ const Canvas: React.FC<CanvasProps> = ({
   return (
     <div 
       className="flex justify-center items-start h-full overflow-auto"
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onDragLeave={handleDragLeave}
       ref={containerRef}
     >
       <div className="flex flex-col relative">
@@ -346,7 +340,10 @@ const Canvas: React.FC<CanvasProps> = ({
             }}
           ></div>
           
-          <div className="w-full relative" style={{ padding: containerPadding }}>
+          <div 
+            className="w-full relative" 
+            style={{ padding: containerPadding }}
+          >
             {components.map((component, index) => (
               <div 
                 key={component.id}
@@ -361,7 +358,10 @@ const Canvas: React.FC<CanvasProps> = ({
                   onDelete={() => handleComponentDelete(component.id)}
                   onDuplicate={() => handleDuplicate(component.id)}
                   onDragStart={handleDragStart}
-                  onDragOver={(e) => e.preventDefault()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onDragEnd={handleDragEnd}
                   onMoveUp={() => handleMoveComponentUp(index)}
                   onMoveDown={() => handleMoveComponentDown(index)}

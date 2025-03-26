@@ -44,8 +44,8 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
         const rect = childrenRef.current.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
           // 存储原始尺寸（不考虑缩放）
-          const width = rect.width * (100 / zoom);
-          const height = rect.height * (100 / zoom);
+          const width = rect.width;
+          const height = rect.height;
           console.log('Real canvas size:', width, height);
           setCanvasSize({ width, height });
         }
@@ -58,10 +58,10 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
     updateCanvasSize();
   }, []);
 
-  // 当子元素或缩放比例变化时更新尺寸
+  // 只在子元素变化时更新尺寸
   useEffect(() => {
     updateCanvasSize();
-  }, [children, zoom]);
+  }, [children]); // 移除 zoom 依赖
   
   // 绘制刻度尺
   useEffect(() => {
@@ -70,57 +70,17 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
     }
   }, [zoom]);
   
-  // 初始化时将画布定位到视图中心
-  useEffect(() => {
-    if (containerRef.current) {
-      // 计算并设置初始位置到中心
-      const updateCanvasPosition = () => {
-        if (!containerRef.current) return;
-        
-        // 计算容器的可视区域
-        const containerWidth = containerRef.current.clientWidth;
-        const containerHeight = containerRef.current.clientHeight;
-        
-        // 计算画布应该位于的中心位置 - 使用实际画布尺寸
-        const centerX = Math.max(0, (containerWidth - canvasSize.width * (zoom / 100)) / 2);
-        const centerY = Math.max(0, (containerHeight - canvasSize.height * (zoom / 100)) / 2);
-        
-        console.log('Container dimensions:', containerWidth, containerHeight);
-        console.log('Canvas dimensions:', canvasSize.width, canvasSize.height);
-        console.log('Setting canvas position to:', centerX, centerY);
-        
-        // 设置画布位置
-        setCanvasPosition({
-          x: centerX,
-          y: centerY
-        });
-        
-        // 重置滚动位置
-        containerRef.current.scrollLeft = 0;
-        containerRef.current.scrollTop = 0;
-      };
-      
-      // 立即执行一次
-      updateCanvasPosition();
-      
-      // 添加一个短暂延迟再次执行，确保DOM已完全渲染
-      setTimeout(updateCanvasPosition, 200);
-      
-      // 监听窗口大小变化，实时调整位置
-      window.addEventListener('resize', updateCanvasPosition);
-      return () => window.removeEventListener('resize', updateCanvasPosition);
-    }
-  }, [canvasSize, zoom]);
-  
   // 处理鼠标按下事件 - 开始拖拽
   const handleMouseDown = (e: React.MouseEvent) => {
     // 阻止事件冒泡，以防止触发Canvas内部组件选择
     e.stopPropagation(); 
     
-    // 判断是否点击在画布外的背景区域 - 修改为允许直接在画布上拖动
+    // 判断是否点击在画布外的背景区域
     const isBackground = 
       e.currentTarget === e.target || 
-      (e.currentTarget.contains(e.target as Node));
+      (e.currentTarget.contains(e.target as Node) && 
+       !(e.target as HTMLElement).closest('.component-item') &&
+       !(e.target as HTMLElement).closest('.mobile-container'));
       
     if (e.button === 0 && isBackground) {
       e.preventDefault(); // 阻止默认行为
@@ -307,9 +267,6 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
     if (zoom < 200) {
       const newZoom = Math.min(200, zoom + 20);
       onZoomChange?.(newZoom);
-      
-      // 缩放时保持画布居中
-      updateCanvasPositionForZoom(newZoom);
     }
   };
   
@@ -317,43 +274,11 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
     if (zoom > 30) {
       const newZoom = Math.max(30, zoom - 20);
       onZoomChange?.(newZoom);
-      
-      // 缩放时保持画布居中
-      updateCanvasPositionForZoom(newZoom);
     }
   };
   
   const handleZoomReset = () => {
     onZoomChange?.(100);
-    
-    // 重置缩放时居中显示
-    handleCenterCanvas();
-  };
-
-  // 缩放时更新画布位置以保持居中
-  const updateCanvasPositionForZoom = (newZoom: number) => {
-    if (containerRef.current && canvasWrapperRef.current) {
-      // 获取容器尺寸
-      const containerWidth = containerRef.current.clientWidth;
-      const containerHeight = containerRef.current.clientHeight;
-      
-      // 获取当前画布中心点相对于视窗的位置
-      const currentCenterX = canvasPosition.x + (canvasSize.width * (zoom / 100)) / 2;
-      const currentCenterY = canvasPosition.y + (canvasSize.height * (zoom / 100)) / 2;
-      
-      // 计算新缩放比例下，画布中心点应保持在相同位置所需的画布左上角坐标
-      const newWidth = canvasSize.width * (newZoom / 100);
-      const newHeight = canvasSize.height * (newZoom / 100);
-      
-      const newX = currentCenterX - newWidth / 2;
-      const newY = currentCenterY - newHeight / 2;
-      
-      // 更新画布位置
-      setCanvasPosition({
-        x: newX,
-        y: newY
-      });
-    }
   };
 
   // 计算缩放控制面板的位置，根据右侧面板状态调整
@@ -448,17 +373,9 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
             title="放大 (+20%)"
           />
           <Button 
-            icon={<ExpandOutlined />}
-            shape="circle"
-            size="small"
-            onClick={handleCenterCanvas}
-            title="居中显示"
-            className="text-blue-500 mx-3"
-          />
-          <Button 
             onClick={handleZoomReset}
             size="small"
-            className="font-mono my-1 mr-3"
+            className="font-mono my-1 mx-3"
             title="重置缩放"
           >
             {zoom}%
