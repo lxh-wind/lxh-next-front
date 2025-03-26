@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { ComponentType, PageInfo } from '../components/types';
+import { CANVAS_DEFAULTS } from '../utils/constants';
 
 // 页面信息状态
 export const pageInfoAtom = atom<PageInfo>({
@@ -52,4 +53,7 @@ export const historyIndexAtom = atom<number>(-1);
 
 // 可撤销/重做状态
 export const canUndoAtom = atom<boolean>(false);
-export const canRedoAtom = atom<boolean>(false); 
+export const canRedoAtom = atom<boolean>(false);
+
+// 画布位置状态
+export const canvasPositionAtom = atom(CANVAS_DEFAULTS.POSITION); 

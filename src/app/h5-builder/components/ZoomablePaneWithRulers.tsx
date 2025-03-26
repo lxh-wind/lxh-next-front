@@ -3,6 +3,9 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Button } from 'antd';
 import { MinusOutlined, PlusOutlined, DragOutlined, ExpandOutlined } from '@ant-design/icons';
+import { useAtom } from 'jotai';
+import { canvasPositionAtom } from '../store/atoms';
+import { CANVAS_DEFAULTS, PANEL_CONFIG } from '../utils/constants';
 
 interface ZoomablePaneWithRulersProps {
   children: React.ReactNode;
@@ -15,7 +18,7 @@ const DEFAULT_CANVAS_POSITION  = { x:350, y: 50 };
 
 const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   children,
-  zoom = 100,
+  zoom = CANVAS_DEFAULTS.DEFAULT_ZOOM,
   onZoomChange,
   isPropertyPanelOpen = false
 }) => {
@@ -25,15 +28,14 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const childrenRef = useRef<HTMLDivElement>(null);
   
-  // 拖拽状态
+  // 使用 Jotai 状态替换本地状态
+  const [canvasPosition, setCanvasPosition] = useAtom(canvasPositionAtom);
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
-  // 画布位置状态
-  const [canvasPosition, setCanvasPosition] = useState(DEFAULT_CANVAS_POSITION);
-  
   // 实际画布尺寸，用于计算居中位置
-  const [canvasSize, setCanvasSize] = useState({ width: 375, height: 667 });
+  const [canvasSize, setCanvasSize] = useState(CANVAS_DEFAULTS.SIZE);
   
   // 添加拖拽提示状态
   const [dragMessage, setDragMessage] = useState('按住鼠标拖拽画布 (可滚动查看更多)');
@@ -74,28 +76,22 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   
   // 处理鼠标按下事件 - 开始拖拽
   const handleMouseDown = (e: React.MouseEvent) => {
-    // 阻止事件冒泡，以防止触发Canvas内部组件选择
-    e.stopPropagation(); 
+    e.stopPropagation();
     
-    // 判断是否点击在画布外的背景区域
-    const isBackground = 
-      e.currentTarget === e.target || 
-      (e.currentTarget.contains(e.target as Node) && 
-       !(e.target as HTMLElement).closest('.component-item') &&
-       !(e.target as HTMLElement).closest('.mobile-container'));
-      
-    if (e.button === 0 && isBackground) {
-      e.preventDefault(); // 阻止默认行为
+    // 检查点击是否在画布区域外
+    const isOutsideCanvas = !canvasWrapperRef.current?.contains(e.target as Node);
+    
+    // 只有在画布区域外点击时才允许拖动
+    if (e.button === 0 && isOutsideCanvas) {
+      e.preventDefault();
       
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       
-      // 修改鼠标样式
       if (containerRef.current) {
         containerRef.current.style.cursor = 'grabbing';
       }
       
-      // 更新拖拽提示
       setDragMessage('正在移动画布...');
     }
   };
@@ -138,31 +134,19 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   // 重置画布位置到中心
   const handleCenterCanvas = () => {
     if (containerRef.current) {
-      // 计算容器的可视区域
       const containerWidth = containerRef.current.clientWidth;
       const containerHeight = containerRef.current.clientHeight;
       
-      // 计算画布应该位于的中心位置 - 使用实际画布尺寸
       const centerX = Math.max(0, (containerWidth - canvasSize.width * (zoom / 100)) / 2);
       const centerY = Math.max(0, (containerHeight - canvasSize.height * (zoom / 100)) / 2);
       
-      console.log('Centering canvas:', centerX, centerY);
-      
-      // 设置画布位置
       setCanvasPosition({
         x: centerX,
         y: centerY
       });
       
-      // 重置滚动位置
-      containerRef.current.scrollLeft = 0;
-      containerRef.current.scrollTop = 0;
-      
-      // 添加动画过渡效果
       if (canvasWrapperRef.current) {
         canvasWrapperRef.current.style.transition = 'all 0.3s ease-in-out';
-        
-        // 恢复原始transition设置
         setTimeout(() => {
           if (canvasWrapperRef.current) {
             canvasWrapperRef.current.style.transition = isDragging ? 'none' : 'all 0.1s ease';
@@ -266,30 +250,29 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
 
   // 缩放控制
   const handleZoomIn = () => {
-    if (zoom < 200) {
-      const newZoom = Math.min(200, zoom + 20);
+    if (zoom < CANVAS_DEFAULTS.MAX_ZOOM) {
+      const newZoom = Math.min(CANVAS_DEFAULTS.MAX_ZOOM, zoom + CANVAS_DEFAULTS.ZOOM_STEP);
       onZoomChange?.(newZoom);
     }
   };
   
   const handleZoomOut = () => {
-    if (zoom > 30) {
-      const newZoom = Math.max(30, zoom - 20);
+    if (zoom > CANVAS_DEFAULTS.MIN_ZOOM) {
+      const newZoom = Math.max(CANVAS_DEFAULTS.MIN_ZOOM, zoom - CANVAS_DEFAULTS.ZOOM_STEP);
       onZoomChange?.(newZoom);
     }
   };
   
   const handleZoomReset = () => {
-    onZoomChange?.(100);
+    onZoomChange?.(CANVAS_DEFAULTS.DEFAULT_ZOOM);
   };
 
-  // 计算缩放控制面板的位置，根据右侧面板状态调整
+  // 计算缩放控制面板的位置
   const zoomControlPosition = useMemo(() => {
-    // 如果右侧面板打开，将缩放控制向左移动
     if (isPropertyPanelOpen) {
-      return { right: '324px' }; // 右侧面板宽度 (300px) + 额外间距 (24px)
+      return { right: `${PANEL_CONFIG.PROPERTY_PANEL.WIDTH + PANEL_CONFIG.PROPERTY_PANEL.MARGIN}px` };
     } else {
-      return { right: '24px' }; // 正常位置
+      return { right: `${PANEL_CONFIG.PROPERTY_PANEL.MARGIN}px` };
     }
   }, [isPropertyPanelOpen]);
 
@@ -317,16 +300,19 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
           ref={containerRef}
           className="flex-1 relative min-h-0 overflow-auto"
           style={{ 
-            backgroundSize: '20px 20px',
-            backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.01) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.01) 1px, transparent 1px)',
-            backgroundColor: '#f9fafc',
-            cursor: isDragging ? 'grabbing' : 'grab',
-            padding: '24px' // 添加内边距，使内容不贴边
+            backgroundSize: CANVAS_DEFAULTS.BACKGROUND.SIZE,
+            backgroundImage: CANVAS_DEFAULTS.BACKGROUND.IMAGE,
+            backgroundColor: CANVAS_DEFAULTS.BACKGROUND.COLOR,
+            cursor: isDragging ? 'grabbing' : 'default',
+            padding: `${CANVAS_DEFAULTS.PADDING}px`
           }}
           onMouseDown={handleMouseDown}
         >
           {/* 内容区域 - 适当缩小区域尺寸，防止过度滚动 */}
-          <div className="relative" style={{ width: '2000px', height: '2000px' }}>
+          <div className="relative" style={{ 
+            width: `${CANVAS_DEFAULTS.CONTAINER_SIZE.width}px`, 
+            height: `${CANVAS_DEFAULTS.CONTAINER_SIZE.height}px` 
+          }}>
             {/* 画布视窗 - 可自由拖拽移动 */}
             <div 
               ref={canvasWrapperRef}

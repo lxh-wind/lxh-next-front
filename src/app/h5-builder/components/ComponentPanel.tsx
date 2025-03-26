@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, Card, Input, Tag } from 'antd';
+import { Card, Input, Tag } from 'antd';
 import { SearchOutlined, AppstoreOutlined, ShoppingOutlined, FundViewOutlined, DragOutlined } from '@ant-design/icons';
 import { getComponentsByCategory } from '../core/components';
-import { ComponentPanelProps } from './types';
+import { useAtom } from 'jotai';
+import { componentsAtom } from '../store/atoms';
+import { generateComplexId } from '../utils/store';
 
 // 组件分类
 const componentCategories = [
@@ -13,7 +15,8 @@ const componentCategories = [
   { key: 'advanced', name: '高级', icon: <FundViewOutlined /> },
 ];
 
-export default function ComponentPanel({ onAddComponent }: ComponentPanelProps) {
+export default function ComponentPanel() {
+  const [components, setComponents] = useAtom(componentsAtom);
   const [activeCategory, setActiveCategory] = useState('basic');
   const [searchText, setSearchText] = useState('');
   const [draggedComponent, setDraggedComponent] = useState<any>(null);
@@ -51,9 +54,21 @@ export default function ComponentPanel({ onAddComponent }: ComponentPanelProps) 
     setDraggedComponent(null);
   };
 
+  const handleAddComponent = (componentType: any) => {
+    const newComponent = {
+      ...componentType,
+      id: generateComplexId(componentType.type),
+      props: { ...componentType.defaultProps }
+    };
+    setComponents(prev => [...prev, newComponent]);
+  };
+
+  const handleChangeCategory = (key: string) => {
+    setActiveCategory(key);
+  };
+
   const renderComponentItem = (component: any) => (
     <Card
-      key={component.type}
       hoverable
       className="mb-2 cursor-grab relative"
       onClick={() => handleAddComponent(component)}
@@ -71,17 +86,6 @@ export default function ComponentPanel({ onAddComponent }: ComponentPanelProps) 
       </div>
     </Card>
   );
-
-  const handleAddComponent = (componentType: any) => {
-    onAddComponent({
-      ...componentType,
-      props: { ...componentType.defaultProps }
-    });
-  };
-
-  const handleChangeCategory = (key: string) => {
-    setActiveCategory(key);
-  };
 
   return (
     <div className="h-full flex flex-col">

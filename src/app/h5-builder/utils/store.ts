@@ -105,6 +105,25 @@ const generateId = () => {
   return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// 生成复杂ID的函数
+export const generateComplexId = (componentType: string) => {
+  // 生成UUID v4
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+  
+  // 生成时间戳
+  const timestamp = new Date().getTime();
+  
+  // 生成格式化的时间字符串
+  const date = new Date();
+  const formattedDate = date.toISOString().replace(/[:\-\.]/g, '');
+  
+  return `${componentType}-${uuid}-${timestamp}-${formattedDate}`;
+};
+
 // 保存页面
 export const savePage = async (pageData: Partial<PageData>): Promise<PageData> => {
   try {

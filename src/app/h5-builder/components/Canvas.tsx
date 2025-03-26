@@ -5,50 +5,33 @@ import { Modal } from 'antd';
 import { ComponentType } from './types';
 import ComponentItem from './ComponentItem';
 import { renderComponentContent } from './ComponentRenderer';
+import { useAtom } from 'jotai';
+import {
+  componentsAtom,
+  selectedComponentAtom,
+  zoomAtom,
+  canvasSizeAtom,
+  pageInfoAtom
+} from '../store/atoms';
+import { generateComplexId } from '../utils/store';
+import { COMPONENT_DEFAULTS } from '../utils/constants';
 
 interface CanvasProps {
-  components: ComponentType[];
-  selectedComponentId?: string;
-  onSelectComponent?: (component: ComponentType) => void;
-  onRemoveComponent?: (id: string) => void;
-  onUpdateComponentPosition?: (id: string, position: { top: number; left: number }) => void;
-  onDeleteComponent?: (id: string) => void;
-  onDuplicateComponent?: (id: string) => void;
   onUpdateComponentsOrder?: (startIndex: number, endIndex: number) => void;
   onAddComponent?: (component: any) => void;
-  zoom: number;
-  canvasSize?: { width: number; height: number };
-  // 页面布局设置
-  containerPadding?: number;
-  componentGap?: number;
-  containerWidth?: number;
-  layoutMode?: 'auto' | 'free';
-  // 页面背景设置
-  bgMode?: 'color' | 'image' | 'gradient';
-  bgColor?: string;
-  bgImage?: string | null;
-  bgRepeat?: string;
 }
 
 const Canvas: React.FC<CanvasProps> = ({
-  components,
-  selectedComponentId,
-  onSelectComponent,
-  onDeleteComponent,
-  onDuplicateComponent,
   onUpdateComponentsOrder,
   onAddComponent,
-  zoom,
-  canvasSize = { width: 375, height: 667 }, // 默认尺寸
-  containerPadding = 16,
-  containerWidth = 100,
-  // 页面背景设置
-  bgMode,
-  bgColor,
-  bgImage,
-  bgRepeat
 }) => {
-  const [selectedId, setSelectedId] = useState<string | null>(selectedComponentId || null);
+  const [components, setComponents] = useAtom(componentsAtom);
+  const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
+  const [zoom] = useAtom(zoomAtom);
+  const [canvasSize] = useAtom(canvasSizeAtom);
+  const [pageInfo] = useAtom(pageInfoAtom);
+  
+  const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [dropIndicatorPosition, setDropIndicatorPosition] = useState<number | null>(null);
@@ -56,26 +39,27 @@ const Canvas: React.FC<CanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 更新选中的组件ID，以便在外部选择时同步
-    setSelectedId(selectedComponentId || null);
-  }, [selectedComponentId]);
+    setSelectedId(selectedComponent?.id || null);
+  }, [selectedComponent]);
 
   const handleComponentSelect = (component: ComponentType) => {
     setSelectedId(component.id);
-    if (onSelectComponent) {
-      onSelectComponent(component);
-    }
+    setSelectedComponent(component);
   };
 
   const handleComponentDelete = (id: string) => {
-    if (onDeleteComponent) {
-      onDeleteComponent(id);
+    setComponents(prev => prev.filter(comp => comp.id !== id));
+    if (selectedComponent?.id === id) {
+      setSelectedComponent(null);
     }
   };
 
   const handleDuplicate = (id: string) => {
-    if (onDuplicateComponent) {
-      onDuplicateComponent(id);
+    const component = components.find(comp => comp.id === id);
+    if (component) {
+      const newComponent = JSON.parse(JSON.stringify(component));
+      newComponent.id = generateComplexId(component.type);
+      setComponents(prev => [...prev, newComponent]);
     }
   };
 
@@ -225,50 +209,10 @@ const Canvas: React.FC<CanvasProps> = ({
       // 获取组件在画布中的位置 - 从props.style中获取
       const top = component.props?.style?.marginTop || 0;
       
-      // 估计组件高度 - 根据组件类型确定默认高度
-      let height;
-      
       // 根据组件类型设置默认高度
-      switch (component.type) {
-        case 'image':
-          height = component.props?.style?.height || 200;
-          break;
-        case 'text':
-          height = component.props?.style?.height || 40;
-          break;
-        case 'button':
-          height = component.props?.style?.height || 40;
-          break;
-        case 'carousel':
-          height = 200;
-          break;
-        case 'productList':
-          height = 300;
-          break;
-        case 'countdown':
-          height = 100;
-          break;
-        case 'coupon':
-          height = 150 + (component.props?.coupons?.length || 1) * 70;
-          break;
-        case 'luckyWheel':
-          height = 350;
-          break;
-        case 'checkinCalendar':
-          height = 250;
-          break;
-        case 'memberBenefits':
-          height = 250;
-          break;
-        case 'surveyForm':
-          height = 200 + (component.props?.questions?.length || 1) * 100;
-          break;
-        case 'teamBuying':
-          height = 350;
-          break;
-        default:
-          height = 80; // 默认高度
-      }
+      const height = component.props?.style?.height || 
+                    COMPONENT_DEFAULTS.HEIGHTS[component.type.toUpperCase() as keyof typeof COMPONENT_DEFAULTS.HEIGHTS] || 
+                    COMPONENT_DEFAULTS.HEIGHTS.DEFAULT;
       
       // 计算组件底部位置，考虑padding和margin
       const paddingTop = component.props?.style?.paddingTop || 0;
@@ -278,8 +222,6 @@ const Canvas: React.FC<CanvasProps> = ({
       // 计算组件底部位置 (top + height + margins & paddings)
       const bottom = top + height + marginBottom + paddingTop + paddingBottom;
       
-      console.log(`组件: ${component.type}, ID: ${component.id}, 顶部: ${top}, 高度: ${height}, 底部: ${bottom}`);
-      
       // 更新最大底部位置
       if (bottom > maxComponentBottom) {
         maxComponentBottom = bottom;
@@ -288,95 +230,82 @@ const Canvas: React.FC<CanvasProps> = ({
     
     // 添加底部边距并确保最小高度不小于基础高度
     const calculatedHeight = Math.max(baseHeight, maxComponentBottom + 100);
-    console.log(`计算画布高度: ${calculatedHeight}px (基础高度: ${baseHeight}px, 最大组件底部: ${maxComponentBottom}px)`);
     
     return calculatedHeight;
-  };
-
-  // 根据缩放比例计算样式
-  const zoomStyle = {
-    width: canvasSize.width,
-    minHeight: canvasSize.height,
-    // 应用页面布局设置
-    padding: containerPadding && `${containerPadding}px`,
-    maxWidth: containerWidth && `${containerWidth}%`,
   };
 
   // 应用背景样式
   const getBackgroundStyle = () => {
     return {
-      backgroundColor: bgMode === 'color' ? bgColor : 'white',
-      backgroundImage: bgMode === 'image' && bgImage ? `url(${bgImage})` :
-                        bgMode === 'gradient' ? bgColor : undefined,
-      backgroundRepeat: bgRepeat || 'no-repeat',
-      backgroundSize: bgRepeat === 'no-repeat' ? 'cover' : undefined,
+      backgroundImage: pageInfo.bgMode === 'image' && pageInfo.bgImage ? `url(${pageInfo.bgImage})` :
+                      pageInfo.bgMode === 'gradient' ? pageInfo.bgColor : undefined,
+      backgroundRepeat: pageInfo.bgRepeat || 'no-repeat',
+      backgroundSize: pageInfo.bgRepeat === 'no-repeat' ? 'cover' : undefined,
       // 添加微妙的内阴影效果
       boxShadow: 'inset 0 0 3px rgba(0, 0, 0, 0.05)',
     };
   };
 
   return (
-    <div 
-      className="flex justify-center items-start h-full overflow-auto"
-      ref={containerRef}
-    >
-      <div className="flex flex-col relative">
+    <div className="canvas-container">
+      <div 
+        ref={containerRef}
+        className="canvas-content"
+        style={{
+          width: canvasSize.width,
+          height: canvasSize.height,
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          overflow: 'auto',
+          position: 'relative',
+          ...getBackgroundStyle()
+        }}
+      >
+        {/* 添加简单阴影效果 */}
         <div 
-          className="mobile-container relative"
-          style={{ 
-            ...zoomStyle,
-            padding: 0, 
-            overflow: 'auto',
-            position: 'relative',
-            ...getBackgroundStyle()
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+            zIndex: 2
           }}
+        ></div>
+        
+        <div 
+          className="w-full relative" 
+          style={{ padding: pageInfo.containerPadding }}
         >
-          {/* 添加简单阴影效果 */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-              zIndex: 2
-            }}
-          ></div>
+          {components.map((component, index) => (
+            <div 
+              key={component.id}
+              className="component-item relative"
+              data-index={index}
+            >
+              <ComponentItem
+                component={component}
+                isSelected={selectedId === component.id}
+                index={index}
+                onSelect={() => handleComponentSelect(component)}
+                onDelete={() => handleComponentDelete(component.id)}
+                onDuplicate={() => handleDuplicate(component.id)}
+                onDragStart={handleDragStart}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDragEnd={handleDragEnd}
+                onMoveUp={() => handleMoveComponentUp(index)}
+                onMoveDown={() => handleMoveComponentDown(index)}
+                isFirst={index === 0}
+                isLast={index === components.length - 1}
+              />
+            </div>
+          ))}
           
-          <div 
-            className="w-full relative" 
-            style={{ padding: containerPadding }}
-          >
-            {components.map((component, index) => (
-              <div 
-                key={component.id}
-                className="component-item relative"
-                data-index={index}
-              >
-                <ComponentItem
-                  component={component}
-                  isSelected={selectedId === component.id}
-                  index={index}
-                  onSelect={() => handleComponentSelect(component)}
-                  onDelete={() => handleComponentDelete(component.id)}
-                  onDuplicate={() => handleDuplicate(component.id)}
-                  onDragStart={handleDragStart}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onDragEnd={handleDragEnd}
-                  onMoveUp={() => handleMoveComponentUp(index)}
-                  onMoveDown={() => handleMoveComponentDown(index)}
-                  isFirst={index === 0}
-                  isLast={index === components.length - 1}
-                />
-              </div>
-            ))}
-            
-            {components.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                <p>从左侧拖入组件到这里</p>
-              </div>
-            )}
-          </div>
+          {components.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+              <p>从左侧拖入组件到这里</p>
+            </div>
+          )}
         </div>
       </div>
       

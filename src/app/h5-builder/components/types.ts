@@ -1,6 +1,6 @@
 export interface ComponentType {
   id: string;
-  type: 'text' | 'image' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'floatMenu' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying';
+  type: 'text' | 'image' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'floatMenu' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container';
   name: string;
   props: {
     // 通用属性
@@ -15,6 +15,23 @@ export interface ComponentType {
     text?: string;
     buttonType?: 'link' | 'text' | 'primary' | 'default' | 'dashed'; 
     link?: string;
+    
+    // 样式属性
+    style?: {
+      width?: number;
+      height?: number;
+      backgroundColor?: string;
+      borderWidth?: string;
+      borderRadius?: number;
+      marginTop?: number;
+      marginBottom?: number;
+      padding?: number;
+      paddingTop?: number;
+      paddingBottom?: number;
+      color?: string;
+      fontSize?: number;
+      textAlign?: 'left' | 'center' | 'right';
+    };
     
     // 优惠券组件特有属性
     coupons?: Array<{
@@ -67,26 +84,6 @@ export interface ComponentType {
       teamPrice: number;
       originalPrice: number;
     };
-    
-    // 样式属性
-    style?: {
-      marginTop?: number;
-      marginBottom?: number;
-      padding?: number;
-      backgroundColor?: string;
-      borderRadius?: number;
-      color?: string;
-      fontSize?: number;
-      textAlign?: 'left' | 'center' | 'right';
-      height?: number;
-      width?: number;
-      paddingTop?: number;
-      paddingBottom?: number;
-    };
-    
-    // 动画属性
-    animation?: string;
-    animationDuration?: number;
   };
 }
 
@@ -96,24 +93,22 @@ export interface PropertyPanelProps {
 }
 
 export interface PageInfo {
-  id?: string;
+  id: string;
   title: string;
-  description: string;
+  description?: string;
   components: ComponentType[];
+  bgMode?: 'color' | 'image' | 'gradient';
+  bgColor?: string;
+  bgImage?: string | null;
+  bgRepeat?: string;
+  shareImage?: string | null;
+  layoutMode?: 'auto' | 'free';
+  containerPadding?: number;
+  componentGap?: number;
+  containerWidth?: number;
   published?: boolean;
   publishUrl?: string;
   tags?: string[];
-  // 外观设置
-  bgMode: 'color' | 'image' | 'gradient';
-  bgColor: string;
-  bgImage: string | null;
-  bgRepeat: string;
-  shareImage: string | null;
-  // 布局设置
-  layoutMode: 'auto' | 'free';
-  containerPadding: number;
-  componentGap: number;
-  containerWidth: number;
 }
 
 // 组件面板属性接口
