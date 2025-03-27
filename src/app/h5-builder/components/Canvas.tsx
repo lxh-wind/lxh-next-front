@@ -22,10 +22,10 @@ const Canvas: React.FC<{}> = () => {
   const [canvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
 
-  const [, setHistory] = useAtom(historyAtom);
-  const [, setHistoryIndex] = useAtom(historyIndexAtom);
-  const [, setCanUndo] = useAtom(canUndoAtom);
-  const [, setCanRedo] = useAtom(canRedoAtom);
+  const setHistory = useAtom(historyAtom);
+  const setHistoryIndex = useAtom(historyIndexAtom);
+  const setCanUndo = useAtom(canUndoAtom);
+  const setCanRedo = useAtom(canRedoAtom);
   
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
   
@@ -114,10 +114,9 @@ const Canvas: React.FC<{}> = () => {
         className="canvas-content"
         style={{
           width: canvasSize.width,
-          height: canvasSize.height,
+          minHeight: canvasSize.height,
           margin: '0 auto',
           backgroundColor: '#fff',
-          overflow: 'auto',
           position: 'relative',
           ...getBackgroundStyle()
         }}

@@ -10,6 +10,10 @@ const nextConfig = {
   images: {
     loader: "default",
     path: "/",
+    domains: [
+      'placeholder.pics', 
+      'avatars.githubusercontent.com'
+    ],
   },
   // 使用 rewrite 解决跨域问题
   async rewrites() {

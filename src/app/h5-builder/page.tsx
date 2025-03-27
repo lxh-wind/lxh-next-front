@@ -16,7 +16,7 @@ import {
   RedoOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { savePage, publishPage, previewPage, previewLuckyWheel, generateComplexId } from './utils/store';
+import { publishPage, previewPage, generateComplexId } from './utils/store';
 import { PageInfo } from './components/types';
 import CommonOperations from '@/components/CommonOperations';
 import { useAtom } from 'jotai';

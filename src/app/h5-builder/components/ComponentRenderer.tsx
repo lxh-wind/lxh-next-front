@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Button, Avatar } from 'antd';
+import { Button, Avatar } from 'antd-mobile';
 import { ComponentType } from './types';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 // 动态导入抽奖转盘组件以避免SSR问题
 const LuckyWheel = dynamic(() => import('./marketing/LuckyWheel'), { ssr: false });
@@ -20,9 +21,11 @@ export function renderComponentContent(component: ComponentType) {
     
     case 'image':
       return (
-        <img 
-          src={component.props.src} 
-          alt={component.props.alt} 
+        <Image 
+          src={component.props.src || ''} 
+          alt={component.props.alt || ''} 
+          width={component.props.width}
+          height={component.props.height}
           style={{ 
             ...component.props.style,
             maxWidth: '100%'
@@ -33,7 +36,8 @@ export function renderComponentContent(component: ComponentType) {
     case 'button':
       return (
         <Button 
-          type={(component.props.buttonType as "link" | "text" | "primary" | "default" | "dashed") || 'default'} 
+          color={component.props.buttonType === 'primary' ? 'primary' : 'default'} 
+          fill={component.props.buttonType === 'dashed' ? 'outline' : 'solid'}
           style={{ ...component.props.style }}
         >
           {component.props.text}
@@ -112,7 +116,7 @@ export function renderComponentContent(component: ComponentType) {
                 </div>
                 <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
                   <div>{coupon.condition}</div>
-                  <Button size="small" type="primary" danger>{coupon.buttonText}</Button>
+                  <Button size='mini' color='danger'>{coupon.buttonText}</Button>
                 </div>
               </div>
             ))}
@@ -130,7 +134,7 @@ export function renderComponentContent(component: ComponentType) {
               模拟抽奖转盘
             </div>
           </div>
-          <Button type="primary" danger>{component.props.buttonText}</Button>
+          <Button color='danger'>{component.props.buttonText}</Button>
         </div>
       );
     
@@ -156,7 +160,7 @@ export function renderComponentContent(component: ComponentType) {
             ))}
           </div>
           <div className="text-center mt-3">
-            <Button type="primary">{component.props.buttonText}</Button>
+            <Button color='primary'>{component.props.buttonText}</Button>
           </div>
         </div>
       );
@@ -211,7 +215,7 @@ export function renderComponentContent(component: ComponentType) {
             </div>
           ))}
           <div className="text-center mt-3">
-            <Button type="primary">{component.props.buttonText}</Button>
+            <Button color='primary'>{component.props.buttonText}</Button>
             <div className="text-xs text-gray-500 mt-1">{component.props.rewardText}</div>
           </div>
         </div>
@@ -237,13 +241,13 @@ export function renderComponentContent(component: ComponentType) {
             <div className="text-sm">剩余时间: 23:59:59</div>
           </div>
           <div className="flex justify-center mb-3">
-            <Avatar.Group>
-              <Avatar style={{ backgroundColor: '#f56a00' }}>U</Avatar>
-              <Avatar style={{ backgroundColor: '#1890ff' }}>?</Avatar>
-              <Avatar style={{ backgroundColor: '#1890ff' }}>?</Avatar>
-            </Avatar.Group>
+            <div className="flex">
+              <Avatar className="mr-1" src="https://avatars.githubusercontent.com/u/1" style={{ '--border-radius': '50%' }}/>
+              <Avatar className="mr-1" src="https://placeholder.pics/svg/30/DEDEDE/555555/?" style={{ '--border-radius': '50%' }}/>
+              <Avatar src="https://placeholder.pics/svg/30/DEDEDE/555555/?" style={{ '--border-radius': '50%' }}/>
+            </div>
           </div>
-          <Button type="primary" danger>{component.props.buttonText}</Button>
+          <Button color='danger'>{component.props.buttonText}</Button>
         </div>
       );
     

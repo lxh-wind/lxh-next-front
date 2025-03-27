@@ -16,6 +16,7 @@
     "@tanstack/react-query": "^5.0.0",
     "@tanstack/react-query-devtools": "^5.0.0",
     "antd": "^5.24.4",
+    "antd-mobile": "^5.39.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jotai": "^2.12.2",

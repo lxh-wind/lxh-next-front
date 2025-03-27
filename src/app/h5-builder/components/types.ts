@@ -15,6 +15,9 @@ export interface ComponentType {
     text?: string;
     buttonType?: 'link' | 'text' | 'primary' | 'default' | 'dashed'; 
     link?: string;
+
+    width?: number;
+    height?: number;
     
     // 样式属性
     style?: {

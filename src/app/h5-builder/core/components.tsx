@@ -63,6 +63,8 @@ export const marketingComponents: ComponentType[] = [
     defaultProps: {
       src: 'https://placeholder.pics/svg/300x150',
       alt: '图片',
+      width: 100,
+      height: 100,
       style: {
         width: 100,
         borderRadius: 0,
