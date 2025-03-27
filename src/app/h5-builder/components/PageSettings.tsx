@@ -7,7 +7,7 @@ import type { Color } from 'antd/es/color-picker';
 import type { PageInfo } from './types';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { useAtom } from 'jotai';
-import { pageInfoAtom } from '@/src/app/h5-builder/store/atoms';
+import { pageInfoAtom, componentsAtom, canvasSizeAtom } from '@/src/app/h5-builder/store/atoms';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -36,10 +36,13 @@ interface LayoutSettings {
   layoutMode: LayoutMode;
   containerPadding: number;
   componentGap: number;
+  canvasHeight: number;
 }
 
 const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
   const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
+  const [components, setComponents] = useAtom(componentsAtom);
+  const [canvasSize, setCanvasSize] = useAtom(canvasSizeAtom);
   const [form] = Form.useForm();
   
   // 将相关状态整合到一个对象中
@@ -58,6 +61,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
     layoutMode: pageInfo.layoutMode || 'auto',
     containerPadding: pageInfo.containerPadding || 0,
     componentGap: pageInfo.componentGap || 0,
+    canvasHeight: canvasSize.height || 667,
   });
 
   // 更新外观设置的单个属性
@@ -148,6 +152,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
         layoutMode: pageInfo.layoutMode || 'auto',
         containerPadding: pageInfo.containerPadding || 0,
         componentGap: pageInfo.componentGap || 0,
+        canvasHeight: canvasSize.height || 667,
       });
       
       form.setFieldsValue({
@@ -156,7 +161,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
         tags: pageInfo.tags,
       });
     }
-  }, [open, pageInfo, form]);
+  }, [open, pageInfo, canvasSize, form]);
 
   // 背景设置的额外字段
   const renderBgSettings = () => {
@@ -398,14 +403,93 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
                 <div className="text-center">{layout.componentGap}px</div>
               </Form.Item>
               
+              <Form.Item label="画布高度">
+                <Slider
+                  min={600}
+                  max={2000}
+                  step={10}
+                  value={layout.canvasHeight}
+                  onChange={(value) => updateLayout('canvasHeight', value)}
+                />
+                <div className="text-center">{layout.canvasHeight}px</div>
+              </Form.Item>
+              
               <Form.Item>
                 <Button 
                   type="primary" 
                   onClick={() => {
+                    // 更新页面信息时，保留组件的位置信息（无论是否在自由布局模式）
+                    const newLayoutMode = layout.layoutMode;
+                    const oldLayoutMode = pageInfo.layoutMode;
+                    
+                    // 如果从自动布局切换到自由布局，需要计算当前组件的实际位置
+                    if (oldLayoutMode === 'auto' && newLayoutMode === 'free') {
+                      // 获取每个组件的当前位置，并更新position信息
+                      const updatedComponents = components.map((component, index) => {
+                        const componentElement = document.getElementById(`component-${component.id}`);
+                        if (componentElement) {
+                          // 获取组件相对于画布的位置
+                          const rect = componentElement.getBoundingClientRect();
+                          const canvasElement = document.querySelector('.canvas-content');
+                          const canvasRect = canvasElement ? canvasElement.getBoundingClientRect() : null;
+                          
+                          if (canvasRect) {
+                            // 计算相对于画布的位置
+                            const top = rect.top - canvasRect.top;
+                            const left = rect.left - canvasRect.left;
+                            
+                            // 考虑容器内边距
+                            const containerPadding = layout.containerPadding || 0;
+                            const adjustedTop = Math.max(0, top - containerPadding);
+                            const adjustedLeft = Math.max(0, left - containerPadding);
+                            
+                            // 保存当前的宽高
+                            const width = rect.width;
+                            const height = rect.height;
+                            
+                            // 返回更新后的组件
+                            return {
+                              ...component,
+                              position: {
+                                ...component.position,
+                                top: adjustedTop,
+                                left: adjustedLeft,
+                                width: component.position?.width || width,
+                                height: component.position?.height || height,
+                                zIndex: index + 1
+                              }
+                            };
+                          }
+                        }
+                        
+                        // 如果找不到元素或者画布，保持原样并确保至少有位置信息
+                        return {
+                          ...component,
+                          position: {
+                            ...component.position,
+                            top: component.position?.top ?? index * 10,
+                            left: component.position?.left ?? 0,
+                            zIndex: index + 1
+                          }
+                        };
+                      });
+                      
+                      // 更新组件位置
+                      setComponents(updatedComponents);
+                    }
+                    
+                    // 更新画布尺寸
+                    setCanvasSize(prev => ({
+                      ...prev,
+                      height: layout.canvasHeight
+                    }));
+                    
+                    // 只更新布局模式和间距信息，不改变组件位置数据
                     onUpdatePageInfo({
-                      layoutMode: layout.layoutMode,
+                      layoutMode: newLayoutMode,
                       containerPadding: layout.containerPadding,
-                      componentGap: layout.componentGap
+                      componentGap: layout.componentGap,
+                      canvasHeight: layout.canvasHeight
                     });
                     message.success('布局设置已更新');
                   }}

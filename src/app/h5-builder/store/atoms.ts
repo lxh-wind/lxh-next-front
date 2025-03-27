@@ -16,6 +16,7 @@ export const pageInfoAtom = atom<PageInfo>({
   layoutMode: 'auto',
   containerPadding: 0,
   componentGap: 0,
+  canvasHeight: 667,
   published: false,
   publishUrl: '',
   tags: [],

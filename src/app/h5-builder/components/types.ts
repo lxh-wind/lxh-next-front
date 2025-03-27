@@ -116,6 +116,7 @@ export interface PageInfo {
   layoutMode?: 'auto' | 'free';
   containerPadding?: number;
   componentGap?: number;
+  canvasHeight?: number;
   published?: boolean;
   publishUrl?: string;
   tags?: string[];

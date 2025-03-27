@@ -117,7 +117,7 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, move
 const Canvas: React.FC<{}> = () => {
   const [components, setComponents] = useAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
-  const [canvasSize] = useAtom(canvasSizeAtom);
+  const [canvasSize, setCanvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
 
   const [history, setHistory] = useAtom(historyAtom);
@@ -434,6 +434,66 @@ const Canvas: React.FC<{}> = () => {
       }
     }
   }, [pageInfo.layoutMode, handleUpdateComponentPosition, components]);
+
+  useEffect(() => {
+    if (pageInfo.layoutMode === 'auto' && components.length > 0) {
+      // 使用requestAnimationFrame确保获取到的布局信息是最新的
+      const timeoutId = setTimeout(() => {
+        const updatedComponents = [...components];
+        let hasUpdates = false;
+        
+        // 遍历所有组件，获取实际位置
+        components.forEach((component, index) => {
+          const componentElement = document.getElementById(`component-${component.id}`);
+          if (componentElement && containerRef.current) {
+            const rect = componentElement.getBoundingClientRect();
+            const canvasRect = containerRef.current.getBoundingClientRect();
+            
+            // 计算相对于画布的位置
+            const top = rect.top - canvasRect.top;
+            const left = rect.left - canvasRect.left;
+            
+            // 考虑容器内边距
+            const containerPadding = pageInfo.containerPadding || 0;
+            const adjustedTop = Math.max(0, top - containerPadding);
+            const adjustedLeft = Math.max(0, left - containerPadding);
+            
+            // 更新组件的position属性
+            updatedComponents[index] = {
+              ...updatedComponents[index],
+              position: {
+                ...updatedComponents[index].position,
+                top: adjustedTop,
+                left: adjustedLeft,
+                width: updatedComponents[index].position?.width || rect.width,
+                height: updatedComponents[index].position?.height || rect.height,
+                zIndex: index + 1
+              }
+            };
+            
+            hasUpdates = true;
+          }
+        });
+        
+        // 如果有更新，更新组件状态
+        if (hasUpdates) {
+          setComponents(updatedComponents);
+        }
+      }, 500); // 延迟执行，确保布局完成
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [pageInfo.layoutMode, pageInfo.containerPadding, components]);
+
+  // 当pageInfo.canvasHeight更新时，同步更新canvasSize
+  useEffect(() => {
+    if (pageInfo.canvasHeight && pageInfo.canvasHeight !== canvasSize.height) {
+      setCanvasSize(prev => ({
+        ...prev,
+        height: pageInfo.canvasHeight as number
+      }));
+    }
+  }, [pageInfo.canvasHeight, canvasSize.height, setCanvasSize]);
 
   return (
     <div className="canvas-container">
