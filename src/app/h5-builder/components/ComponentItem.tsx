@@ -62,16 +62,14 @@ const ComponentItem: React.FC<ComponentItemProps> = ({
 
   return (
     <Dropdown menu={{ items }} trigger={['contextMenu']}>
-      <div 
-        className={`relative min-h-[20px] ${
-          isSelected ? 'outline outline-1 outline-blue-400 bg-blue-50' : ''
-        }`}
-        onClick={onSelect}
-        data-index={index}
-      >
-        <div>
-          {renderComponentContent(component)}
+      <div className={`reactive ${isSelected ? 'bg-blue-50' : ''}`} onClick={onSelect} data-index={index}>
+        <div 
+          className={`absolute h-full w-full ${
+            isSelected ? 'outline outline-1 outline-blue-400' : ''
+          }`}
+        >
         </div>
+        {renderComponentContent(component)}
       </div>
     </Dropdown>
   );

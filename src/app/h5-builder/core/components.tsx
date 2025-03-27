@@ -47,9 +47,10 @@ export const marketingComponents: ComponentType[] = [
         fontSize: 14,
         fontWeight: 'normal',
         textAlign: 'left',
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 0,
+        paddingTop: 10,
+        paddingRight: 0,
+        paddingBottom: 10,
+        paddingLeft: 0,
         backgroundColor: 'transparent'
       }
     }
@@ -65,9 +66,10 @@ export const marketingComponents: ComponentType[] = [
       style: {
         width: 100,
         borderRadius: 0,
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: 'transparent'
       }
     }
@@ -83,9 +85,10 @@ export const marketingComponents: ComponentType[] = [
       link: '',
       style: {
         width: 80,
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: 'transparent'
       }
     }
@@ -106,9 +109,10 @@ export const marketingComponents: ComponentType[] = [
         'https://placeholder.pics/svg/375x200/DEDEDE/555555/轮播图3',
       ],
       style: {
-        marginTop: 0,
-        marginBottom: 10,
-        padding: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: 'transparent'
       },
       animation: '',
@@ -125,9 +129,10 @@ export const marketingComponents: ComponentType[] = [
       columns: 2,
       showPrice: true,
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#f5f5f5'
       }
     }
@@ -145,9 +150,10 @@ export const marketingComponents: ComponentType[] = [
       showMinutes: true,
       showSeconds: true,
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         color: '#ff4d4f',
         backgroundColor: 'transparent',
         textAlign: 'center'
@@ -176,9 +182,10 @@ export const marketingComponents: ComponentType[] = [
         }
       ],
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#fff1f0'
       }
     }
@@ -208,9 +215,10 @@ export const marketingComponents: ComponentType[] = [
         }
       ],
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#fff1f0'
       }
     }
@@ -226,9 +234,10 @@ export const marketingComponents: ComponentType[] = [
       title: '扫码关注',
       description: '扫描二维码，关注公众号',
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: 'transparent',
         textAlign: 'center'
       }
@@ -307,9 +316,10 @@ export const marketingComponents: ComponentType[] = [
       ],
       maxChances: 3,
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#fff8e8',
         textAlign: 'center'
       }
@@ -332,9 +342,10 @@ export const marketingComponents: ComponentType[] = [
       ],
       buttonText: '立即签到',
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#f0f7ff',
         textAlign: 'center'
       }
@@ -358,9 +369,10 @@ export const marketingComponents: ComponentType[] = [
       price: '30.00',
       period: 'month',
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#f9f0ff',
         textAlign: 'center'
       }
@@ -393,9 +405,10 @@ export const marketingComponents: ComponentType[] = [
       buttonText: '提交',
       rewardText: '提交后可获得抽奖机会',
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 15,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#f5f5f5',
         textAlign: 'left'
       }
@@ -421,9 +434,10 @@ export const marketingComponents: ComponentType[] = [
       expireTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       buttonText: '发起拼团',
       style: {
-        marginTop: 10,
-        marginBottom: 10,
-        padding: 10,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
         backgroundColor: '#fff1f0',
         textAlign: 'center'
       }

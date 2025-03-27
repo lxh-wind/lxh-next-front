@@ -15,25 +15,6 @@ export const CANVAS_DEFAULTS = {
   }
 };
 
-// 组件相关默认配置
-export const COMPONENT_DEFAULTS = {
-  HEIGHTS: {
-    IMAGE: 200,
-    TEXT: 40,
-    BUTTON: 40,
-    CAROUSEL: 200,
-    PRODUCT_LIST: 300,
-    COUNTDOWN: 100,
-    COUPON: 150,
-    LUCKY_WHEEL: 350,
-    CHECKIN_CALENDAR: 250,
-    MEMBER_BENEFITS: 250,
-    SURVEY_FORM: 200,
-    TEAM_BUYING: 350,
-    DEFAULT: 80
-  }
-};
-
 // 面板相关配置
 export const PANEL_CONFIG = {
   PROPERTY_PANEL: {

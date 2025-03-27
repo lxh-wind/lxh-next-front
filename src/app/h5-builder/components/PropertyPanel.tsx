@@ -96,30 +96,6 @@ export default function PropertyPanel() {
             children: (
               <div>
                 <Form layout="vertical">
-                  {/* 外边距设置 */}
-                  <Form.Item label="外边距" className="mb-4">
-                    <Space>
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        defaultValue={selectedComponent.props?.style?.marginTop || 0}
-                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          style: { ...selectedComponent.props?.style, marginTop: value }
-                        })}
-                        addonAfter="上"
-                      />
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        defaultValue={selectedComponent.props?.style?.marginBottom || 0}
-                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          style: { ...selectedComponent.props?.style, marginBottom: value }
-                        })}
-                        addonAfter="下"
-                      />
-                    </Space>
-                  </Form.Item>
-
                   {/* 内边距设置 */}
                   <Form.Item label="内边距" className="mb-4">
                     <InputNumber
