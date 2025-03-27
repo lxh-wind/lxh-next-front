@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Modal } from 'antd';
 import { ComponentType } from './types';
 import ComponentItem from './ComponentItem';
-import { renderComponentContent } from './ComponentRenderer';
 import { useAtom } from 'jotai';
 import {
   componentsAtom,
@@ -24,13 +22,12 @@ const Canvas: React.FC<{}> = () => {
   const [canvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
 
-  const [history, setHistory] = useAtom(historyAtom);
-  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
-  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
-  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
+  const [, setHistory] = useAtom(historyAtom);
+  const [, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [, setCanUndo] = useAtom(canUndoAtom);
+  const [, setCanRedo] = useAtom(canRedoAtom);
   
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -50,30 +47,30 @@ const Canvas: React.FC<{}> = () => {
     }
   };
 
-    // 更新组件顺序
-    const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
-      // 更新历史状态
-      setHistory(prev => ({
-        past: [...prev.past, prev.present],
-        present: (() => {
-          const result = Array.from(prev.present);
-          const [removed] = result.splice(startIndex, 1);
-          result.splice(endIndex, 0, removed);
-          return result;
-        })(),
-        future: [],
-      }));
-      setHistoryIndex(prev => prev + 1);
-      setCanUndo(true);
-      setCanRedo(false);
-      
-      setComponents(prev => {
-        const result = Array.from(prev);
+  // 更新组件顺序
+  const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
+    // 更新历史状态
+    setHistory(prev => ({
+      past: [...prev.past, prev.present],
+      present: (() => {
+        const result = Array.from(prev.present);
         const [removed] = result.splice(startIndex, 1);
         result.splice(endIndex, 0, removed);
         return result;
-      });
-    }, []);
+      })(),
+      future: [],
+    }));
+    setHistoryIndex(prev => prev + 1);
+    setCanUndo(true);
+    setCanRedo(false);
+    
+    setComponents(prev => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+  }, []);
 
   const handleDuplicate = (id: string) => {
     const component = components.find(comp => comp.id === id);
@@ -95,28 +92,6 @@ const Canvas: React.FC<{}> = () => {
   const handleMoveComponentDown = (index: number) => {
     if (index < components.length - 1 && handleUpdateComponentsOrder) {
       handleUpdateComponentsOrder(index, index + 1);
-    }
-  };
-
-  // 组件拖拽排序相关
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', index.toString());
-      
-      // 设置拖动时的半透明效果
-      setTimeout(() => {
-        if (e.target && (e.target as HTMLElement).style) {
-          (e.target as HTMLElement).style.opacity = '0.5';
-        }
-      }, 0);
-    }
-  };
-
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (e.target && (e.target as HTMLElement).style) {
-      (e.target as HTMLElement).style.opacity = '1';
     }
   };
 
@@ -173,12 +148,6 @@ const Canvas: React.FC<{}> = () => {
                 onSelect={() => handleComponentSelect(component)}
                 onDelete={() => handleComponentDelete(component.id)}
                 onDuplicate={() => handleDuplicate(component.id)}
-                onDragStart={handleDragStart}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onDragEnd={handleDragEnd}
                 onMoveUp={() => handleMoveComponentUp(index)}
                 onMoveDown={() => handleMoveComponentDown(index)}
                 isFirst={index === 0}
@@ -186,38 +155,14 @@ const Canvas: React.FC<{}> = () => {
               />
             </div>
           ))}
-          
+
           {components.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+            <div style={{ height: `${canvasSize.height}px` }} className="flex items-center justify-center text-center text-gray-400">
               <p>从左侧拖入组件到这里</p>
             </div>
           )}
         </div>
       </div>
-      
-      {/* 预览模态框 */}
-      <Modal
-        title="移动端预览"
-        open={showPreview}
-        onCancel={() => setShowPreview(false)}
-        footer={null}
-        width={400}
-      >
-        <div className="w-full max-h-[80vh] overflow-auto p-0">
-          <div className="bg-gray-100 rounded-t-lg p-2 text-center text-xs">
-            <div className="inline-block bg-black text-white px-4 py-1 rounded-full">
-              手机预览模式
-            </div>
-          </div>
-          <div className="w-full bg-white p-4">
-            {components.map((component) => (
-              <div key={component.id} className="mb-4">
-                {renderComponentContent(component)}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };

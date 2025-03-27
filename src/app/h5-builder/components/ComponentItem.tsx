@@ -14,9 +14,6 @@ interface ComponentItemProps {
   onSelect: () => void;
   onDelete: () => void;
   onDuplicate?: () => void;
-  onDragStart: (e: React.DragEvent, index: number) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragEnd: (e: React.DragEvent) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   isFirst: boolean;
@@ -30,9 +27,6 @@ const ComponentItem: React.FC<ComponentItemProps> = ({
   onSelect,
   onDelete,
   onDuplicate,
-  onDragStart,
-  onDragOver,
-  onDragEnd,
   onMoveUp,
   onMoveDown,
   isFirst,
@@ -73,10 +67,6 @@ const ComponentItem: React.FC<ComponentItemProps> = ({
           isSelected ? 'outline outline-1 outline-blue-400 bg-blue-50' : ''
         }`}
         onClick={onSelect}
-        draggable
-        onDragStart={(e) => onDragStart(e, index)}
-        onDragOver={onDragOver}
-        onDragEnd={onDragEnd}
         data-index={index}
       >
         <div>
