@@ -1,7 +1,7 @@
 'use client';
 import { useCallback } from 'react';
 import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag } from 'antd';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
   selectedComponentAtom,
@@ -12,13 +12,13 @@ import {
 } from '@/src/app/h5-builder/store/atoms';
 
 export default function PropertyPanel() {
-  const [components, setComponents] = useAtom(componentsAtom);
+  const setComponents = useSetAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
-  const [history, setHistory] = useAtom(historyAtom);
-  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
-  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
-  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   
+  const setHistory = useSetAtom(historyAtom);
+  const setHistoryIndex = useSetAtom(historyIndexAtom);
+  const setCanUndo = useSetAtom(canUndoAtom);
+  const setCanRedo = useSetAtom(canRedoAtom);
 
   // 更新组件属性
   const onUpdateComponent = useCallback((id: string, props: any) => {
@@ -175,6 +175,10 @@ export default function PropertyPanel() {
 
   // 渲染内容设置表单
   function renderContentForm() {
+    if (!selectedComponent) {
+      return <div>请先选择一个组件</div>;
+    }
+    
     switch (selectedComponent.type) {
       case 'text':
         return (
