@@ -17,7 +17,6 @@ import {
 import { generateComplexId } from '../utils/store';
 import { useDrag, useDrop } from 'react-dnd';
 import { COMPONENT_ITEM_TYPE } from './ComponentPanel';
-import { DragOutlined } from '@ant-design/icons';
 
 // 拖拽项组件
 interface DraggableComponentProps {
@@ -111,77 +110,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, move
   return (
     <div ref={ref} style={style} className="component-item w-full" data-index={index}>
       {children}
-    </div>
-  );
-};
-
-// 自由布局模式下的拖拽句柄组件接口
-interface DragHandleProps {
-  onDragStart?: () => void;
-  onDragEnd?: (offset: { x: number, y: number }) => void;
-}
-
-// 自由布局模式下的拖拽句柄组件
-const DragHandle: React.FC<DragHandleProps> = ({ onDragStart, onDragEnd }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartPos({ x: e.clientX, y: e.clientY });
-    setOffset({ x: 0, y: 0 });
-    
-    if (onDragStart) {
-      onDragStart();
-    }
-    
-    // 阻止事件冒泡，防止触发其他点击事件
-    e.stopPropagation();
-  };
-  
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      
-      const newOffset = {
-        x: e.clientX - startPos.x,
-        y: e.clientY - startPos.y
-      };
-      
-      setOffset(newOffset);
-    };
-    
-    const handleMouseUp = () => {
-      if (!isDragging) return;
-      
-      setIsDragging(false);
-      
-      if (onDragEnd) {
-        onDragEnd(offset);
-      }
-    };
-    
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, startPos, offset, onDragEnd]);
-  
-  return (
-    <div 
-      className="absolute top-0 right-0 z-20 w-6 h-6 flex items-center justify-center bg-blue-500 text-white cursor-move opacity-70 hover:opacity-100 rounded-bl-md"
-      onMouseDown={handleMouseDown}
-      style={{ 
-        transform: isDragging ? `translate(${offset.x}px, ${offset.y}px)` : 'none',
-      }}
-    >
-      <DragOutlined />
     </div>
   );
 };
@@ -312,10 +240,22 @@ const Canvas: React.FC<{}> = () => {
   const handleDropNewComponentAtPosition = useCallback((item: { componentType: any }, targetIndex: number) => {
     if (!item.componentType) return;
     
+    // 根据布局模式设置默认位置信息
+    const defaultPosition = pageInfo.layoutMode === 'free' 
+      ? { 
+          top: (pageInfo.containerPadding || 0), 
+          left: (pageInfo.containerPadding || 0), 
+          width: '100%', 
+          height: 'auto',
+          zIndex: components.length + 1 
+        } 
+      : undefined;
+    
     const newComponent = {
       ...item.componentType,
       id: generateComplexId(item.componentType.type),
-      props: { ...item.componentType.defaultProps }
+      props: { ...item.componentType.defaultProps },
+      position: defaultPosition
     };
     
     // 创建新的组件数组，在指定位置插入新组件
@@ -340,7 +280,7 @@ const Canvas: React.FC<{}> = () => {
     
     // 选中新添加的组件
     setSelectedComponent(newComponent);
-  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, setSelectedComponent]);
+  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, setSelectedComponent, pageInfo.layoutMode]);
 
   // 处理从面板拖入的新组件到画布末尾
   const handleDropNewComponent = useCallback((item: { componentType: any }) => {
@@ -404,6 +344,50 @@ const Canvas: React.FC<{}> = () => {
 
   // 更新组件位置（自由布局模式）
   const handleUpdateComponentPosition = useCallback((id: string, newPosition: any) => {
+    // 如果是自由布局模式，检查边界
+    if (pageInfo.layoutMode === 'free' && containerRef.current) {
+      const component = components.find(comp => comp.id === id);
+      const componentElement = document.getElementById(`component-${id}`);
+      const canvasElement = containerRef.current;
+      
+      if (component && componentElement && canvasElement) {
+        const componentRect = componentElement.getBoundingClientRect();
+        const canvasRect = canvasElement.getBoundingClientRect();
+        
+        // 如果没有指定宽高，获取当前实际宽高
+        if (newPosition.width === undefined && newPosition.height === undefined) {
+          // 计算组件的实际尺寸（考虑border和padding）
+          const computedStyle = window.getComputedStyle(componentElement);
+          const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+          const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+          const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
+          const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
+          
+          const actualWidth = Math.round(componentRect.width - borderLeft - borderRight);
+          const actualHeight = Math.round(componentRect.height - borderTop - borderBottom);
+          
+          // 更新宽高信息（如果之前不是数字类型）
+          if (typeof component.position?.width !== 'number') {
+            newPosition.width = actualWidth;
+          }
+          
+          if (typeof component.position?.height !== 'number') {
+            newPosition.height = actualHeight;
+          }
+        }
+        
+        // 计算边界
+        const minLeft = 0;
+        const maxLeft = canvasRect.width - componentRect.width - (pageInfo.containerPadding || 0) * 2;
+        const minTop = 0;
+        const maxTop = canvasRect.height - componentRect.height - (pageInfo.containerPadding || 0) * 2;
+        
+        // 应用边界约束
+        newPosition.left = Math.max(minLeft, Math.min(newPosition.left, maxLeft));
+        newPosition.top = Math.max(minTop, Math.min(newPosition.top, maxTop));
+      }
+    }
+    
     const updatedComponents = components.map(comp => {
       if (comp.id === id) {
         return {
@@ -432,14 +416,24 @@ const Canvas: React.FC<{}> = () => {
     
     // 更新组件状态
     setComponents(updatedComponents);
-  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo]);
+  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, pageInfo.layoutMode, pageInfo.containerPadding]);
 
   // 处理组件拖拽结束事件（自由布局模式）
   const handleComponentDragEnd = useCallback((id: string, position: { top: number, left: number }) => {
     if (pageInfo.layoutMode === 'free') {
-      handleUpdateComponentPosition(id, position);
+      // 获取当前组件
+      const component = components.find(comp => comp.id === id);
+      if (component) {
+        // 构建新的位置对象，确保保留宽高属性
+        const newPosition = {
+          ...component.position,
+          top: position.top,
+          left: position.left
+        };
+        handleUpdateComponentPosition(id, newPosition);
+      }
     }
-  }, [pageInfo.layoutMode, handleUpdateComponentPosition]);
+  }, [pageInfo.layoutMode, handleUpdateComponentPosition, components]);
 
   return (
     <div className="canvas-container">
@@ -470,10 +464,10 @@ const Canvas: React.FC<{}> = () => {
         ></div>
         
         <div 
-          className={`w-full relative ${pageInfo.layoutMode === 'free' ? 'h-full' : ''}`}
+          className={`w-full relative`}
           style={{ 
             padding: pageInfo.containerPadding,
-            minHeight: pageInfo.layoutMode === 'free' ? canvasSize.height : 'auto'
+            minHeight: canvasSize.height // 保持一致的画布高度
           }}
         >
           {components.map((component, index) => (
@@ -490,26 +484,132 @@ const Canvas: React.FC<{}> = () => {
                   position: pageInfo.layoutMode === 'free' ? 'absolute' : 'relative',
                   top: pageInfo.layoutMode === 'free' ? component.position?.top || 0 : 'auto',
                   left: pageInfo.layoutMode === 'free' ? component.position?.left || 0 : 'auto',
-                  width: pageInfo.layoutMode === 'free' ? component.position?.width || '100%' : '100%',
+                  width: pageInfo.layoutMode === 'free' && component.position?.width ? 
+                    (typeof component.position.width === 'number' ? `${component.position.width}px` : component.position.width) : 
+                    '100%',
+                  height: pageInfo.layoutMode === 'free' && component.position?.height && component.position.height !== 'auto' ?
+                    (typeof component.position.height === 'number' ? `${component.position.height}px` : component.position.height) :
+                    'auto',
                   zIndex: pageInfo.layoutMode === 'free' ? component.position?.zIndex || index + 1 : 'auto',
                 }}
-                className={`${pageInfo.layoutMode === 'free' ? 'cursor-move relative' : ''}`}
-              >
-                {/* 自由布局模式下显示拖拽手柄 */}
-                {pageInfo.layoutMode === 'free' && selectedId === component.id && (
-                  <DragHandle 
-                    onDragStart={() => {}}
-                    onDragEnd={(offset: { x: number, y: number }) => {
-                      // 计算新位置
-                      const newPosition = {
-                        top: (component.position?.top || 0) + offset.y,
-                        left: (component.position?.left || 0) + offset.x
+                className={`${pageInfo.layoutMode === 'free' && selectedId === component.id ? 'cursor-move' : ''} relative`}
+                {...(pageInfo.layoutMode === 'free' && selectedId === component.id ? {
+                  onMouseDown: (e) => {
+                    // 记录初始位置
+                    const startPos = { x: e.clientX, y: e.clientY };
+                    const initialTop = component.position?.top || 0;
+                    const initialLeft = component.position?.left || 0;
+                    
+                    // 获取组件和画布的大小，用于计算边界
+                    const componentElement = document.getElementById(`component-${component.id}`);
+                    const canvasElement = containerRef.current;
+                    
+                    if (!componentElement || !canvasElement) return;
+                    
+                    const componentRect = componentElement.getBoundingClientRect();
+                    const canvasRect = canvasElement.getBoundingClientRect();
+                    
+                    // 计算边界限制
+                    const minLeft = 0;
+                    const maxLeft = canvasRect.width - componentRect.width - (pageInfo.containerPadding || 0) * 2;
+                    const minTop = 0;
+                    const maxTop = canvasRect.height - componentRect.height - (pageInfo.containerPadding || 0) * 2;
+                    
+                    // 创建移动处理函数
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const offset = {
+                        x: moveEvent.clientX - startPos.x,
+                        y: moveEvent.clientY - startPos.y
                       };
-                      handleUpdateComponentPosition(component.id, newPosition);
-                    }}
-                  />
-                )}
-                
+                      
+                      // 计算新位置，并应用边界限制
+                      let newLeft = initialLeft + offset.x;
+                      let newTop = initialTop + offset.y;
+                      
+                      // 应用边界限制
+                      newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
+                      newTop = Math.max(minTop, Math.min(newTop, maxTop));
+                      
+                      // 更新组件位置显示
+                      if (componentElement) {
+                        componentElement.style.top = `${newTop}px`;
+                        componentElement.style.left = `${newLeft}px`;
+                      }
+                    };
+                    
+                    // 创建鼠标释放处理函数
+                    const handleMouseUp = (upEvent: MouseEvent) => {
+                      // 计算最终的位置偏移，考虑边界
+                      const offset = {
+                        x: upEvent.clientX - startPos.x,
+                        y: upEvent.clientY - startPos.y
+                      };
+                      
+                      let finalLeft = initialLeft + offset.x;
+                      let finalTop = initialTop + offset.y;
+                      
+                      // 应用边界限制
+                      finalLeft = Math.max(minLeft, Math.min(finalLeft, maxLeft));
+                      finalTop = Math.max(minTop, Math.min(finalTop, maxTop));
+                      
+                      // 获取组件当前实际尺寸
+                      const updatedComponentElement = document.getElementById(`component-${component.id}`);
+                      if (updatedComponentElement) {
+                        const computedStyle = window.getComputedStyle(updatedComponentElement);
+                        const updatedRect = updatedComponentElement.getBoundingClientRect();
+                        
+                        // 计算组件的实际尺寸（考虑border和padding）
+                        const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+                        const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+                        const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
+                        const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
+                        
+                        const actualWidth = Math.round(updatedRect.width - borderLeft - borderRight);
+                        const actualHeight = Math.round(updatedRect.height - borderTop - borderBottom);
+                        
+                        // 更新组件位置状态，包括实际宽高
+                        const newPosition = {
+                          ...component.position,
+                          top: finalTop,
+                          left: finalLeft
+                        };
+                        
+                        // 如果宽高之前不是数字类型，则更新为实际值
+                        if (typeof component.position?.width !== 'number') {
+                          newPosition.width = actualWidth;
+                        }
+                        
+                        if (typeof component.position?.height !== 'number') {
+                          newPosition.height = actualHeight;
+                        }
+                        
+                        handleUpdateComponentPosition(component.id, newPosition);
+                      } else {
+                        // 如果找不到元素，仅更新位置
+                        const newPosition = {
+                          ...component.position,
+                          top: finalTop,
+                          left: finalLeft
+                        };
+                        
+                        handleUpdateComponentPosition(component.id, newPosition);
+                      }
+                      
+                      // 移除事件监听器
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+                    
+                    // 添加事件监听器
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                    
+                    // 阻止事件冒泡，防止触发其他点击事件
+                    e.stopPropagation();
+                  }
+                } : {})}
+                id={`component-${component.id}`}
+              >
                 <ComponentItem
                   component={component}
                   isSelected={selectedId === component.id}
@@ -521,7 +621,6 @@ const Canvas: React.FC<{}> = () => {
                   onMoveDown={() => handleMoveComponentDown(index)}
                   isFirst={index === 0}
                   isLast={index === components.length - 1}
-                  layoutMode={pageInfo.layoutMode}
                 />
               </div>
             </DraggableComponent>

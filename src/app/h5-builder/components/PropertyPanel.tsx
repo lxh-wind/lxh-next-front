@@ -1,6 +1,6 @@
 'use client';
-import { useCallback } from 'react';
-import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
@@ -9,16 +9,82 @@ import {
   historyIndexAtom,
   canUndoAtom,
   canRedoAtom,
+  pageInfoAtom
 } from '@/src/app/h5-builder/store/atoms';
 
 export default function PropertyPanel() {
   const setComponents = useSetAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
+  const [pageInfo] = useAtom(pageInfoAtom);
   
   const setHistory = useSetAtom(historyAtom);
   const setHistoryIndex = useSetAtom(historyIndexAtom);
   const setCanUndo = useSetAtom(canUndoAtom);
   const setCanRedo = useSetAtom(canRedoAtom);
+
+  // 判断是否为自由布局模式
+  const isFreeModeActive = pageInfo.layoutMode === 'free';
+
+  // 添加状态来存储组件的实际尺寸信息
+  const [componentRect, setComponentRect] = useState<DOMRect | null>(null);
+
+  // 当选中组件变化时，获取其实际尺寸
+  useEffect(() => {
+    if (selectedComponent && isFreeModeActive) {
+      const componentElement = document.getElementById(`component-${selectedComponent.id}`);
+      if (componentElement) {
+        // 获取组件尺寸
+        const rect = componentElement.getBoundingClientRect();
+        setComponentRect(rect);
+        
+        // 创建ResizeObserver监听组件尺寸变化
+        const resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            setComponentRect(entry.target.getBoundingClientRect());
+          }
+        });
+        
+        resizeObserver.observe(componentElement);
+        
+        return () => {
+          resizeObserver.disconnect();
+        };
+      }
+    }
+  }, [selectedComponent, isFreeModeActive]);
+
+  // 辅助函数，获取组件实际宽高
+  const getActualSize = (property: 'width' | 'height') => {
+    if (componentRect && isFreeModeActive) {
+      if (property === 'width') {
+        // 如果position中已经定义了数值宽度，优先使用它
+        if (typeof selectedComponent?.position?.width === 'number') {
+          return selectedComponent.position.width;
+        }
+        // 否则返回实际计算的宽度
+        return Math.round(componentRect.width);
+      } else if (property === 'height') {
+        // 如果position中已经定义了数值高度，优先使用它
+        if (typeof selectedComponent?.position?.height === 'number') {
+          return selectedComponent.position.height;
+        }
+        // 否则返回实际计算的高度
+        return Math.round(componentRect.height);
+      }
+    }
+    return undefined;
+  };
+
+  // 应用实际尺寸到组件
+  const applyActualSize = () => {
+    if (selectedComponent && isFreeModeActive && componentRect) {
+      const newPosition = {
+        width: Math.round(componentRect.width),
+        height: Math.round(componentRect.height)
+      };
+      updateComponentPosition(selectedComponent.id, newPosition);
+    }
+  };
 
   // 更新组件属性
   const onUpdateComponent = useCallback((id: string, props: any) => {
@@ -50,6 +116,70 @@ export default function PropertyPanel() {
       );
     }
   }, [selectedComponent]);
+
+  // 更新组件位置和尺寸
+  const updateComponentPosition = useCallback((id: string, position: any) => {
+    // 当修改宽高时，可能需要调整位置，确保不超出画布
+    if ((position.width || position.height) && selectedComponent) {
+      const componentElement = document.getElementById(`component-${id}`);
+      const canvasElement = document.querySelector('.canvas-content');
+      
+      if (componentElement && canvasElement) {
+        const canvasRect = canvasElement.getBoundingClientRect();
+        const currentLeft = selectedComponent.position?.left || 0;
+        const currentTop = selectedComponent.position?.top || 0;
+        
+        // 计算新宽高
+        const newWidth = position.width || 
+          (typeof selectedComponent.position?.width === 'number' 
+            ? selectedComponent.position.width 
+            : 200);
+        const newHeight = position.height && position.height !== 'auto' 
+          ? position.height 
+          : (typeof selectedComponent.position?.height === 'number' 
+              ? selectedComponent.position.height 
+              : 100);
+        
+        // 计算边界
+        const maxLeft = canvasRect.width - newWidth - (pageInfo.containerPadding || 0) * 2;
+        const maxTop = canvasRect.height - newHeight - (pageInfo.containerPadding || 0) * 2;
+        
+        // 如果当前位置会超出边界，则调整位置
+        if (currentLeft > maxLeft) {
+          position.left = Math.max(0, maxLeft);
+        }
+        
+        if (currentTop > maxTop) {
+          position.top = Math.max(0, maxTop);
+        }
+      }
+    }
+    
+    setHistory(prev => ({
+      past: [...prev.past, prev.present],
+      present: prev.present.map(comp => 
+        comp.id === id ? { ...comp, position: { ...comp.position, ...position } } : comp
+      ),
+      future: [],
+    }));
+    setHistoryIndex(prev => prev + 1);
+    setCanUndo(true);
+    setCanRedo(false);
+    
+    setComponents(prev => 
+      prev.map(comp => 
+        comp.id === id 
+          ? { ...comp, position: { ...comp.position, ...position } } 
+          : comp
+      )
+    );
+    
+    if (selectedComponent && selectedComponent.id === id) {
+      setSelectedComponent(prev => 
+        prev ? { ...prev, position: { ...prev.position, ...position } } : null
+      );
+    }
+  }, [selectedComponent, pageInfo.containerPadding]);
 
   if (!selectedComponent) {
     return (
@@ -96,6 +226,95 @@ export default function PropertyPanel() {
             children: (
               <div>
                 <Form layout="vertical">
+                  {/* 自由布局模式下显示位置和尺寸设置 */}
+                  {isFreeModeActive && (
+                    <>
+                      <div className="mb-4">
+                        <div className="font-medium mb-2 flex justify-between items-center">
+                          <span>位置与尺寸</span>
+                          <Button 
+                            size="small"
+                            onClick={applyActualSize}
+                            title="使用实际尺寸"
+                          >
+                            应用实际尺寸
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Form.Item label="X 坐标" className="mb-2">
+                            <InputNumber
+                              min={0}
+                              value={selectedComponent.position?.left}
+                              onChange={(value) => updateComponentPosition(selectedComponent.id, {
+                                left: value
+                              })}
+                              addonAfter="px"
+                              style={{ width: '100%' }}
+                            />
+                          </Form.Item>
+                          <Form.Item label="Y 坐标" className="mb-2">
+                            <InputNumber
+                              min={0}
+                              value={selectedComponent.position?.top}
+                              onChange={(value) => updateComponentPosition(selectedComponent.id, {
+                                top: value
+                              })}
+                              addonAfter="px"
+                              style={{ width: '100%' }}
+                            />
+                          </Form.Item>
+                          <Form.Item label="宽度" className="mb-2">
+                            <InputNumber
+                              min={20}
+                              value={getActualSize('width')}
+                              onChange={(value) => {
+                                if (value) {
+                                  updateComponentPosition(selectedComponent.id, {
+                                    width: value
+                                  });
+                                }
+                              }}
+                              addonAfter="px"
+                              style={{ width: '100%' }}
+                              placeholder={typeof selectedComponent.position?.width === 'string' ? selectedComponent.position.width : "auto"}
+                            />
+                          </Form.Item>
+                          <Form.Item label="高度" className="mb-2">
+                            <InputNumber
+                              min={20}
+                              value={getActualSize('height')}
+                              onChange={(value) => {
+                                if (value) {
+                                  updateComponentPosition(selectedComponent.id, {
+                                    height: value
+                                  });
+                                } else {
+                                  updateComponentPosition(selectedComponent.id, {
+                                    height: 'auto'
+                                  });
+                                }
+                              }}
+                              addonAfter="px"
+                              style={{ width: '100%' }}
+                              placeholder={typeof selectedComponent.position?.height === 'string' ? selectedComponent.position.height : "auto"}
+                            />
+                          </Form.Item>
+                        </div>
+                      </div>
+                      <Form.Item label="层级 (Z-Index)" className="mb-4">
+                        <InputNumber
+                          min={1}
+                          value={selectedComponent.position?.zIndex}
+                          onChange={(value) => updateComponentPosition(selectedComponent.id, {
+                            zIndex: value
+                          })}
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                      <hr className="my-4 border-gray-200" />
+                    </>
+                  )}
+
                   {/* 内边距设置 */}
                   <Form.Item label="内边距" className="mb-4">
                     <InputNumber
