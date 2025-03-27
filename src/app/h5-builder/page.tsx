@@ -16,7 +16,7 @@ import {
   RedoOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { publishPage, previewPage, generateComplexId } from './utils/store';
+import { publishPage, previewPage } from './utils/store';
 import { PageInfo } from './components/types';
 import CommonOperations from '@/components/CommonOperations';
 import { useAtom } from 'jotai';
@@ -330,12 +330,6 @@ export default function H5Builder() {
     });
   }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, messageApi, setSelectedComponent]);
 
-  // 添加一个测试函数来验证 ID 生成
-  const testIdGeneration = useCallback(() => {
-    const testId = generateComplexId('test');
-    messageApi.info(`新生成的复杂ID: ${testId}`);
-  }, []);
-
   return (
     <div className="h-full flex flex-col">
       {contextHolder}
@@ -345,7 +339,6 @@ export default function H5Builder() {
         <div className="flex items-center">
           <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>返回</Button>
           <span className="text-xl font-medium ml-4">H5营销页面制作</span>
-          <Button onClick={testIdGeneration} className="ml-4">测试ID生成</Button>
         </div>
         
         <div className="flex items-center gap-2">
