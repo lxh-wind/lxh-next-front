@@ -87,35 +87,64 @@ export default function H5Builder() {
   
   // 撤销操作
   const handleUndo = useCallback(() => {
-    if (historyIndex > 0) {
+    console.log('Undo called', {
+      historyIndex,
+      pastLength: history.past.length,
+      canUndo,
+      componentsLength: components.length
+    });
+
+    if (history.past.length > 0) {
+      // 获取当前历史记录的上一个状态
+      const prevState = history.past[history.past.length - 1];
+      console.log('Previous state:', prevState);
+      
+      // 新的past数组，移除最后一个
+      const newPast = history.past.slice(0, -1);
+      
       setHistory(prev => ({
-        past: prev.past.slice(0, -1),
-        present: prev.past[prev.past.length - 1],
+        past: newPast,
+        present: prevState,  // 使用上一个状态作为当前状态
         future: [prev.present, ...prev.future],
       }));
+      
       setHistoryIndex(prev => prev - 1);
-      setCanUndo(historyIndex > 1);
+      // 撤销后，只要newPast数组中还有元素，就可以继续撤销
+      setCanUndo(newPast.length > 0);
       setCanRedo(true);
       
-      setComponents(history.past[history.past.length - 1]);
+      // 更新组件到上一个状态
+      setComponents(prevState);
+      
+      console.log('After undo', {
+        newPastLength: newPast.length,
+        newCanUndo: newPast.length > 0,
+        newComponentsLength: prevState.length
+      });
     }
-  }, [history, historyIndex]);
+  }, [history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, components.length, canUndo]);
   
   // 重做操作
   const handleRedo = useCallback(() => {
     if (history.future.length > 0) {
+      const newPast = [...history.past, history.present];
+      const newFuture = history.future.slice(1);
+      
       setHistory(prev => ({
-        past: [...prev.past, prev.present],
+        past: newPast,
         present: prev.future[0],
-        future: prev.future.slice(1),
+        future: newFuture,
       }));
+      
       setHistoryIndex(prev => prev + 1);
-      setCanUndo(true);
-      setCanRedo(history.future.length > 1);
+      // 只要past中有记录就可以撤销
+      setCanUndo(newPast.length > 0);
+      // 只要future中还有记录就可以重做
+      setCanRedo(newFuture.length > 0);
       
       setComponents(history.future[0]);
     }
-  }, [history]);
+  }, [history, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo]);
   
   // 初始化布局相关方法
   useEffect(() => {
@@ -281,12 +310,25 @@ export default function H5Builder() {
       title: '确认清空画布？',
       content: '此操作将删除画布上的所有组件，且不可恢复',
       onOk: () => {
+        // 在清空前保存当前状态到历史
+        if (components.length > 0) {
+          const newPast = [...history.past, components];
+          setHistory({
+            past: newPast,
+            present: [],
+            future: [],
+          });
+          setHistoryIndex(historyIndex + 1);
+          setCanUndo(true);  // 清空后可以撤销
+          setCanRedo(false);
+        }
+        
         setComponents([]);
         setSelectedComponent(null);
         messageApi.success('画布已清空');
       }
     });
-  }, []);
+  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, messageApi, setSelectedComponent]);
 
   // 添加一个测试函数来验证 ID 生成
   const testIdGeneration = useCallback(() => {

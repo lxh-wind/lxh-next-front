@@ -120,7 +120,26 @@ const Canvas: React.FC<{}> = () => {
   };
 
   const handleComponentDelete = (id: string) => {
-    setComponents(prev => prev.filter(comp => comp.id !== id));
+    // 保存当前状态到历史
+    const newComponents = components.filter(comp => comp.id !== id);
+    const newPast = [...history.past, components];
+    
+    setHistory({
+      past: newPast,
+      present: newComponents,
+      future: [],
+    });
+    
+    // 不再需要更新 historyIndex，因为我们现在使用 past.length 来判断
+    // setHistoryIndex(historyIndex + 1);
+    
+    // 根据newPast的长度判断是否可以撤销
+    setCanUndo(newPast.length > 0);
+    setCanRedo(false);
+    
+    // 更新组件状态
+    setComponents(newComponents);
+    
     if (selectedComponent?.id === id) {
       setSelectedComponent(null);
     }
@@ -143,14 +162,17 @@ const Canvas: React.FC<{}> = () => {
     newComponents.splice(endIndex, 0, movedItem);
     
     // 更新历史状态
+    const newPast = [...history.past, components];
+    
     setHistory({
-      past: [...history.past, components],
+      past: newPast,
       present: newComponents,
       future: [],
     });
     
     setHistoryIndex(historyIndex + 1);
-    setCanUndo(true);
+    // 只要past中有记录就可以撤销
+    setCanUndo(newPast.length > 0);
     setCanRedo(false);
     
     // 更新组件状态
@@ -162,7 +184,24 @@ const Canvas: React.FC<{}> = () => {
     if (component) {
       const newComponent = JSON.parse(JSON.stringify(component));
       newComponent.id = generateComplexId(component.type);
-      setComponents(prev => [...prev, newComponent]);
+      
+      // 更新历史状态
+      const newComponents = [...components, newComponent];
+      const newPast = [...history.past, components];
+      
+      setHistory({
+        past: newPast,
+        present: newComponents,
+        future: [],
+      });
+      
+      setHistoryIndex(historyIndex + 1);
+      // 根据newPast的长度判断是否可以撤销
+      setCanUndo(newPast.length > 0);
+      setCanRedo(false);
+      
+      // 更新组件状态
+      setComponents(newComponents);
     }
   };
 

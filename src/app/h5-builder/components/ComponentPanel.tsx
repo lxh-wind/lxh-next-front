@@ -5,7 +5,7 @@ import { Card, Input, Tag } from 'antd';
 import { SearchOutlined, AppstoreOutlined, ShoppingOutlined, FundViewOutlined, DragOutlined } from '@ant-design/icons';
 import { getComponentsByCategory } from '../core/components';
 import { useAtom } from 'jotai';
-import { componentsAtom } from '../store/atoms';
+import { componentsAtom, historyAtom, historyIndexAtom, canUndoAtom, canRedoAtom } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
 
 // 组件分类
@@ -17,6 +17,10 @@ const componentCategories = [
 
 export default function ComponentPanel() {
   const [components, setComponents] = useAtom(componentsAtom);
+  const [history, setHistory] = useAtom(historyAtom);
+  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
+  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   const [activeCategory, setActiveCategory] = useState('basic');
   const [searchText, setSearchText] = useState('');
 
@@ -44,7 +48,23 @@ export default function ComponentPanel() {
       id: generateComplexId(componentType.type),
       props: { ...componentType.defaultProps }
     };
-    setComponents(prev => [...prev, newComponent]);
+    
+    // 更新历史状态
+    const newComponents = [...components, newComponent];
+    const newPast = [...history.past, components];
+    
+    setHistory({
+      past: newPast,
+      present: newComponents,
+      future: [],
+    });
+    
+    // 根据newPast的长度判断是否可以撤销
+    setCanUndo(newPast.length > 0);
+    setCanRedo(false);
+    
+    // 更新组件状态
+    setComponents(newComponents);
   };
 
   const handleChangeCategory = (key: string) => {
