@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Layout, message, Modal, Button, Tooltip, Divider } from 'antd';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -30,17 +30,17 @@ import {
   canUndoAtom,
   canRedoAtom,
 } from '@/src/app/h5-builder/store/atoms';
+import PageSettings from './components/PageSettings';
+import CanvasSizeSettings from './components/CanvasSizeSettings';
+import SaveModal from './components/SaveModal';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
 const Canvas = dynamic(() => import('./components/Canvas'), { ssr: false });
 const PropertyPanel = dynamic(() => import('./components/PropertyPanel'), { ssr: false });
-const PageSettings = dynamic(() => import('./components/PageSettings'), { ssr: false });
 const ZoomablePaneWithRulers = dynamic(() => import('./components/ZoomablePaneWithRulers'), {
   ssr: false,
 });
-const CanvasSizeSettings = dynamic(() => import('./components/CanvasSizeSettings'), { ssr: false });
-const SaveModal = dynamic(() => import('./components/SaveModal'), { ssr: false });
 
 // 添加一个转换函数，将 PageData 转换为 PageInfo
 const convertPageDataToPageInfo = (pageData: any): PageInfo => {
@@ -117,27 +117,10 @@ export default function H5Builder() {
     }
   }, [history]);
   
-  // 保存页面
-  const handleSave = async (values: any) => {
-    try {
-      const pageData = {
-        ...pageInfo,
-        ...values,
-        components,
-      };
-      
-      const savedData = await savePage(pageData);
-      messageApi.success('保存成功');
-      setPageInfo(prev => ({
-        ...prev,
-        id: savedData.id,
-      }));
-    } catch (error) {
-      messageApi.error('保存失败');
-    } finally {
-      setIsSaveModalOpen(false);
-    }
-  };
+  // 初始化布局相关方法
+  useEffect(() => {
+    // TODO: 从服务器加载页面数据
+  }, []);
   
   // 发布页面
   const handlePublish = async () => {
@@ -156,7 +139,6 @@ export default function H5Builder() {
       }));
     } catch (error) {
       messageApi.error('发布失败');
-    } finally {
     }
   };
   
@@ -379,15 +361,10 @@ export default function H5Builder() {
       </Layout>
       
       {/* 页面设置模态框 */}
-      <Modal
-        title="页面设置"
+      <PageSettings
         open={isPageSettingsOpen}
-        onCancel={() => setIsPageSettingsOpen(false)}
-        footer={null}
-        width={800}
-      >
-        <PageSettings />
-      </Modal>
+        onClose={() => setIsPageSettingsOpen(false)}
+      />
       
       {/* 使用抽离的画布尺寸设置组件 */}
       <CanvasSizeSettings
@@ -403,8 +380,6 @@ export default function H5Builder() {
       <SaveModal
         open={isSaveModalOpen}
         onClose={handleCancelSave}
-        pageInfo={pageInfo}
-        onSave={handleSave}
       />
     </div>
   );

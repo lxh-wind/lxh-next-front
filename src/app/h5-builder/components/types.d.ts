@@ -1,5 +1,3 @@
-import { ReactElement } from 'react';
-
 // 组件类型接口
 export interface ComponentType {
   id: string;

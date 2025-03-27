@@ -1,23 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Modal, Form, Input, Button, Select } from 'antd';
-import type { PageInfo } from './types';
+import { Modal, Form, Input, Button, Select, message } from 'antd';
+import { useAtom } from 'jotai';
+import { pageInfoAtom } from '@/src/app/h5-builder/store/atoms';
+import { savePage } from '../utils/store';
 
 interface SaveModalProps {
   open: boolean;
   onClose: () => void;
-  pageInfo: PageInfo;
-  onSave: (values: any) => Promise<void>;
 }
 
 const SaveModal: React.FC<SaveModalProps> = ({ 
   open, 
-  onClose, 
-  pageInfo, 
-  onSave 
+  onClose 
 }) => {
   const [form] = Form.useForm();
+  const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     // 每次打开模态框时重置表单
@@ -30,6 +30,32 @@ const SaveModal: React.FC<SaveModalProps> = ({
     }
   }, [open, pageInfo, form]);
 
+  const handleSave = async (values: any) => {
+    try {
+      setLoading(true);
+      
+      // 更新页面信息
+      const updatedPageInfo = {
+        ...pageInfo,
+        ...values
+      };
+      
+      // 保存到服务器
+      const savedPage = await savePage(updatedPageInfo);
+      
+      // 更新应用状态
+      setPageInfo(savedPage);
+      
+      message.success('页面保存成功');
+      onClose();
+    } catch (error) {
+      message.error('保存失败，请重试');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       title="保存页面"
@@ -40,7 +66,7 @@ const SaveModal: React.FC<SaveModalProps> = ({
       <Form
         form={form}
         name="saveForm"
-        onFinish={onSave}
+        onFinish={handleSave}
         initialValues={{
           title: pageInfo.title,
           description: pageInfo.description,
@@ -77,7 +103,7 @@ const SaveModal: React.FC<SaveModalProps> = ({
           <Button onClick={onClose} className="mr-2">
             取消
           </Button>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={loading}>
             保存
           </Button>
         </Form.Item>
