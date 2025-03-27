@@ -75,7 +75,7 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
     const targetDegree = 360 * 5 + (360 - (prizeIndex * sectorDegree) - (sectorDegree / 2));
     
     // 设置新的旋转角度
-    setCurrentDegree(targetDegree);
+    setCurrentDegree(prev => prev + targetDegree);
     
     // 旋转结束后的操作
     setTimeout(() => {
@@ -101,10 +101,10 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
         ref={wheelRef} 
         className="lucky-wheel-container relative"
         style={{ 
-          width: '300px', 
-          height: '300px', 
-          margin: '0 auto', 
-          ...style 
+          width: '100%', 
+          height: '280px', 
+          margin: '0 auto',
+          maxWidth: '280px'
         }}
       >
         <div 
@@ -115,10 +115,11 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
             borderRadius: '50%',
             position: 'relative',
             overflow: 'hidden',
-            background: '#FF5C5C',
-            boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-            transition: `transform ${rotationTime / 1000}s ease-out`,
+            background: '#FFCD00',
+            boxShadow: '0 6px 12px rgba(0,0,0,0.1)',
+            transition: `transform ${rotationTime / 1000}s cubic-bezier(0.1, 0.7, 0.1, 1)`,
             transform: `rotate(${currentDegree}deg)`,
+            border: '8px solid #FF5C5C'
           }}
         >
           {prizes.map((prize, index) => (
@@ -133,7 +134,7 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
                 right: '50%',
                 transformOrigin: '100% 100%',
                 transform: `rotate(${index * sectorDegree}deg) skewY(-${90 - sectorDegree}deg)`,
-                background: prize.bgColor || '#FFEECC',
+                background: index % 2 === 0 ? '#FFEECC' : '#FFF4D6',
                 borderRight: '1px solid #FF5C5C',
                 overflow: 'hidden',
               }}
@@ -142,13 +143,13 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
                 className="prize-text"
                 style={{
                   position: 'absolute',
-                  top: '20px',
-                  right: '30px',
-                  transform: 'rotate(15deg) skewY(45deg)',
-                  color: prize.fontColor || '#FF5C5C',
+                  top: '25px',
+                  right: '25px',
+                  transform: 'rotate(20deg) skewY(45deg)',
+                  color: '#FF5C5C',
                   fontWeight: 'bold',
                   fontSize: '14px',
-                  width: '50px',
+                  width: '60px',
                   textAlign: 'center',
                 }}
               >
@@ -169,8 +170,8 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: '#FFD15C',
-            boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+            background: '#FFDB4C',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -180,9 +181,10 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
             borderWidth: '4px',
             borderStyle: 'solid',
             borderColor: '#FF5C5C',
+            fontSize: '12px',
           }}
         >
-          {title}
+          转动
         </div>
         
         {/* 指针 */}
@@ -190,11 +192,11 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
           className="pointer"
           style={{
             position: 'absolute',
-            top: 0,
+            top: '-16px',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '20px',
-            height: '40px',
+            width: '30px',
+            height: '50px',
             zIndex: 5,
           }}
         >
@@ -202,9 +204,9 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
             style={{
               width: 0,
               height: 0,
-              borderLeft: '10px solid transparent',
-              borderRight: '10px solid transparent',
-              borderTop: '30px solid #FF5C5C',
+              borderLeft: '15px solid transparent',
+              borderRight: '15px solid transparent',
+              borderTop: '40px solid #FF5C5C',
             }}
           />
         </div>
@@ -215,7 +217,6 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
   return (
     <div className="lucky-wheel-component text-center">
       {contextHolder}
-      <h3 style={{ fontSize: '20px', marginBottom: '15px', color: '#444' }}>{title}</h3>
       
       {renderWheel()}
       
@@ -230,10 +231,11 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({
             borderRadius: '20px',
             padding: '0 25px',
             height: '40px',
-            fontSize: '16px'
+            fontSize: '16px',
+            marginTop: '12px'
           }}
         >
-          {buttonText}
+          {rotating ? '抽奖中...' : buttonText}
         </Button>
       </div>
       

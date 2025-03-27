@@ -130,6 +130,7 @@ export const marketingComponents: ComponentType[] = [
       productIds: [],
       columns: 2,
       showPrice: true,
+      viewMode: 'grid',
       style: {
         paddingTop: 0,
         paddingRight: 0,
@@ -242,36 +243,6 @@ export const marketingComponents: ComponentType[] = [
         paddingLeft: 0,
         backgroundColor: 'transparent',
         textAlign: 'center'
-      }
-    }
-  },
-  {
-    type: 'floatMenu',
-    name: '悬浮菜单',
-    icon: AppstoreOutlined,
-    category: 'marketing',
-    defaultProps: {
-      items: [
-        {
-          icon: 'home',
-          text: '首页',
-          link: '/'
-        },
-        {
-          icon: 'cart',
-          text: '购物车',
-          link: '/cart'
-        },
-        {
-          icon: 'user',
-          text: '我的',
-          link: '/user'
-        }
-      ],
-      position: 'bottom',
-      style: {
-        backgroundColor: '#ffffff',
-        color: '#333333'
       }
     }
   },

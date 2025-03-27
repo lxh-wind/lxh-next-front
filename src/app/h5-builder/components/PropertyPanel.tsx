@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button } from 'antd';
+import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
@@ -11,6 +11,7 @@ import {
   canRedoAtom,
   pageInfoAtom
 } from '@/src/app/h5-builder/store/atoms';
+import dayjs from 'dayjs';
 
 export default function PropertyPanel() {
   const setComponents = useSetAtom(componentsAtom);
@@ -439,6 +440,391 @@ export default function PropertyPanel() {
                   alt: e.target.value
                 })}
               />
+            </Form.Item>
+          </Form>
+        );
+      
+      case 'button':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="按钮文本">
+              <Input
+                defaultValue={selectedComponent.props?.text}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  text: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="按钮类型">
+              <Select
+                defaultValue={selectedComponent.props?.buttonType || 'primary'}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  buttonType: value
+                })}
+              >
+                <Select.Option value="primary">主按钮</Select.Option>
+                <Select.Option value="default">次按钮</Select.Option>
+                <Select.Option value="dashed">虚线按钮</Select.Option>
+              </Select>
+            </Form.Item>
+          </Form>
+        );
+
+      case 'luckyWheel':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="描述">
+              <Input.TextArea
+                rows={2}
+                defaultValue={selectedComponent.props?.description}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  description: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="按钮文本">
+              <Input
+                defaultValue={selectedComponent.props?.buttonText}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  buttonText: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="奖品设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '奖品设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>奖品编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>打开奖品编辑器</Button>
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'coupon':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="优惠券标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="优惠券设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '优惠券设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>优惠券编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>打开优惠券编辑器</Button>
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'checkinCalendar':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="签到标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="按钮文本">
+              <Input
+                defaultValue={selectedComponent.props?.buttonText}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  buttonText: e.target.value
+                })}
+              />
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'teamBuying':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="拼团标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="描述">
+              <Input.TextArea
+                rows={2}
+                defaultValue={selectedComponent.props?.description}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  description: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="团购人数">
+              <InputNumber
+                min={2}
+                max={50}
+                defaultValue={selectedComponent.props?.teamSize || 2}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  teamSize: value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="按钮文本">
+              <Input
+                defaultValue={selectedComponent.props?.buttonText}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  buttonText: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="商品设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '商品设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>商品编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>商品选择</Button>
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'memberBenefits':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="会员权益标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="权益设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '会员权益设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>会员权益编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>编辑会员权益</Button>
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'surveyForm':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="问卷标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="问卷描述">
+              <Input.TextArea
+                rows={2}
+                defaultValue={selectedComponent.props?.description}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  description: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="提交按钮文本">
+              <Input
+                defaultValue={selectedComponent.props?.buttonText}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  buttonText: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="奖励提示文本">
+              <Input
+                defaultValue={selectedComponent.props?.rewardText}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  rewardText: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="问题编辑">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '问卷问题编辑',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>问卷问题编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>编辑问题</Button>
+            </Form.Item>
+          </Form>
+        );
+
+      case 'carousel':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="轮播图片设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '轮播图片设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>轮播图片编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>编辑轮播图片</Button>
+            </Form.Item>
+            <Form.Item label="自动播放">
+              <Switch
+                defaultChecked={selectedComponent.props?.autoplay || false}
+                onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                  autoplay: checked
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="轮播间隔(秒)">
+              <InputNumber
+                min={1}
+                max={10}
+                defaultValue={selectedComponent.props?.interval || 3}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  interval: value
+                })}
+              />
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'productList':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="商品列表标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="列表类型">
+              <Select
+                defaultValue={selectedComponent.props?.viewMode || 'grid'}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  viewMode: value
+                })}
+              >
+                <Select.Option value="grid">网格视图</Select.Option>
+                <Select.Option value="list">列表视图</Select.Option>
+                <Select.Option value="card">卡片视图</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="商品列数">
+              <InputNumber
+                min={1}
+                max={4}
+                defaultValue={selectedComponent.props?.columns || 2}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  columns: value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="商品设置">
+              <Button onClick={() => {
+                Modal.info({
+                  title: '商品设置',
+                  width: 600,
+                  content: (
+                    <div>
+                      <p>商品编辑将在高级编辑器中提供</p>
+                    </div>
+                  ),
+                });
+              }}>选择商品</Button>
+            </Form.Item>
+          </Form>
+        );
+        
+      case 'countdown':
+        return (
+          <Form layout="vertical">
+            <Form.Item label="倒计时标题">
+              <Input
+                defaultValue={selectedComponent.props?.title}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  title: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="结束时间">
+              <DatePicker
+                showTime
+                placeholder="选择结束时间"
+                defaultValue={selectedComponent.props?.endTime ? dayjs(selectedComponent.props.endTime) : null}
+                onChange={(date) => onUpdateComponent(selectedComponent.id, {
+                  endTime: date ? date.toISOString() : null
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="显示设置">
+              <Checkbox.Group
+                defaultValue={[
+                  ...(selectedComponent.props?.showDays ? ['days'] : []),
+                  ...(selectedComponent.props?.showHours ? ['hours'] : []),
+                  ...(selectedComponent.props?.showMinutes ? ['minutes'] : []),
+                  ...(selectedComponent.props?.showSeconds ? ['seconds'] : [])
+                ]}
+                onChange={(values) => {
+                  onUpdateComponent(selectedComponent.id, {
+                    showDays: values.includes('days'),
+                    showHours: values.includes('hours'),
+                    showMinutes: values.includes('minutes'),
+                    showSeconds: values.includes('seconds')
+                  });
+                }}
+              >
+                <Checkbox value="days">天</Checkbox>
+                <Checkbox value="hours">时</Checkbox>
+                <Checkbox value="minutes">分</Checkbox>
+                <Checkbox value="seconds">秒</Checkbox>
+              </Checkbox.Group>
             </Form.Item>
           </Form>
         );

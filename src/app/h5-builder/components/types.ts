@@ -1,6 +1,6 @@
 export interface ComponentType {
   id: string;
-  type: 'text' | 'image' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'floatMenu' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container';
+  type: 'text' | 'image' | 'video' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container' | 'socialShare';
   name: string;
   // 添加位置信息，用于自由布局模式
   position?: {
@@ -18,6 +18,9 @@ export interface ComponentType {
     title?: string;
     description?: string;
     buttonText?: string;
+    
+    // 视频组件特有属性
+    poster?: string;
     
     // 按钮特有属性
     text?: string;
@@ -71,6 +74,7 @@ export interface ComponentType {
     productIds?: string[];
     columns?: number;
     showPrice?: boolean;
+    viewMode?: 'grid' | 'list' | 'card';
     
     // 问卷调查组件特有属性
     questions?: Array<{

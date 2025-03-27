@@ -2,10 +2,53 @@
 export interface ComponentType {
   id: string;
   type: string;
-  props: any;
+  props: {
+    content?: string;
+    src?: string;
+    alt?: string;
+    title?: string;
+    description?: string;
+    buttonText?: string;
+    text?: string;
+    style?: any;
+    images?: any[];
+    coupons?: any[];
+    showDays?: boolean;
+    showHours?: boolean;
+    showMinutes?: boolean;
+    showSeconds?: boolean;
+    buttonType?: 'primary' | 'default' | 'dashed';
+    benefits?: any[];
+    questions?: any[];
+    rewardText?: string;
+    teamSize?: number;
+    product?: { name: string; teamPrice: number; originalPrice: number };
+    prizes?: Array<{
+      id: string;
+      name: string;
+      probability: number;
+      bgColor?: string;
+      fontColor?: string;
+    }>;
+    // 轮播图属性
+    autoplay?: boolean;
+    interval?: number;
+    // 商品列表属性
+    viewMode?: 'grid' | 'list' | 'card';
+    columns?: number;
+    // 倒计时属性
+    endTime?: string;
+  };
   icon?: React.ElementType;
   name?: string;
   defaultProps?: any;
+  position?: {
+    top?: number;
+    left?: number;
+    width?: number | string;
+    height?: number | string;
+    zIndex?: number;
+  };
 }
 
 // 组件定义接口（不含id，用于组件库中）
