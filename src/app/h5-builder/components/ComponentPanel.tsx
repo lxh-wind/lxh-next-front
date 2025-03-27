@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, Input, Tag } from 'antd';
 import { SearchOutlined, AppstoreOutlined, ShoppingOutlined, FundViewOutlined, DragOutlined } from '@ant-design/icons';
 import { getComponentsByCategory } from '../core/components';
 import { useAtom } from 'jotai';
 import { componentsAtom, historyAtom, canUndoAtom, canRedoAtom } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
+import { useDrag } from 'react-dnd';
 
 // 组件分类
 const componentCategories = [
@@ -14,6 +15,9 @@ const componentCategories = [
   { key: 'marketing', name: '营销', icon: <ShoppingOutlined /> },
   { key: 'advanced', name: '高级', icon: <FundViewOutlined /> },
 ];
+
+// 定义拖拽项类型
+export const COMPONENT_ITEM_TYPE = 'COMPONENT_ITEM';
 
 export default function ComponentPanel() {
   const [components, setComponents] = useAtom(componentsAtom);
@@ -70,21 +74,40 @@ export default function ComponentPanel() {
     setActiveCategory(key);
   };
 
-  const renderComponentItem = (component: any) => (
-    <Card
-      hoverable
-      className="mb-2 cursor-grab relative"
-      onClick={() => handleAddComponent(component)}
-    >
-      <div className="flex flex-col items-center">
-        {component.icon && <component.icon className="text-xl mb-1" />}
-        <div className="text-sm">{component.name}</div>
+  const DraggableComponentItem = ({ component }: { component: any }) => {
+    const ref = useRef(null);
+    const [{ isDragging }, drag] = useDrag({
+      type: COMPONENT_ITEM_TYPE,
+      item: { componentType: component },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      })
+    });
+
+    // 连接ref和drag
+    drag(ref);
+
+    return (
+      <div
+        ref={ref}
+        style={{ opacity: isDragging ? 0.5 : 1 }}
+        onClick={() => handleAddComponent(component)}
+      >
+        <Card
+          hoverable
+          className="mb-2 cursor-grab relative"
+        >
+          <div className="flex flex-col items-center">
+            {component.icon && <component.icon className="text-xl mb-1" />}
+            <div className="text-sm">{component.name}</div>
+          </div>
+          <div className="absolute top-0 right-0 text-blue-500 opacity-50 p-1">
+            <DragOutlined className="text-xs" />
+          </div>
+        </Card>
       </div>
-      <div className="absolute top-0 right-0 text-blue-500 opacity-50 p-1">
-        <DragOutlined className="text-xs" />
-      </div>
-    </Card>
-  );
+    );
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -119,7 +142,7 @@ export default function ComponentPanel() {
         <div className="grid grid-cols-2 gap-3">
           {filteredComponents().map((component, index) => (
             <div key={index}>
-              {renderComponentItem(component)}
+              <DraggableComponentItem component={component} />
             </div>
           ))}
           

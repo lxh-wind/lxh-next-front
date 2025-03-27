@@ -33,6 +33,8 @@ import {
 import PageSettings from './components/PageSettings';
 import CanvasSizeSettings from './components/CanvasSizeSettings';
 import SaveModal from './components/SaveModal';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
@@ -331,91 +333,93 @@ export default function H5Builder() {
   }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, messageApi, setSelectedComponent]);
 
   return (
-    <div className="h-full flex flex-col">
-      {contextHolder}
-      
-      {/* 顶部导航栏 */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center">
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>返回</Button>
-          <span className="text-xl font-medium ml-4">H5营销页面制作</span>
+    <DndProvider backend={HTML5Backend}>
+      <div className="h-full flex flex-col">
+        {contextHolder}
+        
+        {/* 顶部导航栏 */}
+        <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center">
+            <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>返回</Button>
+            <span className="text-xl font-medium ml-4">H5营销页面制作</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <CommonOperations
+              onDownloadJson={handleDownloadJson}
+              onUploadJson={handleUploadJson}
+              onClearCanvas={handleClearCanvas}
+            />
+            {renderComponentActions()}
+            <Divider type="vertical" />
+            
+            <Button 
+              icon={<MobileOutlined />}
+              onClick={openCanvasSizeModal}
+            >
+              画布尺寸
+            </Button>
+            
+            <Link href="/h5-builder/templates">
+              <Button icon={<FolderOutlined />}>模板</Button>
+            </Link>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <CommonOperations
-            onDownloadJson={handleDownloadJson}
-            onUploadJson={handleUploadJson}
-            onClearCanvas={handleClearCanvas}
-          />
-          {renderComponentActions()}
-          <Divider type="vertical" />
+        {/* 主要内容区域 */}
+        <Layout className="flex-1">
+          {/* 左侧组件面板 */}
+          <Sider width={300} theme="light" className="border-r border-gray-200">
+            <ComponentPanel />
+          </Sider>
           
-          <Button 
-            icon={<MobileOutlined />}
-            onClick={openCanvasSizeModal}
+          {/* 中间画布区域 */}
+          <Content 
+            className="overflow-auto p-0 relative"
           >
-            画布尺寸
-          </Button>
+            <ZoomablePaneWithRulers isPropertyPanelOpen={!!selectedComponent}>
+              <Canvas />
+            </ZoomablePaneWithRulers>
+          </Content>
           
-          <Link href="/h5-builder/templates">
-            <Button icon={<FolderOutlined />}>模板</Button>
-          </Link>
-        </div>
-      </div>
-      
-      {/* 主要内容区域 */}
-      <Layout className="flex-1">
-        {/* 左侧组件面板 */}
-        <Sider width={300} theme="light" className="border-r border-gray-200">
-          <ComponentPanel />
-        </Sider>
+          {/* 右侧属性面板 - 根据是否选中组件决定宽度 */}
+          <Sider 
+            width={selectedComponent ? 300 : 0} 
+            theme="light" 
+            className="border-l border-gray-200 overflow-auto transition-all duration-300"
+            style={{ 
+              minWidth: selectedComponent ? '300px' : '0px',
+              maxWidth: selectedComponent ? '300px' : '0px',
+            }}
+          >
+            {selectedComponent && (
+              <PropertyPanel />
+            )}
+          </Sider>
+        </Layout>
         
-        {/* 中间画布区域 */}
-        <Content 
-          className="overflow-auto p-0 relative"
-        >
-          <ZoomablePaneWithRulers isPropertyPanelOpen={!!selectedComponent}>
-            <Canvas />
-          </ZoomablePaneWithRulers>
-        </Content>
+        {/* 页面设置模态框 */}
+        <PageSettings
+          open={isPageSettingsOpen}
+          onClose={() => setIsPageSettingsOpen(false)}
+        />
         
-        {/* 右侧属性面板 - 根据是否选中组件决定宽度 */}
-        <Sider 
-          width={selectedComponent ? 300 : 0} 
-          theme="light" 
-          className="border-l border-gray-200 overflow-auto transition-all duration-300"
-          style={{ 
-            minWidth: selectedComponent ? '300px' : '0px',
-            maxWidth: selectedComponent ? '300px' : '0px',
+        {/* 使用抽离的画布尺寸设置组件 */}
+        <CanvasSizeSettings
+          open={showCanvasSizeModal}
+          onClose={handleCancelCanvasSize}
+          canvasSize={canvasSize}
+          onConfirm={(width, height) => {
+            setCanvasSize({ width, height });
           }}
-        >
-          {selectedComponent && (
-            <PropertyPanel />
-          )}
-        </Sider>
-      </Layout>
-      
-      {/* 页面设置模态框 */}
-      <PageSettings
-        open={isPageSettingsOpen}
-        onClose={() => setIsPageSettingsOpen(false)}
-      />
-      
-      {/* 使用抽离的画布尺寸设置组件 */}
-      <CanvasSizeSettings
-        open={showCanvasSizeModal}
-        onClose={handleCancelCanvasSize}
-        canvasSize={canvasSize}
-        onConfirm={(width, height) => {
-          setCanvasSize({ width, height });
-        }}
-      />
-      
-      {/* 使用抽离的保存设置组件 */}
-      <SaveModal
-        open={isSaveModalOpen}
-        onClose={handleCancelSave}
-      />
-    </div>
+        />
+        
+        {/* 使用抽离的保存设置组件 */}
+        <SaveModal
+          open={isSaveModalOpen}
+          onClose={handleCancelSave}
+        />
+      </div>
+    </DndProvider>
   );
 } 

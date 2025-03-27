@@ -15,11 +15,8 @@ import {
   canRedoAtom
 } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-
-// 定义拖拽项类型
-const COMPONENT_ITEM_TYPE = 'COMPONENT_ITEM';
+import { useDrag, useDrop } from 'react-dnd';
+import { COMPONENT_ITEM_TYPE } from './ComponentPanel';
 
 // 拖拽项组件
 interface DraggableComponentProps {
@@ -27,12 +24,12 @@ interface DraggableComponentProps {
   index: number;
   children: React.ReactNode;
   moveItem: (dragIndex: number, hoverIndex: number) => void;
+  onDropNewComponent: (item: any, index: number) => void;
 }
 
-const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, moveItem, children }) => {
+const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, moveItem, onDropNewComponent, children }) => {
   const ref = useRef<HTMLDivElement>(null);
   
-  // 使用简化的拖拽逻辑，不再使用hoverIndex状态
   const [{ isDragging }, drag] = useDrag({
     type: COMPONENT_ITEM_TYPE,
     item: { id, index },
@@ -43,31 +40,33 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, move
 
   const [{ isOver }, drop] = useDrop({
     accept: COMPONENT_ITEM_TYPE,
-    drop: (item: { id: string; index: number }) => {
-      // 只在drop时执行一次移动操作
-      if (item.index !== index) {
-        moveItem(item.index, index);
+    drop: (item: any) => {
+      // 如果是组件间拖拽顺序调整
+      if (item.index !== undefined && item.id) {
+        if (item.index !== index) {
+          moveItem(item.index, index);
+        }
+      } 
+      // 如果是从面板拖入的新组件
+      else if (item.componentType) {
+        onDropNewComponent(item, index);
+        return { handled: true };
       }
     },
-    hover: (item: { id: string; index: number }, monitor) => {
+    hover: (item: any, monitor) => {
+      // 只处理组件间排序操作
+      if (!item.id || item.index === undefined) return;
       if (!ref.current || item.index === index) {
         return;
       }
       
-      // 获取矩形区域
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      // 计算中点
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      // 获取鼠标位置
       const clientOffset = monitor.getClientOffset();
       if (!clientOffset) return;
       
-      // 计算鼠标相对位置
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
       
-      // 只有当鼠标越过中线位置时才进行判断
-      // 向下拖动：鼠标需要超过下半部分
-      // 向上拖动：鼠标需要超过上半部分
       if ((item.index < index && hoverClientY < hoverMiddleY) ||
           (item.index > index && hoverClientY > hoverMiddleY)) {
         return;
@@ -78,7 +77,6 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, move
     })
   });
   
-  // 设置样式
   const opacity = isDragging ? 0.4 : 1;
   const style = {
     opacity,
@@ -109,6 +107,7 @@ const Canvas: React.FC<{}> = () => {
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const emptyAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSelectedId(selectedComponent?.id || null);
@@ -129,9 +128,6 @@ const Canvas: React.FC<{}> = () => {
       present: newComponents,
       future: [],
     });
-    
-    // 不再需要更新 historyIndex，因为我们现在使用 past.length 来判断
-    // setHistoryIndex(historyIndex + 1);
     
     // 根据newPast的长度判断是否可以撤销
     setCanUndo(newPast.length > 0);
@@ -219,6 +215,45 @@ const Canvas: React.FC<{}> = () => {
     }
   };
 
+  // 处理从面板拖入的新组件到指定位置
+  const handleDropNewComponentAtPosition = useCallback((item: { componentType: any }, targetIndex: number) => {
+    if (!item.componentType) return;
+    
+    const newComponent = {
+      ...item.componentType,
+      id: generateComplexId(item.componentType.type),
+      props: { ...item.componentType.defaultProps }
+    };
+    
+    // 创建新的组件数组，在指定位置插入新组件
+    const newComponents = [...components];
+    newComponents.splice(targetIndex, 0, newComponent);
+    
+    // 更新历史状态
+    const newPast = [...history.past, components];
+    
+    setHistory({
+      past: newPast,
+      present: newComponents,
+      future: [],
+    });
+    
+    setHistoryIndex(historyIndex + 1);
+    setCanUndo(newPast.length > 0);
+    setCanRedo(false);
+    
+    // 更新组件状态
+    setComponents(newComponents);
+    
+    // 选中新添加的组件
+    setSelectedComponent(newComponent);
+  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo, setSelectedComponent]);
+
+  // 处理从面板拖入的新组件到画布末尾
+  const handleDropNewComponent = useCallback((item: { componentType: any }) => {
+    handleDropNewComponentAtPosition(item, components.length);
+  }, [components.length, handleDropNewComponentAtPosition]);
+
   // 应用背景样式
   const getBackgroundStyle = () => {
     return {
@@ -226,70 +261,111 @@ const Canvas: React.FC<{}> = () => {
                       pageInfo.bgMode === 'gradient' ? pageInfo.bgColor : undefined,
       backgroundRepeat: pageInfo.bgRepeat || 'no-repeat',
       backgroundSize: pageInfo.bgRepeat === 'no-repeat' ? 'cover' : undefined,
-      // 添加微妙的内阴影效果
       boxShadow: 'inset 0 0 3px rgba(0, 0, 0, 0.05)',
     };
   };
 
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="canvas-container">
-        <div 
-          ref={containerRef}
-          className="canvas-content"
-          style={{
-            width: canvasSize.width,
-            minHeight: canvasSize.height,
-            margin: '0 auto',
-            backgroundColor: '#fff',
-            position: 'relative',
-            ...getBackgroundStyle()
-          }}
-        >
-          {/* 添加简单阴影效果 */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-              zIndex: 2
-            }}
-          ></div>
-          
-          <div 
-            className="w-full relative" 
-            style={{ padding: pageInfo.containerPadding }}
-          >
-            {components.map((component, index) => (
-              <DraggableComponent 
-                key={component.id} 
-                id={component.id} 
-                index={index}
-                moveItem={handleUpdateComponentsOrder}
-              >
-                <ComponentItem
-                  component={component}
-                  isSelected={selectedId === component.id}
-                  index={index}
-                  onSelect={() => handleComponentSelect(component)}
-                  onDelete={() => handleComponentDelete(component.id)}
-                  onDuplicate={() => handleDuplicate(component.id)}
-                  onMoveUp={() => handleMoveComponentUp(index)}
-                  onMoveDown={() => handleMoveComponentDown(index)}
-                  isFirst={index === 0}
-                  isLast={index === components.length - 1}
-                />
-              </DraggableComponent>
-            ))}
+  // 添加画布区域的拖放处理
+  const [{ isOver: isCanvasOver }, dropCanvas] = useDrop({
+    accept: COMPONENT_ITEM_TYPE,
+    drop: (item: any, monitor) => {
+      // 如果是新组件（从面板拖入）并且没有被子组件处理
+      if (item.componentType && !item.id && !monitor.didDrop()) {
+        handleDropNewComponent(item);
+        return { handled: true };
+      }
+      return undefined;
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true })
+    })
+  });
 
-            {components.length === 0 && (
-              <div style={{ height: `${canvasSize.height}px` }} className="flex items-center justify-center text-center text-gray-400">
-                <p>从左侧拖入组件到这里</p>
-              </div>
-            )}
-          </div>
+  // 添加画布为空时的放置区
+  const [, dropEmptyArea] = useDrop({
+    accept: COMPONENT_ITEM_TYPE,
+    drop: (item: any) => {
+      if (item.componentType) {
+        handleDropNewComponent(item);
+        return { handled: true };
+      }
+    }
+  });
+
+  // 设置空画布区域的ref
+  useEffect(() => {
+    if (emptyAreaRef.current) {
+      dropEmptyArea(emptyAreaRef.current);
+    }
+  }, [dropEmptyArea]);
+
+  return (
+    <div className="canvas-container">
+      <div 
+        ref={(node) => {
+          containerRef.current = node;
+          dropCanvas(node);
+        }}
+        className="canvas-content"
+        style={{
+          width: canvasSize.width,
+          minHeight: canvasSize.height,
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          position: 'relative',
+          ...getBackgroundStyle(),
+          border: isCanvasOver ? '2px dashed #1890ff' : undefined,
+          transition: 'border-color 0.3s'
+        }}
+      >
+        {/* 添加简单阴影效果 */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+            zIndex: 2
+          }}
+        ></div>
+        
+        <div 
+          className="w-full relative" 
+          style={{ padding: pageInfo.containerPadding }}
+        >
+          {components.map((component, index) => (
+            <DraggableComponent 
+              key={component.id} 
+              id={component.id} 
+              index={index}
+              moveItem={handleUpdateComponentsOrder}
+              onDropNewComponent={handleDropNewComponentAtPosition}
+            >
+              <ComponentItem
+                component={component}
+                isSelected={selectedId === component.id}
+                index={index}
+                onSelect={() => handleComponentSelect(component)}
+                onDelete={() => handleComponentDelete(component.id)}
+                onDuplicate={() => handleDuplicate(component.id)}
+                onMoveUp={() => handleMoveComponentUp(index)}
+                onMoveDown={() => handleMoveComponentDown(index)}
+                isFirst={index === 0}
+                isLast={index === components.length - 1}
+              />
+            </DraggableComponent>
+          ))}
+
+          {components.length === 0 && (
+            <div 
+              ref={emptyAreaRef}
+              style={{ height: `${canvasSize.height}px` }} 
+              className="flex items-center justify-center text-center text-gray-400"
+            >
+              <p>从左侧拖入组件到这里</p>
+            </div>
+          )}
         </div>
       </div>
-    </DndProvider>
+    </div>
   );
 };
 
