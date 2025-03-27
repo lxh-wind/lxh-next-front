@@ -61,5 +61,4 @@ export interface PageInfo {
   layoutMode?: 'auto' | 'free';
   containerPadding?: number;
   componentGap?: number;
-  containerWidth?: number;
 } 

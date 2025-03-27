@@ -17,6 +17,7 @@ import {
 import { generateComplexId } from '../utils/store';
 import { useDrag, useDrop } from 'react-dnd';
 import { COMPONENT_ITEM_TYPE } from './ComponentPanel';
+import { DragOutlined } from '@ant-design/icons';
 
 // 拖拽项组件
 interface DraggableComponentProps {
@@ -29,31 +30,45 @@ interface DraggableComponentProps {
 
 const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, moveItem, onDropNewComponent, children }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [pageInfo] = useAtom(pageInfoAtom);
+  const [components] = useAtom(componentsAtom);
+  const isFreeModeActive = pageInfo.layoutMode === 'free';
+  
+  // 获取当前组件
+  const component = components.find(comp => comp.id === id);
   
   const [{ isDragging }, drag] = useDrag({
     type: COMPONENT_ITEM_TYPE,
     item: { id, index },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
-    })
+    }),
+    // 自由布局模式下，禁用拖拽排序功能
+    canDrag: !isFreeModeActive
   });
 
   const [{ isOver }, drop] = useDrop({
     accept: COMPONENT_ITEM_TYPE,
     drop: (item: any) => {
-      // 如果是组件间拖拽顺序调整
-      if (item.index !== undefined && item.id) {
-        if (item.index !== index) {
-          moveItem(item.index, index);
+      // 如果不是自由布局模式，才处理组件间拖拽
+      if (!isFreeModeActive) {
+        // 如果是组件间拖拽顺序调整
+        if (item.index !== undefined && item.id) {
+          if (item.index !== index) {
+            moveItem(item.index, index);
+          }
+        } 
+        // 如果是从面板拖入的新组件
+        else if (item.componentType) {
+          onDropNewComponent(item, index);
+          return { handled: true };
         }
-      } 
-      // 如果是从面板拖入的新组件
-      else if (item.componentType) {
-        onDropNewComponent(item, index);
-        return { handled: true };
       }
     },
     hover: (item: any, monitor) => {
+      // 自由布局模式下不处理拖拽hover
+      if (isFreeModeActive) return;
+      
       // 只处理组件间排序操作
       if (!item.id || item.index === undefined) return;
       if (!ref.current || item.index === index) {
@@ -80,15 +95,93 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, move
   const opacity = isDragging ? 0.4 : 1;
   const style = {
     opacity,
-    backgroundColor: isOver ? 'rgba(0, 0, 255, 0.05)' : undefined,
-    borderTop: isOver ? '2px dashed #aaa' : undefined
+    position: 'relative' as const,
+    backgroundColor: isOver && !isFreeModeActive ? 'rgba(0, 0, 255, 0.05)' : undefined,
+    borderTop: isOver && !isFreeModeActive ? '2px dashed #aaa' : undefined
   };
   
-  drag(drop(ref));
+  // 只在非自由布局模式下应用拖拽功能
+  if (!isFreeModeActive) {
+    drag(drop(ref));
+  } else {
+    // 自由布局模式下，只应用drop功能用于接收新组件
+    drop(ref);
+  }
   
   return (
-    <div ref={ref} style={style} className="component-item relative" data-index={index}>
+    <div ref={ref} style={style} className="component-item w-full" data-index={index}>
       {children}
+    </div>
+  );
+};
+
+// 自由布局模式下的拖拽句柄组件接口
+interface DragHandleProps {
+  onDragStart?: () => void;
+  onDragEnd?: (offset: { x: number, y: number }) => void;
+}
+
+// 自由布局模式下的拖拽句柄组件
+const DragHandle: React.FC<DragHandleProps> = ({ onDragStart, onDragEnd }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartPos({ x: e.clientX, y: e.clientY });
+    setOffset({ x: 0, y: 0 });
+    
+    if (onDragStart) {
+      onDragStart();
+    }
+    
+    // 阻止事件冒泡，防止触发其他点击事件
+    e.stopPropagation();
+  };
+  
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const newOffset = {
+        x: e.clientX - startPos.x,
+        y: e.clientY - startPos.y
+      };
+      
+      setOffset(newOffset);
+    };
+    
+    const handleMouseUp = () => {
+      if (!isDragging) return;
+      
+      setIsDragging(false);
+      
+      if (onDragEnd) {
+        onDragEnd(offset);
+      }
+    };
+    
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, startPos, offset, onDragEnd]);
+  
+  return (
+    <div 
+      className="absolute top-0 right-0 z-20 w-6 h-6 flex items-center justify-center bg-blue-500 text-white cursor-move opacity-70 hover:opacity-100 rounded-bl-md"
+      onMouseDown={handleMouseDown}
+      style={{ 
+        transform: isDragging ? `translate(${offset.x}px, ${offset.y}px)` : 'none',
+      }}
+    >
+      <DragOutlined />
     </div>
   );
 };
@@ -256,13 +349,23 @@ const Canvas: React.FC<{}> = () => {
 
   // 应用背景样式
   const getBackgroundStyle = () => {
-    return {
-      backgroundImage: pageInfo.bgMode === 'image' && pageInfo.bgImage ? `url(${pageInfo.bgImage})` :
-                      pageInfo.bgMode === 'gradient' ? pageInfo.bgColor : undefined,
-      backgroundRepeat: pageInfo.bgRepeat || 'no-repeat',
-      backgroundSize: pageInfo.bgRepeat === 'no-repeat' ? 'cover' : undefined,
-      boxShadow: 'inset 0 0 3px rgba(0, 0, 0, 0.05)',
-    };
+    const bgStyle: React.CSSProperties = {};
+    
+    // 处理背景颜色或背景图片
+    if (pageInfo.bgMode === 'color') {
+      bgStyle.backgroundColor = pageInfo.bgColor || '#ffffff';
+    } else if (pageInfo.bgMode === 'image' && pageInfo.bgImage) {
+      bgStyle.backgroundImage = `url(${pageInfo.bgImage})`;
+      bgStyle.backgroundRepeat = pageInfo.bgRepeat || 'no-repeat';
+      bgStyle.backgroundSize = pageInfo.bgRepeat === 'no-repeat' ? 'cover' : undefined;
+    } else if (pageInfo.bgMode === 'gradient') {
+      bgStyle.background = pageInfo.bgColor; // 渐变色字符串存储在bgColor中
+    } else {
+      // 默认背景色
+      bgStyle.backgroundColor = '#ffffff';
+    }
+    
+    return bgStyle;
   };
 
   // 添加画布区域的拖放处理
@@ -299,6 +402,45 @@ const Canvas: React.FC<{}> = () => {
     }
   }, [dropEmptyArea]);
 
+  // 更新组件位置（自由布局模式）
+  const handleUpdateComponentPosition = useCallback((id: string, newPosition: any) => {
+    const updatedComponents = components.map(comp => {
+      if (comp.id === id) {
+        return {
+          ...comp,
+          position: {
+            ...comp.position,
+            ...newPosition
+          }
+        };
+      }
+      return comp;
+    });
+    
+    // 更新历史状态
+    const newPast = [...history.past, components];
+    
+    setHistory({
+      past: newPast,
+      present: updatedComponents,
+      future: [],
+    });
+    
+    setHistoryIndex(historyIndex + 1);
+    setCanUndo(newPast.length > 0);
+    setCanRedo(false);
+    
+    // 更新组件状态
+    setComponents(updatedComponents);
+  }, [components, history, historyIndex, setComponents, setHistory, setHistoryIndex, setCanUndo, setCanRedo]);
+
+  // 处理组件拖拽结束事件（自由布局模式）
+  const handleComponentDragEnd = useCallback((id: string, position: { top: number, left: number }) => {
+    if (pageInfo.layoutMode === 'free') {
+      handleUpdateComponentPosition(id, position);
+    }
+  }, [pageInfo.layoutMode, handleUpdateComponentPosition]);
+
   return (
     <div className="canvas-container">
       <div 
@@ -311,8 +453,8 @@ const Canvas: React.FC<{}> = () => {
           width: canvasSize.width,
           minHeight: canvasSize.height,
           margin: '0 auto',
-          backgroundColor: '#fff',
           position: 'relative',
+          boxShadow: 'inset 0 0 3px rgba(0, 0, 0, 0.05)',
           ...getBackgroundStyle(),
           border: isCanvasOver ? '2px dashed #1890ff' : undefined,
           transition: 'border-color 0.3s'
@@ -328,8 +470,11 @@ const Canvas: React.FC<{}> = () => {
         ></div>
         
         <div 
-          className="w-full relative" 
-          style={{ padding: pageInfo.containerPadding }}
+          className={`w-full relative ${pageInfo.layoutMode === 'free' ? 'h-full' : ''}`}
+          style={{ 
+            padding: pageInfo.containerPadding,
+            minHeight: pageInfo.layoutMode === 'free' ? canvasSize.height : 'auto'
+          }}
         >
           {components.map((component, index) => (
             <DraggableComponent 
@@ -339,18 +484,46 @@ const Canvas: React.FC<{}> = () => {
               moveItem={handleUpdateComponentsOrder}
               onDropNewComponent={handleDropNewComponentAtPosition}
             >
-              <ComponentItem
-                component={component}
-                isSelected={selectedId === component.id}
-                index={index}
-                onSelect={() => handleComponentSelect(component)}
-                onDelete={() => handleComponentDelete(component.id)}
-                onDuplicate={() => handleDuplicate(component.id)}
-                onMoveUp={() => handleMoveComponentUp(index)}
-                onMoveDown={() => handleMoveComponentDown(index)}
-                isFirst={index === 0}
-                isLast={index === components.length - 1}
-              />
+              <div 
+                style={{ 
+                  marginBottom: pageInfo.layoutMode === 'auto' && index < components.length - 1 ? pageInfo.componentGap : 0,
+                  position: pageInfo.layoutMode === 'free' ? 'absolute' : 'relative',
+                  top: pageInfo.layoutMode === 'free' ? component.position?.top || 0 : 'auto',
+                  left: pageInfo.layoutMode === 'free' ? component.position?.left || 0 : 'auto',
+                  width: pageInfo.layoutMode === 'free' ? component.position?.width || '100%' : '100%',
+                  zIndex: pageInfo.layoutMode === 'free' ? component.position?.zIndex || index + 1 : 'auto',
+                }}
+                className={`${pageInfo.layoutMode === 'free' ? 'cursor-move relative' : ''}`}
+              >
+                {/* 自由布局模式下显示拖拽手柄 */}
+                {pageInfo.layoutMode === 'free' && selectedId === component.id && (
+                  <DragHandle 
+                    onDragStart={() => {}}
+                    onDragEnd={(offset: { x: number, y: number }) => {
+                      // 计算新位置
+                      const newPosition = {
+                        top: (component.position?.top || 0) + offset.y,
+                        left: (component.position?.left || 0) + offset.x
+                      };
+                      handleUpdateComponentPosition(component.id, newPosition);
+                    }}
+                  />
+                )}
+                
+                <ComponentItem
+                  component={component}
+                  isSelected={selectedId === component.id}
+                  index={index}
+                  onSelect={() => handleComponentSelect(component)}
+                  onDelete={() => handleComponentDelete(component.id)}
+                  onDuplicate={() => handleDuplicate(component.id)}
+                  onMoveUp={() => handleMoveComponentUp(index)}
+                  onMoveDown={() => handleMoveComponentDown(index)}
+                  isFirst={index === 0}
+                  isLast={index === components.length - 1}
+                  layoutMode={pageInfo.layoutMode}
+                />
+              </div>
             </DraggableComponent>
           ))}
 

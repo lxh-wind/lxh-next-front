@@ -30,7 +30,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({
   onMoveUp,
   onMoveDown,
   isFirst,
-  isLast
+  isLast,
 }) => {
   const items: MenuProps['items'] = [
     ...(!isFirst && onMoveUp ? [{

@@ -2,6 +2,13 @@ export interface ComponentType {
   id: string;
   type: 'text' | 'image' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'floatMenu' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container';
   name: string;
+  // 添加位置信息，用于自由布局模式
+  position?: {
+    top?: number;
+    left?: number;
+    width?: string | number;
+    zIndex?: number;
+  };
   props: {
     // 通用属性
     content?: string;
@@ -108,7 +115,6 @@ export interface PageInfo {
   layoutMode?: 'auto' | 'free';
   containerPadding?: number;
   componentGap?: number;
-  containerWidth?: number;
   published?: boolean;
   publishUrl?: string;
   tags?: string[];

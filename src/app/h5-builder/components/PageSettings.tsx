@@ -36,7 +36,6 @@ interface LayoutSettings {
   layoutMode: LayoutMode;
   containerPadding: number;
   componentGap: number;
-  containerWidth: number;
 }
 
 const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
@@ -57,9 +56,8 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
   // 将布局相关状态整合到一个对象中
   const [layout, setLayout] = useState<LayoutSettings>({
     layoutMode: pageInfo.layoutMode || 'auto',
-    containerPadding: pageInfo.containerPadding || 16,
-    componentGap: pageInfo.componentGap || 16,
-    containerWidth: pageInfo.containerWidth || 100
+    containerPadding: pageInfo.containerPadding || 0,
+    componentGap: pageInfo.componentGap || 0,
   });
 
   // 更新外观设置的单个属性
@@ -100,7 +98,6 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
       layoutMode: layout.layoutMode,
       containerPadding: layout.containerPadding,
       componentGap: layout.componentGap,
-      containerWidth: layout.containerWidth,
     });
     message.success('页面设置已更新');
   };
@@ -149,9 +146,8 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
       
       setLayout({
         layoutMode: pageInfo.layoutMode || 'auto',
-        containerPadding: pageInfo.containerPadding || 16,
-        componentGap: pageInfo.componentGap || 16,
-        containerWidth: pageInfo.containerWidth || 100
+        containerPadding: pageInfo.containerPadding || 0,
+        componentGap: pageInfo.componentGap || 0,
       });
       
       form.setFieldsValue({
@@ -382,17 +378,6 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
                 </div>
               </Form.Item>
               
-              <Form.Item label="内容区宽度">
-                <Slider
-                  min={60}
-                  max={100}
-                  value={layout.containerWidth}
-                  onChange={(value) => updateLayout('containerWidth', value)}
-                  tipFormatter={(value) => `${value}%`}
-                />
-                <div className="text-center">{layout.containerWidth}%</div>
-              </Form.Item>
-              
               <Form.Item label="内容区内边距">
                 <Slider
                   min={0}
@@ -420,8 +405,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ open, onClose }) => {
                     onUpdatePageInfo({
                       layoutMode: layout.layoutMode,
                       containerPadding: layout.containerPadding,
-                      componentGap: layout.componentGap,
-                      containerWidth: layout.containerWidth
+                      componentGap: layout.componentGap
                     });
                     message.success('布局设置已更新');
                   }}

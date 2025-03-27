@@ -63,7 +63,6 @@ const convertPageDataToPageInfo = (pageData: any): PageInfo => {
     layoutMode: pageData.layoutMode || 'auto',
     containerPadding: pageData.containerPadding || 0,
     componentGap: pageData.componentGap || 0,
-    containerWidth: pageData.containerWidth || 100,
   };
 };
 
