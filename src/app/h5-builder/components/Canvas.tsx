@@ -15,6 +15,85 @@ import {
   canRedoAtom
 } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
+// 定义拖拽项类型
+const COMPONENT_ITEM_TYPE = 'COMPONENT_ITEM';
+
+// 拖拽项组件
+interface DraggableComponentProps {
+  id: string;
+  index: number;
+  children: React.ReactNode;
+  moveItem: (dragIndex: number, hoverIndex: number) => void;
+}
+
+const DraggableComponent: React.FC<DraggableComponentProps> = ({ id, index, moveItem, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  
+  // 使用简化的拖拽逻辑，不再使用hoverIndex状态
+  const [{ isDragging }, drag] = useDrag({
+    type: COMPONENT_ITEM_TYPE,
+    item: { id, index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    })
+  });
+
+  const [{ isOver }, drop] = useDrop({
+    accept: COMPONENT_ITEM_TYPE,
+    drop: (item: { id: string; index: number }) => {
+      // 只在drop时执行一次移动操作
+      if (item.index !== index) {
+        moveItem(item.index, index);
+      }
+    },
+    hover: (item: { id: string; index: number }, monitor) => {
+      if (!ref.current || item.index === index) {
+        return;
+      }
+      
+      // 获取矩形区域
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      // 计算中点
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      // 获取鼠标位置
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
+      
+      // 计算鼠标相对位置
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+      
+      // 只有当鼠标越过中线位置时才进行判断
+      // 向下拖动：鼠标需要超过下半部分
+      // 向上拖动：鼠标需要超过上半部分
+      if ((item.index < index && hoverClientY < hoverMiddleY) ||
+          (item.index > index && hoverClientY > hoverMiddleY)) {
+        return;
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver()
+    })
+  });
+  
+  // 设置样式
+  const opacity = isDragging ? 0.4 : 1;
+  const style = {
+    opacity,
+    backgroundColor: isOver ? 'rgba(0, 0, 255, 0.05)' : undefined,
+    borderTop: isOver ? '2px dashed #aaa' : undefined
+  };
+  
+  drag(drop(ref));
+  
+  return (
+    <div ref={ref} style={style} className="component-item relative" data-index={index}>
+      {children}
+    </div>
+  );
+};
 
 const Canvas: React.FC<{}> = () => {
   const [components, setComponents] = useAtom(componentsAtom);
@@ -22,10 +101,10 @@ const Canvas: React.FC<{}> = () => {
   const [canvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
 
-  const setHistory = useAtom(historyAtom);
-  const setHistoryIndex = useAtom(historyIndexAtom);
-  const setCanUndo = useAtom(canUndoAtom);
-  const setCanRedo = useAtom(canRedoAtom);
+  const [history, setHistory] = useAtom(historyAtom);
+  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
+  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
   
@@ -49,28 +128,34 @@ const Canvas: React.FC<{}> = () => {
 
   // 更新组件顺序
   const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
+    // 确保索引有效
+    if (startIndex === endIndex || 
+        startIndex < 0 || 
+        endIndex < 0 || 
+        startIndex >= components.length || 
+        endIndex >= components.length) {
+      return;
+    }
+
+    // 更新组件数组
+    const newComponents = [...components];
+    const [movedItem] = newComponents.splice(startIndex, 1);
+    newComponents.splice(endIndex, 0, movedItem);
+    
     // 更新历史状态
-    setHistory(prev => ({
-      past: [...prev.past, prev.present],
-      present: (() => {
-        const result = Array.from(prev.present);
-        const [removed] = result.splice(startIndex, 1);
-        result.splice(endIndex, 0, removed);
-        return result;
-      })(),
+    setHistory({
+      past: [...history.past, components],
+      present: newComponents,
       future: [],
-    }));
-    setHistoryIndex(prev => prev + 1);
+    });
+    
+    setHistoryIndex(historyIndex + 1);
     setCanUndo(true);
     setCanRedo(false);
     
-    setComponents(prev => {
-      const result = Array.from(prev);
-      const [removed] = result.splice(startIndex, 1);
-      result.splice(endIndex, 0, removed);
-      return result;
-    });
-  }, []);
+    // 更新组件状态
+    setComponents(newComponents);
+  }, [components, history, historyIndex, setHistory, setHistoryIndex, setCanUndo, setCanRedo, setComponents]);
 
   const handleDuplicate = (id: string) => {
     const component = components.find(comp => comp.id === id);
@@ -83,14 +168,14 @@ const Canvas: React.FC<{}> = () => {
 
   // 处理组件上移
   const handleMoveComponentUp = (index: number) => {
-    if (index > 0 && handleUpdateComponentsOrder) {
+    if (index > 0) {
       handleUpdateComponentsOrder(index, index - 1);
     }
   };
 
   // 处理组件下移
   const handleMoveComponentDown = (index: number) => {
-    if (index < components.length - 1 && handleUpdateComponentsOrder) {
+    if (index < components.length - 1) {
       handleUpdateComponentsOrder(index, index + 1);
     }
   };
@@ -108,61 +193,64 @@ const Canvas: React.FC<{}> = () => {
   };
 
   return (
-    <div className="canvas-container">
-      <div 
-        ref={containerRef}
-        className="canvas-content"
-        style={{
-          width: canvasSize.width,
-          minHeight: canvasSize.height,
-          margin: '0 auto',
-          backgroundColor: '#fff',
-          position: 'relative',
-          ...getBackgroundStyle()
-        }}
-      >
-        {/* 添加简单阴影效果 */}
+    <DndProvider backend={HTML5Backend}>
+      <div className="canvas-container">
         <div 
-          className="absolute inset-0 pointer-events-none"
+          ref={containerRef}
+          className="canvas-content"
           style={{
-            boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-            zIndex: 2
+            width: canvasSize.width,
+            minHeight: canvasSize.height,
+            margin: '0 auto',
+            backgroundColor: '#fff',
+            position: 'relative',
+            ...getBackgroundStyle()
           }}
-        ></div>
-        
-        <div 
-          className="w-full relative" 
-          style={{ padding: pageInfo.containerPadding }}
         >
-          {components.map((component, index) => (
-            <div 
-              key={component.id}
-              className="component-item relative"
-              data-index={index}
-            >
-              <ComponentItem
-                component={component}
-                isSelected={selectedId === component.id}
+          {/* 添加简单阴影效果 */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+              zIndex: 2
+            }}
+          ></div>
+          
+          <div 
+            className="w-full relative" 
+            style={{ padding: pageInfo.containerPadding }}
+          >
+            {components.map((component, index) => (
+              <DraggableComponent 
+                key={component.id} 
+                id={component.id} 
                 index={index}
-                onSelect={() => handleComponentSelect(component)}
-                onDelete={() => handleComponentDelete(component.id)}
-                onDuplicate={() => handleDuplicate(component.id)}
-                onMoveUp={() => handleMoveComponentUp(index)}
-                onMoveDown={() => handleMoveComponentDown(index)}
-                isFirst={index === 0}
-                isLast={index === components.length - 1}
-              />
-            </div>
-          ))}
+                moveItem={handleUpdateComponentsOrder}
+              >
+                <ComponentItem
+                  component={component}
+                  isSelected={selectedId === component.id}
+                  index={index}
+                  onSelect={() => handleComponentSelect(component)}
+                  onDelete={() => handleComponentDelete(component.id)}
+                  onDuplicate={() => handleDuplicate(component.id)}
+                  onMoveUp={() => handleMoveComponentUp(index)}
+                  onMoveDown={() => handleMoveComponentDown(index)}
+                  isFirst={index === 0}
+                  isLast={index === components.length - 1}
+                />
+              </DraggableComponent>
+            ))}
 
-          {components.length === 0 && (
-            <div style={{ height: `${canvasSize.height}px` }} className="flex items-center justify-center text-center text-gray-400">
-              <p>从左侧拖入组件到这里</p>
-            </div>
-          )}
+            {components.length === 0 && (
+              <div style={{ height: `${canvasSize.height}px` }} className="flex items-center justify-center text-center text-gray-400">
+                <p>从左侧拖入组件到这里</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </DndProvider>
   );
 };
 
