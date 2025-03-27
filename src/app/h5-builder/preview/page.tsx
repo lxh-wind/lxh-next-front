@@ -7,8 +7,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { ComponentType } from '../components/types';
 import dynamic from 'next/dynamic';
 
-// 动态导入抽奖转盘组件以避免SSR问题
-const LuckyWheel = dynamic(() => import('../components/marketing/LuckyWheel'), { ssr: false });
 
 // 用于渲染不同类型组件的助手组件
 const ComponentRenderer = ({ component }: { component: any }) => {
@@ -219,19 +217,76 @@ const ComponentRenderer = ({ component }: { component: any }) => {
     case 'luckyWheel':
       return (
         <div style={component.props.style} className="text-center p-4">
-          <h3 className="font-medium">{component.props.title}</h3>
+          <h3 className="font-medium text-orange-500">{component.props.title}</h3>
           <p className="text-xs text-gray-500 mb-2">{component.props.description}</p>
-          <div className="bg-yellow-100 rounded-full w-32 h-32 mx-auto relative mb-2 border-4 border-yellow-500">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 bg-red-500 transform rotate-45"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-xs">转盘示意</div>
+          <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-100 mx-auto mb-2">
+            <div className="relative w-56 h-56 mx-auto">
+              {/* Wheel background */}
+              <div className="absolute inset-0 rounded-full border-8 border-orange-500 bg-gradient-to-b from-yellow-100 to-orange-50"></div>
+              
+              {/* Decorative dots */}
+              {Array(12).fill(0).map((_, i) => {
+                const angle = (i / 12) * 2 * Math.PI;
+                const dotX = 28 + Math.cos(angle) * 26;
+                const dotY = 28 + Math.sin(angle) * 26;
+                return (
+                  <div 
+                    key={i}
+                    className={`absolute w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-yellow-500' : 'bg-orange-500'}`}
+                    style={{ 
+                      left: `${dotX}%`, 
+                      top: `${dotY}%`,
+                    }}
+                  ></div>
+                );
+              })}
+              
+              {/* Segments */}
+              {Array(6).fill(0).map((_, i) => {
+                const angle = (i / 6) * 2 * Math.PI;
+                const lineX1 = 50;
+                const lineY1 = 50;
+                const lineX2 = 50 + Math.cos(angle) * 45;
+                const lineY2 = 50 + Math.sin(angle) * 45;
+                return (
+                  <div 
+                    key={i}
+                    className="absolute bg-gray-300 h-0.5 origin-left"
+                    style={{ 
+                      left: `${lineX1}%`, 
+                      top: `${lineY1}%`,
+                      width: '45%',
+                      transform: `rotate(${angle}rad)`
+                    }}
+                  ></div>
+                );
+              })}
+              
+              {/* Prize names */}
+              {Array(6).fill(0).map((_, i) => {
+                const angle = (i / 6) * 2 * Math.PI + Math.PI / 6; // offset for positioning
+                const prizeX = 50 + Math.cos(angle) * 30;
+                const prizeY = 50 + Math.sin(angle) * 30;
+                return (
+                  <div 
+                    key={i}
+                    className="absolute text-xs font-bold text-orange-700 transform -translate-x-1/2 -translate-y-1/2"
+                    style={{ 
+                      left: `${prizeX}%`, 
+                      top: `${prizeY}%`,
+                    }}
+                  >
+                    {i % 2 === 0 ? `红包` : `谢谢`}
+                  </div>
+                );
+              })}
+              
+              {/* Center button */}
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-white font-bold">{component.props.buttonText}</span>
+              </div>
             </div>
           </div>
-          <button className="bg-red-500 text-white px-4 py-2 rounded">
-            {component.props.buttonText}
-          </button>
         </div>
       );
 

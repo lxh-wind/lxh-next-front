@@ -254,47 +254,55 @@ export const marketingComponents: ComponentType[] = [
     icon: GiftOutlined,
     category: 'advanced',
     defaultProps: {
-      title: '幸运大转盘',
+      title: '淘宝幸运大转盘',
       description: '转动大转盘，赢取惊喜好礼',
-      buttonText: '点击抽奖',
+      buttonText: '抽奖',
       prizes: [
         {
           id: '1',
-          name: '一等奖',
-          probability: 0.01,
-          type: 'physical',
-          image: 'https://placeholder.pics/svg/60x60/DEDEDE/555555/奖品1'
+          name: '1元红包',
+          probability: 0.1,
+          bgColor: '#FFEECC'
         },
         {
           id: '2',
-          name: '二等奖',
-          probability: 0.05,
-          type: 'coupon',
-          image: 'https://placeholder.pics/svg/60x60/DEDEDE/555555/奖品2'
+          name: '谢谢参与',
+          probability: 0.4,
+          bgColor: '#FFF4D6'
         },
         {
           id: '3',
-          name: '三等奖',
-          probability: 0.1,
-          type: 'points',
-          image: 'https://placeholder.pics/svg/60x60/DEDEDE/555555/奖品3'
+          name: '5元红包',
+          probability: 0.05, 
+          bgColor: '#FFEECC'
         },
         {
           id: '4',
           name: '谢谢参与',
-          probability: 0.84,
-          type: 'none',
-          image: 'https://placeholder.pics/svg/60x60/DEDEDE/555555/谢谢参与'
+          probability: 0.4,
+          bgColor: '#FFF4D6'
+        },
+        {
+          id: '5',
+          name: '10元红包',
+          probability: 0.03,
+          bgColor: '#FFEECC'
+        },
+        {
+          id: '6',
+          name: '再来一次',
+          probability: 0.02,
+          bgColor: '#FFF4D6'
         }
       ],
-      maxChances: 3,
       style: {
-        paddingTop: 0,
-        paddingRight: 0,
-        paddingBottom: 0,
-        paddingLeft: 0,
+        paddingTop: 10,
+        paddingRight: 10,
+        paddingBottom: 10,
+        paddingLeft: 10,
         backgroundColor: '#fff8e8',
-        textAlign: 'center'
+        textAlign: 'center',
+        borderRadius: 8
       }
     }
   },

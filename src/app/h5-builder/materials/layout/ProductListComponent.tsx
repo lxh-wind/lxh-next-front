@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function ProductListComponent({ component }: { component: ComponentType }) {
   const viewMode = (component.props as any).viewMode || 'grid';

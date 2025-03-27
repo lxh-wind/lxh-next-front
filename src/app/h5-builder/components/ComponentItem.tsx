@@ -5,7 +5,7 @@ import { Dropdown } from 'antd';
 import { DeleteOutlined, CopyOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { ComponentType } from './types';
-import { renderComponentContent } from './materials';
+import { renderComponentContent } from '../materials';
 
 interface ComponentItemProps {
   component: ComponentType;

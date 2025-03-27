@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function ImageComponent({ component }: { component: ComponentType }) {
   return (

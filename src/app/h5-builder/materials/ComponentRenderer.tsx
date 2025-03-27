@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ComponentType } from '../types';
+import { ComponentType } from '../components/types';
 
 // Basic components
 import { TextComponent } from './basic/TextComponent';

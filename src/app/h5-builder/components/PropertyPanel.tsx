@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker } from 'antd';
+import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker, Table, Alert, Divider } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
@@ -332,9 +332,9 @@ export default function PropertyPanel() {
                   {/* 背景颜色设置 */}
                   <Form.Item label="背景颜色" className="mb-4">
                     <ColorPicker
-                      defaultValue={selectedComponent.props?.style?.backgroundColor || 'transparent'}
+                      value={selectedComponent.props?.style?.backgroundColor || '#fff8e8'}
                       onChange={(color) => onUpdateComponent(selectedComponent.id, {
-                        style: { ...selectedComponent.props?.style, backgroundColor: color.toRgbString() }
+                        style: { ...selectedComponent.props?.style, backgroundColor: color }
                       })}
                     />
                   </Form.Item>
@@ -403,7 +403,7 @@ export default function PropertyPanel() {
               <ColorPicker
                 defaultValue={selectedComponent.props?.style?.color || '#000000'}
                 onChange={(color) => onUpdateComponent(selectedComponent.id, {
-                  style: { ...selectedComponent.props?.style, color: color.toRgbString() }
+                  style: { ...selectedComponent.props?.style, color: color }
                 })}
               />
             </Form.Item>
@@ -500,16 +500,115 @@ export default function PropertyPanel() {
             </Form.Item>
             <Form.Item label="奖品设置">
               <Button onClick={() => {
+                const prizes = (selectedComponent.props as any)?.prizes || [];
                 Modal.info({
-                  title: '奖品设置',
-                  width: 600,
+                  title: '淘宝风格奖品设置',
+                  width: 700,
                   content: (
                     <div>
-                      <p>奖品编辑将在高级编辑器中提供</p>
+                      <Table
+                        dataSource={prizes.map((prize: any, index: number) => ({
+                          ...prize,
+                          key: prize.id || index.toString()
+                        }))}
+                        columns={[
+                          {
+                            title: '奖品名称',
+                            dataIndex: 'name',
+                            key: 'name',
+                          },
+                          {
+                            title: '概率',
+                            dataIndex: 'probability',
+                            key: 'probability',
+                            render: (prob: number) => `${(prob * 100).toFixed(1)}%`
+                          },
+                          {
+                            title: '背景颜色',
+                            dataIndex: 'bgColor',
+                            key: 'bgColor',
+                            render: (color: string) => (
+                              <div style={{ 
+                                width: '24px', 
+                                height: '24px', 
+                                backgroundColor: color,
+                                borderRadius: '4px',
+                                border: '1px solid #ddd'
+                              }}></div>
+                            )
+                          }
+                        ]}
+                      />
+                      <Alert 
+                        style={{ marginTop: '10px' }}
+                        message="提示：高级奖品编辑功能将在后续版本提供" 
+                        type="info" 
+                      />
                     </div>
                   ),
                 });
               }}>打开奖品编辑器</Button>
+            </Form.Item>
+            <Form.Item label="样式设置">
+              <ColorPicker
+                value={selectedComponent.props?.style?.backgroundColor || '#fff8e8'}
+                onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                  style: { ...selectedComponent.props?.style, backgroundColor: color }
+                })}
+              />
+              <div style={{ marginTop: '8px', marginBottom: '8px' }}>背景颜色</div>
+              <Divider style={{ margin: '8px 0' }} />
+              
+              <div style={{ marginBottom: '8px' }}>圆角</div>
+              <InputNumber
+                min={0}
+                max={50}
+                value={selectedComponent.props?.style?.borderRadius || 8}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  style: { ...selectedComponent.props?.style, borderRadius: value }
+                })}
+              />
+              <Divider style={{ margin: '8px 0' }} />
+              
+              <div style={{ marginBottom: '8px' }}>内边距</div>
+              <Space>
+                <InputNumber
+                  min={0}
+                  max={50}
+                  value={selectedComponent.props?.style?.paddingTop || 10}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, paddingTop: value }
+                  })}
+                  addonBefore="上"
+                />
+                <InputNumber
+                  min={0}
+                  max={50}
+                  value={selectedComponent.props?.style?.paddingRight || 10}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, paddingRight: value }
+                  })}
+                  addonBefore="右"
+                />
+                <InputNumber
+                  min={0}
+                  max={50}
+                  value={selectedComponent.props?.style?.paddingBottom || 10}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, paddingBottom: value }
+                  })}
+                  addonBefore="下"
+                />
+                <InputNumber
+                  min={0}
+                  max={50}
+                  value={selectedComponent.props?.style?.paddingLeft || 10}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, paddingLeft: value }
+                  })}
+                  addonBefore="左"
+                />
+              </Space>
             </Form.Item>
           </Form>
         );

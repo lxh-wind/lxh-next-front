@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'antd-mobile';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function ButtonComponent({ component }: { component: ComponentType }) {
   // 处理按钮链接功能

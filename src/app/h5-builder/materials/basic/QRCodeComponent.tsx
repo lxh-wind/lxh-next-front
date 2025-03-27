@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function QRCodeComponent({ component }: { component: ComponentType }) {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function ContainerComponent({ component }: { component: ComponentType }) {
   return (

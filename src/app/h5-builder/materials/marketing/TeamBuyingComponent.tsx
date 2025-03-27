@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Avatar } from 'antd-mobile';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function TeamBuyingComponent({ component }: { component: ComponentType }) {
   return (

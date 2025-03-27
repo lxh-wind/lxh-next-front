@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'antd-mobile';
-import { ComponentType } from '../../types';
+import { ComponentType } from '../../components/types';
 
 export function CheckinCalendarComponent({ component }: { component: ComponentType }) {
   return (

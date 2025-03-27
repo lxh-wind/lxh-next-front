@@ -41,7 +41,9 @@ export interface ComponentType {
       marginBottom?: number;
       padding?: number;
       paddingTop?: number;
+      paddingRight?: number;
       paddingBottom?: number;
+      paddingLeft?: number;
       color?: string;
       fontSize?: number;
       textAlign?: 'left' | 'center' | 'right';
