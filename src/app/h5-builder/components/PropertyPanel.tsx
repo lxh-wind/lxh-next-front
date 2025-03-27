@@ -1,13 +1,56 @@
 'use client';
-
+import { useCallback } from 'react';
 import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag } from 'antd';
-import type { TabsProps } from 'antd';
-import { ComponentType, PropertyPanelProps } from './types';
+import { useAtom } from 'jotai';
+import {
+  componentsAtom,
+  selectedComponentAtom,
+  historyAtom,
+  historyIndexAtom,
+  canUndoAtom,
+  canRedoAtom,
+} from '@/src/app/h5-builder/store/atoms';
 
-export default function PropertyPanel({
-  selectedComponent,
-  onUpdateComponent
-}: PropertyPanelProps) {
+export default function PropertyPanel() {
+  const [components, setComponents] = useAtom(componentsAtom);
+  const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
+  const [history, setHistory] = useAtom(historyAtom);
+  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
+  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
+  
+
+  // 更新组件属性
+  const onUpdateComponent = useCallback((id: string, props: any) => {
+    // 仅在不频繁更新的属性变更时记录历史
+    if (Object.keys(props).some(key => !['style.marginTop', 'style.marginBottom'].includes(key))) {
+      setHistory(prev => ({
+        past: [...prev.past, prev.present],
+        present: prev.present.map(comp => 
+          comp.id === id ? { ...comp, props: { ...comp.props, ...props } } : comp
+        ),
+        future: [],
+      }));
+      setHistoryIndex(prev => prev + 1);
+      setCanUndo(true);
+      setCanRedo(false);
+    }
+    
+    setComponents(prev => 
+      prev.map(comp => 
+        comp.id === id 
+          ? { ...comp, props: { ...comp.props, ...props } } 
+          : comp
+      )
+    );
+    
+    if (selectedComponent && selectedComponent.id === id) {
+      setSelectedComponent(prev => 
+        prev ? { ...prev, props: { ...prev.props, ...props } } : null
+      );
+    }
+  }, [selectedComponent]);
+
   if (!selectedComponent) {
     return (
       <div className="p-4 text-center text-gray-400">

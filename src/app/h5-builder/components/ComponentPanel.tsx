@@ -19,7 +19,6 @@ export default function ComponentPanel() {
   const [components, setComponents] = useAtom(componentsAtom);
   const [activeCategory, setActiveCategory] = useState('basic');
   const [searchText, setSearchText] = useState('');
-  const [draggedComponent, setDraggedComponent] = useState<any>(null);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
@@ -37,21 +36,6 @@ export default function ComponentPanel() {
     }
     
     return components;
-  };
-
-  // 处理拖拽开始
-  const handleDragStart = (e: React.DragEvent, component: any) => {
-    // 设置拖拽数据
-    e.dataTransfer.setData('componentType', JSON.stringify(component));
-    // 设置可拖拽的视觉效果
-    e.dataTransfer.effectAllowed = 'copy';
-    // 记录当前拖拽的组件
-    setDraggedComponent(component);
-  };
-
-  // 处理拖拽结束
-  const handleDragEnd = () => {
-    setDraggedComponent(null);
   };
 
   const handleAddComponent = (componentType: any) => {
@@ -72,10 +56,6 @@ export default function ComponentPanel() {
       hoverable
       className="mb-2 cursor-grab relative"
       onClick={() => handleAddComponent(component)}
-      bodyStyle={{ padding: '12px', textAlign: 'center' }}
-      draggable
-      onDragStart={(e) => handleDragStart(e, component)}
-      onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col items-center">
         {component.icon && <component.icon className="text-xl mb-1" />}

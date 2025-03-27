@@ -1,24 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Tabs, Form, Input, Select, Radio, Slider, Button, ColorPicker, Upload, Space, message } from 'antd';
+import React, { useState, useCallback } from 'react';
+import { Tabs, Form, Input, Select, Radio, Slider, Button, ColorPicker, Upload, message } from 'antd';
 import { UploadOutlined, PictureOutlined, BgColorsOutlined, LayoutOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { Color } from 'antd/es/color-picker';
 import type { PageInfo } from './types';
 import type { UploadFile } from 'antd/es/upload/interface';
+import { useAtom } from 'jotai';
+import {
+  pageInfoAtom
+} from '@/src/app/h5-builder/store/atoms';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
 
-interface PageSettingsProps {
-  pageInfo: PageInfo;
-  onUpdatePageInfo: (updates: Partial<PageInfo>) => void;
-}
-
 type BgMode = 'color' | 'image' | 'gradient';
 type LayoutMode = 'auto' | 'free';
 
-const PageSettings: React.FC<PageSettingsProps> = ({ pageInfo, onUpdatePageInfo }) => {
+const PageSettings: React.FC<{}> = () => {
+
+  const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
+
   // 初始化外观设置状态
   const [bgMode, setBgMode] = useState<BgMode>(pageInfo.bgMode || 'color');
   const [bgColor, setBgColor] = useState<string>(pageInfo.bgColor || '#ffffff');
@@ -27,7 +29,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({ pageInfo, onUpdatePageInfo 
   const [bgRepeat, setBgRepeat] = useState<string>(pageInfo.bgRepeat || 'no-repeat');
   const [shareImage, setShareImage] = useState<string | null>(pageInfo.shareImage || null);
   const [shareFileList, setShareFileList] = useState<UploadFile[]>([]);
-  
+
   // 初始化布局设置状态
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(pageInfo.layoutMode || 'auto');
   const [containerPadding, setContainerPadding] = useState<number>(pageInfo.containerPadding || 16);
@@ -36,6 +38,14 @@ const PageSettings: React.FC<PageSettingsProps> = ({ pageInfo, onUpdatePageInfo 
   
   // 表单实例
   const [form] = Form.useForm();
+
+  // 更新页面信息
+  const onUpdatePageInfo = useCallback((updates: Partial<PageInfo>) => {
+    setPageInfo(prev => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
 
   // 更新页面信息
   const handleUpdatePageInfo = (values: any) => {

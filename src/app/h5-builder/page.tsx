@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, message, Modal, Input, Button, Tooltip, Form, Card, Row, Col, Divider, Select } from 'antd';
+import React, { useState, useCallback } from 'react';
+import { Layout, message, Modal, Button, Tooltip, Divider } from 'antd';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,9 +14,6 @@ import {
   ArrowLeftOutlined,
   UndoOutlined,
   RedoOutlined,
-  TabletOutlined,
-  LaptopOutlined,
-  FileTextOutlined,
   SettingOutlined
 } from '@ant-design/icons';
 import { savePage, publishPage, previewPage, previewLuckyWheel, generateComplexId } from './utils/store';
@@ -42,16 +39,8 @@ const PageSettings = dynamic(() => import('./components/PageSettings'), { ssr: f
 const ZoomablePaneWithRulers = dynamic(() => import('./components/ZoomablePaneWithRulers'), {
   ssr: false,
 });
-
-// 预设画布尺寸
-const DEVICE_SIZES = [
-  { name: 'iphone6/7/8', width: 375, height: 667, icon: <MobileOutlined /> },
-  { name: 'iphoneXR', width: 414, height: 896, icon: <MobileOutlined /> },
-  { name: 'android', width: 360, height: 780, icon: <MobileOutlined /> },
-  { name: 'ipad', width: 768, height: 1024, icon: <TabletOutlined /> },
-  { name: 'PC', width: 1200, height: 764, icon: <LaptopOutlined /> },
-  { name: 'A4', width: 595, height: 842, icon: <FileTextOutlined /> },
-];
+const CanvasSizeSettings = dynamic(() => import('./components/CanvasSizeSettings'), { ssr: false });
+const SaveModal = dynamic(() => import('./components/SaveModal'), { ssr: false });
 
 // 添加一个转换函数，将 PageData 转换为 PageInfo
 const convertPageDataToPageInfo = (pageData: any): PageInfo => {
@@ -92,140 +81,9 @@ export default function H5Builder() {
   const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   
   // 本地状态
-  const [loading, setLoading] = useState<boolean>(false);
   const [showCanvasSizeModal, setShowCanvasSizeModal] = useState(false);
-  const [customWidth, setCustomWidth] = useState('375');
-  const [customHeight, setCustomHeight] = useState('667');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isPageSettingsOpen, setIsPageSettingsOpen] = useState<boolean>(false);
-  const [tempCanvasSize, setTempCanvasSize] = useState({ width: 375, height: 667 });
-  
-  // 添加组件
-  const handleAddComponent = useCallback((component: any) => {
-    const newComponent = {
-      id: generateComplexId(component.type),
-      ...component
-    };
-    
-    // 更新历史状态
-    setHistory(prev => ({
-      past: [...prev.past, prev.present],
-      present: [...prev.present, newComponent],
-      future: [],
-    }));
-    setHistoryIndex(prev => prev + 1);
-    setCanUndo(true);
-    setCanRedo(false);
-    
-    setComponents(prev => [...prev, newComponent]);
-  }, []);
-  
-  // 选择组件
-  const handleSelectComponent = useCallback((component: any) => {
-    setSelectedComponent(component);
-  }, []);
-  
-  // 删除组件
-  const handleDeleteComponent = useCallback((id: string) => {
-    // 更新历史状态
-    setHistory(prev => ({
-      past: [...prev.past, prev.present],
-      present: prev.present.filter(comp => comp.id !== id),
-      future: [],
-    }));
-    setHistoryIndex(prev => prev + 1);
-    setCanUndo(true);
-    setCanRedo(false);
-    
-    setComponents(prev => prev.filter(comp => comp.id !== id));
-    if (selectedComponent && selectedComponent.id === id) {
-      setSelectedComponent(null);
-    }
-  }, [selectedComponent]);
-  
-  // 复制组件
-  const handleDuplicateComponent = useCallback((id: string) => {
-    const component = components.find(comp => comp.id === id);
-    if (component) {
-      const newComponent = JSON.parse(JSON.stringify(component));
-      newComponent.id = generateComplexId(component.type);
-      
-      if (newComponent.props?.coupons) {
-        newComponent.props.coupons = newComponent.props.coupons.map((coupon: any) => ({
-          ...coupon,
-          id: generateComplexId('coupon')
-        }));
-      }
-      
-      // 更新历史状态
-      setHistory(prev => ({
-        past: [...prev.past, prev.present],
-        present: [...prev.present, newComponent],
-        future: [],
-      }));
-      setHistoryIndex(prev => prev + 1);
-      setCanUndo(true);
-      setCanRedo(false);
-      
-      setComponents(prev => [...prev, newComponent]);
-    }
-  }, [components]);
-  
-  // 更新组件属性
-  const handleUpdateComponent = useCallback((id: string, props: any) => {
-    // 仅在不频繁更新的属性变更时记录历史
-    if (Object.keys(props).some(key => !['style.marginTop', 'style.marginBottom'].includes(key))) {
-      setHistory(prev => ({
-        past: [...prev.past, prev.present],
-        present: prev.present.map(comp => 
-          comp.id === id ? { ...comp, props: { ...comp.props, ...props } } : comp
-        ),
-        future: [],
-      }));
-      setHistoryIndex(prev => prev + 1);
-      setCanUndo(true);
-      setCanRedo(false);
-    }
-    
-    setComponents(prev => 
-      prev.map(comp => 
-        comp.id === id 
-          ? { ...comp, props: { ...comp.props, ...props } } 
-          : comp
-      )
-    );
-    
-    if (selectedComponent && selectedComponent.id === id) {
-      setSelectedComponent(prev => 
-        prev ? { ...prev, props: { ...prev.props, ...props } } : null
-      );
-    }
-  }, [selectedComponent]);
-  
-  // 更新组件顺序
-  const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
-    // 更新历史状态
-    setHistory(prev => ({
-      past: [...prev.past, prev.present],
-      present: (() => {
-        const result = Array.from(prev.present);
-        const [removed] = result.splice(startIndex, 1);
-        result.splice(endIndex, 0, removed);
-        return result;
-      })(),
-      future: [],
-    }));
-    setHistoryIndex(prev => prev + 1);
-    setCanUndo(true);
-    setCanRedo(false);
-    
-    setComponents(prev => {
-      const result = Array.from(prev);
-      const [removed] = result.splice(startIndex, 1);
-      result.splice(endIndex, 0, removed);
-      return result;
-    });
-  }, []);
   
   // 撤销操作
   const handleUndo = useCallback(() => {
@@ -259,26 +117,9 @@ export default function H5Builder() {
     }
   }, [history]);
   
-  // 同步组件到页面信息
-  useEffect(() => {
-    setPageInfo(prev => ({
-      ...prev,
-      components,
-    }));
-  }, [components]);
-  
-  // 更新页面信息
-  const handleUpdatePageInfo = useCallback((updates: Partial<PageInfo>) => {
-    setPageInfo(prev => ({
-      ...prev,
-      ...updates,
-    }));
-  }, []);
-  
   // 保存页面
   const handleSave = async (values: any) => {
     try {
-      setLoading(true);
       const pageData = {
         ...pageInfo,
         ...values,
@@ -294,7 +135,6 @@ export default function H5Builder() {
     } catch (error) {
       messageApi.error('保存失败');
     } finally {
-      setLoading(false);
       setIsSaveModalOpen(false);
     }
   };
@@ -307,7 +147,6 @@ export default function H5Builder() {
     }
 
     try {
-      setLoading(true);
       const publishedData = await publishPage(pageInfo.id);
       messageApi.success('发布成功');
       setPageInfo(prev => ({
@@ -318,7 +157,6 @@ export default function H5Builder() {
     } catch (error) {
       messageApi.error('发布失败');
     } finally {
-      setLoading(false);
     }
   };
   
@@ -329,15 +167,6 @@ export default function H5Builder() {
       return;
     }
     previewPage(pageInfo.id);
-  };
-  
-  // 预览组件
-  const handlePreviewComponent = () => {
-    if (!selectedComponent) {
-      messageApi.warning('请先选择组件');
-      return;
-    }
-    previewLuckyWheel(selectedComponent);
   };
   
   // 显示保存模态框
@@ -404,44 +233,14 @@ export default function H5Builder() {
     );
   };
 
-  // 处理画布尺寸变更
-  const handleCanvasSizeChange = (width: number, height: number) => {
-    setTempCanvasSize({ width, height });
-  };
-
-  // 应用自定义尺寸
-  const applyCustomSize = () => {
-    const width = parseInt(customWidth);
-    const height = parseInt(customHeight);
-    if (width && height) {
-      setTempCanvasSize({ width, height });
-    }
-  };
-
-  // 确认画布尺寸
-  const confirmCanvasSize = () => {
-    setCanvasSize(tempCanvasSize);
-    setShowCanvasSizeModal(false);
-  };
-
-  // 打开画布尺寸模态框
-  const openCanvasSizeModal = () => {
-    setTempCanvasSize(canvasSize);
-    setCustomWidth(canvasSize.width.toString());
-    setCustomHeight(canvasSize.height.toString());
-    setShowCanvasSizeModal(true);
-  };
-
-  // 检查是否为自定义尺寸
-  const isCustomTempSize = () => {
-    return !DEVICE_SIZES.some(
-      size => size.width === tempCanvasSize.width && size.height === tempCanvasSize.height
-    );
-  };
-
   // 取消画布尺寸设置
   const handleCancelCanvasSize = () => {
     setShowCanvasSizeModal(false);
+  };
+  
+  // 打开画布尺寸模态框
+  const openCanvasSizeModal = () => {
+    setShowCanvasSizeModal(true);
   };
 
   // 返回上一页
@@ -551,7 +350,7 @@ export default function H5Builder() {
       <Layout className="flex-1">
         {/* 左侧组件面板 */}
         <Sider width={300} theme="light" className="border-r border-gray-200">
-          <ComponentPanel onAddComponent={handleAddComponent} />
+          <ComponentPanel />
         </Sider>
         
         {/* 中间画布区域 */}
@@ -559,24 +358,7 @@ export default function H5Builder() {
           className="overflow-auto p-0 relative"
         >
           <ZoomablePaneWithRulers isPropertyPanelOpen={!!selectedComponent}>
-            <Canvas
-              components={components}
-              selectedComponentId={selectedComponent?.id}
-              onSelectComponent={handleSelectComponent}
-              onDeleteComponent={handleDeleteComponent}
-              onDuplicateComponent={handleDuplicateComponent}
-              onUpdateComponentsOrder={handleUpdateComponentsOrder}
-              onAddComponent={handleAddComponent}
-              canvasSize={canvasSize}
-              containerPadding={pageInfo.containerPadding}
-              componentGap={pageInfo.componentGap}
-              containerWidth={pageInfo.containerWidth}
-              layoutMode={pageInfo.layoutMode}
-              bgMode={pageInfo.bgMode}
-              bgColor={pageInfo.bgColor}
-              bgImage={pageInfo.bgImage}
-              bgRepeat={pageInfo.bgRepeat}
-            />
+            <Canvas />
           </ZoomablePaneWithRulers>
         </Content>
         
@@ -591,10 +373,7 @@ export default function H5Builder() {
           }}
         >
           {selectedComponent && (
-            <PropertyPanel
-              selectedComponent={selectedComponent}
-              onUpdateComponent={handleUpdateComponent}
-            />
+            <PropertyPanel />
           )}
         </Sider>
       </Layout>
@@ -606,216 +385,27 @@ export default function H5Builder() {
         onCancel={() => setIsPageSettingsOpen(false)}
         footer={null}
         width={800}
-        bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}
       >
-        <PageSettings 
-          pageInfo={pageInfo}
-          onUpdatePageInfo={handleUpdatePageInfo}
-        />
+        <PageSettings />
       </Modal>
       
-      {/* 画布尺寸设置模态框 */}
-      <Modal
-        title="设置画布尺寸"
+      {/* 使用抽离的画布尺寸设置组件 */}
+      <CanvasSizeSettings
         open={showCanvasSizeModal}
-        onCancel={handleCancelCanvasSize}
-        footer={[
-          <Button key="cancel" onClick={handleCancelCanvasSize}>
-            取消
-          </Button>,
-          <Button 
-            key="confirm" 
-            type="primary" 
-            onClick={confirmCanvasSize}
-            disabled={tempCanvasSize.width === canvasSize.width && tempCanvasSize.height === canvasSize.height}
-          >
-            确认更改
-          </Button>
-        ]}
-        width={750}
-      >
-        <div className="mb-8">
-          {/* 当前画布尺寸信息 */}
-          <div className="mb-6 bg-gray-50 px-4 py-3 rounded-md border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="font-medium mr-2">当前尺寸:</span>
-                <span className="font-mono">{canvasSize.width} × {canvasSize.height} px</span>
-              </div>
-              <div>
-                <span className="text-gray-500 text-sm">
-                  {!DEVICE_SIZES.some(
-                    device => device.width === canvasSize.width && device.height === canvasSize.height
-                  ) ? '自定义尺寸' : 
-                    DEVICE_SIZES.find(device => 
-                      device.width === canvasSize.width && device.height === canvasSize.height
-                    )?.name
-                  }
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 选择后的尺寸预览 */}
-          {(tempCanvasSize.width !== canvasSize.width || tempCanvasSize.height !== canvasSize.height) && (
-            <div className="mb-6 bg-blue-50 px-4 py-3 rounded-md border border-blue-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-medium mr-2 text-blue-600">选择的新尺寸:</span>
-                  <span className="font-mono text-blue-600">{tempCanvasSize.width} × {tempCanvasSize.height} px</span>
-                </div>
-                <div>
-                  <span className="text-blue-500 text-sm">
-                    {isCustomTempSize() ? '自定义尺寸' : 
-                      DEVICE_SIZES.find(device => 
-                        device.width === tempCanvasSize.width && device.height === tempCanvasSize.height
-                      )?.name
-                    }
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <h3 className="mb-4 font-semibold">预设设备尺寸</h3>
-          <Row gutter={[16, 16]} className="mb-4">
-            {DEVICE_SIZES.map((device) => {
-              const isSelected = tempCanvasSize.width === device.width && tempCanvasSize.height === device.height;
-              const isCurrent = canvasSize.width === device.width && canvasSize.height === device.height;
-              return (
-                <Col span={8} key={device.name}>
-                  <Card 
-                    hoverable
-                    className={`transition-all duration-300 ${
-                      isSelected 
-                        ? 'border-blue-500 bg-blue-50 shadow-md transform scale-105' 
-                        : isCurrent 
-                          ? 'border-green-500 bg-green-50'
-                          : 'border border-gray-200'
-                    }`}
-                    onClick={() => handleCanvasSizeChange(device.width, device.height)}
-                  >
-                    <div className="flex items-center">
-                      <div className={`text-2xl mr-3 ${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : ''}`}>
-                        {device.icon}
-                      </div>
-                      <div>
-                        <div className={`font-medium ${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : ''}`}>
-                          {device.name}
-                        </div>
-                        <div className={`${isSelected ? 'text-blue-500' : isCurrent ? 'text-green-500' : 'text-gray-500'}`}>
-                          {device.width} × {device.height}
-                        </div>
-                      </div>
-                      <div className="ml-auto">
-                        {isSelected && (
-                          <span className="bg-blue-500 text-white text-xs py-1 rounded flex justify-center w-[50px]">已选择</span>
-                        )}
-                        {isCurrent && !isSelected && (
-                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded w-[100px]">当前</span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-              );
-            })}
-          </Row>
-
-          <Divider />
-
-          <div className="mt-8">
-            <h3 className="mb-4 font-semibold flex items-center">
-              <span>自定义尺寸</span>
-              {isCustomTempSize() && (
-                <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded flex justify-center w-[50px]">已选择</span>
-              )}
-              {!DEVICE_SIZES.some(
-                device => device.width === canvasSize.width && device.height === canvasSize.height
-              ) && !isCustomTempSize() && (
-                <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded">当前</span>
-              )}
-            </h3>
-            <div className="flex items-center gap-2">
-              <span>宽:</span>
-              <Input 
-                type="number" 
-                value={customWidth}
-                onChange={(e) => setCustomWidth(e.target.value)}
-                style={{ width: 120 }}
-                addonAfter="px"
-                className={isCustomTempSize() ? "border-blue-300" : ""}
-              />
-              <span>高:</span>
-              <Input 
-                type="number" 
-                value={customHeight}
-                onChange={(e) => setCustomHeight(e.target.value)}
-                style={{ width: 120 }}
-                addonAfter="px"
-                className={isCustomTempSize() ? "border-blue-300" : ""}
-              />
-              <Button 
-                type="primary" 
-                onClick={applyCustomSize}
-              >
-                使用此尺寸
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
+        onClose={handleCancelCanvasSize}
+        canvasSize={canvasSize}
+        onConfirm={(width, height) => {
+          setCanvasSize({ width, height });
+        }}
+      />
       
-      {/* 保存模态框 */}
-      <Modal
-        title="保存页面"
+      {/* 使用抽离的保存设置组件 */}
+      <SaveModal
         open={isSaveModalOpen}
-        onCancel={handleCancelSave}
-        footer={null}
-      >
-        <Form
-          name="saveForm"
-          onFinish={handleSave}
-          initialValues={{
-            title: pageInfo.title,
-            description: pageInfo.description,
-            tags: pageInfo.tags,
-          }}
-        >
-          <Form.Item
-            name="title"
-            label="页面标题"
-            rules={[{ required: true, message: '请输入页面标题' }]}
-          >
-            <Input placeholder="给页面起个名字" />
-          </Form.Item>
-          
-          <Form.Item
-            name="description"
-            label="页面描述"
-          >
-            <Input.TextArea placeholder="简单描述一下页面内容" rows={4} />
-          </Form.Item>
-          
-          <Form.Item
-            name="tags"
-            label="标签"
-          >
-            <Select
-              mode="tags"
-              placeholder="添加标签"
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-          
-          <Form.Item>
-            <div className="flex justify-end gap-2">
-              <Button onClick={handleCancelSave}>取消</Button>
-              <Button type="primary" htmlType="submit" loading={loading}>保存</Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
+        onClose={handleCancelSave}
+        pageInfo={pageInfo}
+        onSave={handleSave}
+      />
     </div>
   );
 } 

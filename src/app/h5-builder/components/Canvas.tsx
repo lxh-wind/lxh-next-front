@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal } from 'antd';
 import { ComponentType } from './types';
 import ComponentItem from './ComponentItem';
@@ -10,22 +10,24 @@ import {
   componentsAtom,
   selectedComponentAtom,
   canvasSizeAtom,
-  pageInfoAtom
+  pageInfoAtom,
+  historyAtom,
+  historyIndexAtom,
+  canUndoAtom,
+  canRedoAtom
 } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
 
-interface CanvasProps {
-  onUpdateComponentsOrder?: (startIndex: number, endIndex: number) => void;
-  onAddComponent?: (component: any) => void;
-}
-
-const Canvas: React.FC<CanvasProps> = ({
-  onUpdateComponentsOrder,
-}) => {
+const Canvas: React.FC<{}> = () => {
   const [components, setComponents] = useAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
   const [canvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
+
+  const [history, setHistory] = useAtom(historyAtom);
+  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
+  const [canUndo, setCanUndo] = useAtom(canUndoAtom);
+  const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
@@ -48,6 +50,31 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
+    // 更新组件顺序
+    const handleUpdateComponentsOrder = useCallback((startIndex: number, endIndex: number) => {
+      // 更新历史状态
+      setHistory(prev => ({
+        past: [...prev.past, prev.present],
+        present: (() => {
+          const result = Array.from(prev.present);
+          const [removed] = result.splice(startIndex, 1);
+          result.splice(endIndex, 0, removed);
+          return result;
+        })(),
+        future: [],
+      }));
+      setHistoryIndex(prev => prev + 1);
+      setCanUndo(true);
+      setCanRedo(false);
+      
+      setComponents(prev => {
+        const result = Array.from(prev);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        return result;
+      });
+    }, []);
+
   const handleDuplicate = (id: string) => {
     const component = components.find(comp => comp.id === id);
     if (component) {
@@ -59,15 +86,15 @@ const Canvas: React.FC<CanvasProps> = ({
 
   // 处理组件上移
   const handleMoveComponentUp = (index: number) => {
-    if (index > 0 && onUpdateComponentsOrder) {
-      onUpdateComponentsOrder(index, index - 1);
+    if (index > 0 && handleUpdateComponentsOrder) {
+      handleUpdateComponentsOrder(index, index - 1);
     }
   };
 
   // 处理组件下移
   const handleMoveComponentDown = (index: number) => {
-    if (index < components.length - 1 && onUpdateComponentsOrder) {
-      onUpdateComponentsOrder(index, index + 1);
+    if (index < components.length - 1 && handleUpdateComponentsOrder) {
+      handleUpdateComponentsOrder(index, index + 1);
     }
   };
 
