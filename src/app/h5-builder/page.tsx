@@ -19,7 +19,7 @@ import {
   FileTextOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { savePage, publishPage, previewPage, previewLuckyWheel } from './utils/store';
+import { savePage, publishPage, previewPage, previewLuckyWheel, generateComplexId } from './utils/store';
 import { PageInfo } from './components/types';
 import CommonOperations from '@/components/CommonOperations';
 import { useAtom } from 'jotai';
@@ -27,13 +27,12 @@ import {
   pageInfoAtom,
   componentsAtom,
   selectedComponentAtom,
-  zoomAtom,
   canvasSizeAtom,
   historyAtom,
   historyIndexAtom,
   canUndoAtom,
   canRedoAtom,
-} from './store/atoms';
+} from '@/src/app/h5-builder/store/atoms';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
@@ -53,25 +52,6 @@ const DEVICE_SIZES = [
   { name: 'PC', width: 1200, height: 764, icon: <LaptopOutlined /> },
   { name: 'A4', width: 595, height: 842, icon: <FileTextOutlined /> },
 ];
-
-// 生成复杂ID的函数
-const generateComplexId = (componentType: string) => {
-  // 生成UUID v4
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-  
-  // 生成时间戳
-  const timestamp = new Date().getTime();
-  
-  // 生成格式化的时间字符串
-  const date = new Date();
-  const formattedDate = date.toISOString().replace(/[:\-\.]/g, '');
-  
-  return `${componentType}-${uuid}-${timestamp}-${formattedDate}`;
-};
 
 // 添加一个转换函数，将 PageData 转换为 PageInfo
 const convertPageDataToPageInfo = (pageData: any): PageInfo => {
@@ -105,7 +85,6 @@ export default function H5Builder() {
   const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
   const [components, setComponents] = useAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
-  const [zoom, setZoom] = useAtom(zoomAtom);
   const [canvasSize, setCanvasSize] = useAtom(canvasSizeAtom);
   const [history, setHistory] = useAtom(historyAtom);
   const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
@@ -579,11 +558,7 @@ export default function H5Builder() {
         <Content 
           className="overflow-auto p-0 relative"
         >
-          <ZoomablePaneWithRulers 
-            zoom={zoom} 
-            onZoomChange={setZoom}
-            isPropertyPanelOpen={!!selectedComponent}
-          >
+          <ZoomablePaneWithRulers isPropertyPanelOpen={!!selectedComponent}>
             <Canvas
               components={components}
               selectedComponentId={selectedComponent?.id}
@@ -592,7 +567,6 @@ export default function H5Builder() {
               onDuplicateComponent={handleDuplicateComponent}
               onUpdateComponentsOrder={handleUpdateComponentsOrder}
               onAddComponent={handleAddComponent}
-              zoom={zoom}
               canvasSize={canvasSize}
               containerPadding={pageInfo.containerPadding}
               componentGap={pageInfo.componentGap}

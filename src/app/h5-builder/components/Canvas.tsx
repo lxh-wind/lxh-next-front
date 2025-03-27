@@ -9,12 +9,10 @@ import { useAtom } from 'jotai';
 import {
   componentsAtom,
   selectedComponentAtom,
-  zoomAtom,
   canvasSizeAtom,
   pageInfoAtom
 } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
-import { COMPONENT_DEFAULTS } from '../utils/constants';
 
 interface CanvasProps {
   onUpdateComponentsOrder?: (startIndex: number, endIndex: number) => void;
@@ -23,18 +21,14 @@ interface CanvasProps {
 
 const Canvas: React.FC<CanvasProps> = ({
   onUpdateComponentsOrder,
-  onAddComponent,
 }) => {
   const [components, setComponents] = useAtom(componentsAtom);
   const [selectedComponent, setSelectedComponent] = useAtom(selectedComponentAtom);
-  const [zoom] = useAtom(zoomAtom);
   const [canvasSize] = useAtom(canvasSizeAtom);
   const [pageInfo] = useAtom(pageInfoAtom);
   
   const [selectedId, setSelectedId] = useState<string | null>(selectedComponent?.id || null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [dropIndicatorPosition, setDropIndicatorPosition] = useState<number | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +73,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
   // 组件拖拽排序相关
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDragIndex(index);
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', index.toString());
@@ -93,145 +86,11 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-
-    // 显示放置指示器
-    if (dragIndex !== null && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const mouseY = e.clientY - containerRect.top;
-      
-      let targetIndex = -1;
-      const componentItems = containerRef.current.querySelectorAll('[data-index]');
-      
-      for (let i = 0; i < componentItems.length; i++) {
-        const item = componentItems[i] as HTMLElement;
-        const itemRect = item.getBoundingClientRect();
-        const itemY = itemRect.top + itemRect.height / 2 - containerRect.top;
-        
-        if (mouseY < itemY) {
-          targetIndex = parseInt(item.getAttribute('data-index') || '-1', 10);
-          break;
-        }
-      }
-      
-      if (targetIndex === -1 && componentItems.length > 0) {
-        // 如果鼠标位于所有项目下方，则指示器应该在最后一个项目之后
-        targetIndex = componentItems.length;
-      }
-      
-      setDropIndicatorPosition(targetIndex);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      setDropIndicatorPosition(null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDropIndicatorPosition(null);
-    
-    // 组件重新排序
-    if (dragIndex !== null && onUpdateComponentsOrder) {
-      const targetIndex = findDropTargetIndex(e);
-      
-      if (targetIndex !== -1 && targetIndex !== dragIndex) {
-        onUpdateComponentsOrder(dragIndex, targetIndex > dragIndex ? targetIndex - 1 : targetIndex);
-      }
-    } else {
-      // 处理从组件面板拖拽添加新组件的逻辑
-      try {
-        const componentData = JSON.parse(e.dataTransfer.getData('componentType'));
-        
-        if (componentData && onAddComponent) {
-          // 直接调用 onAddComponent 而不是生成 ID
-          onAddComponent(componentData);
-          
-          // 获取新添加的组件（会是数组中的最后一个）
-          // 组件添加后的处理逻辑，如果需要的话
-        }
-      } catch (error) {
-        console.error('Failed to add dragged component:', error);
-      }
-    }
-  };
-
-  const findDropTargetIndex = (e: React.DragEvent): number => {
-    if (!containerRef.current) return -1;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const mouseY = e.clientY - containerRect.top;
-    
-    const componentItems = containerRef.current.querySelectorAll('[data-index]');
-    
-    // 如果没有组件或鼠标在第一个组件上方，则返回0
-    if (componentItems.length === 0) return 0;
-    
-    for (let i = 0; i < componentItems.length; i++) {
-      const item = componentItems[i] as HTMLElement;
-      const itemRect = item.getBoundingClientRect();
-      const itemMiddleY = itemRect.top + itemRect.height / 2 - containerRect.top;
-      
-      if (mouseY < itemMiddleY) {
-        return parseInt(item.getAttribute('data-index') || '0', 10);
-      }
-    }
-    
-    // 如果鼠标在所有组件下方，则返回组件数量
-    return components.length;
-  };
 
   const handleDragEnd = (e: React.DragEvent) => {
     if (e.target && (e.target as HTMLElement).style) {
       (e.target as HTMLElement).style.opacity = '1';
     }
-    setDragIndex(null);
-    setDropIndicatorPosition(null);
-  };
-
-  // 计算画布高度 - 根据内容自适应增加
-  const calculateCanvasHeight = () => {
-    // 基础高度，如果没有组件则使用默认高度
-    const baseHeight = canvasSize.height;
-    
-    if (components.length === 0) {
-      return baseHeight;
-    }
-
-    // 计算所有组件占据的总高度
-    let maxComponentBottom = 0;
-    
-    components.forEach(component => {
-      // 获取组件在画布中的位置 - 从props.style中获取
-      const top = component.props?.style?.marginTop || 0;
-      
-      // 根据组件类型设置默认高度
-      const height = component.props?.style?.height || 
-                    COMPONENT_DEFAULTS.HEIGHTS[component.type.toUpperCase() as keyof typeof COMPONENT_DEFAULTS.HEIGHTS] || 
-                    COMPONENT_DEFAULTS.HEIGHTS.DEFAULT;
-      
-      // 计算组件底部位置，考虑padding和margin
-      const paddingTop = component.props?.style?.paddingTop || 0;
-      const paddingBottom = component.props?.style?.paddingBottom || 0;
-      const marginBottom = component.props?.style?.marginBottom || 0;
-      
-      // 计算组件底部位置 (top + height + margins & paddings)
-      const bottom = top + height + marginBottom + paddingTop + paddingBottom;
-      
-      // 更新最大底部位置
-      if (bottom > maxComponentBottom) {
-        maxComponentBottom = bottom;
-      }
-    });
-    
-    // 添加底部边距并确保最小高度不小于基础高度
-    const calculatedHeight = Math.max(baseHeight, maxComponentBottom + 100);
-    
-    return calculatedHeight;
   };
 
   // 应用背景样式

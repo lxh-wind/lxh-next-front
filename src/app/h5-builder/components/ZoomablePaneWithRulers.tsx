@@ -4,13 +4,14 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Button } from 'antd';
 import { MinusOutlined, PlusOutlined, DragOutlined, ExpandOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
-import { canvasPositionAtom } from '../store/atoms';
+import {
+  zoomAtom,
+  canvasPositionAtom,
+} from '@/src/app/h5-builder/store/atoms';
 import { CANVAS_DEFAULTS, PANEL_CONFIG } from '../utils/constants';
 
 interface ZoomablePaneWithRulersProps {
   children: React.ReactNode;
-  zoom: number;
-  onZoomChange: (zoom: number) => void;
   isPropertyPanelOpen?: boolean;
 }
 
@@ -18,8 +19,6 @@ const DEFAULT_CANVAS_POSITION  = { x:350, y: 50 };
 
 const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   children,
-  zoom = CANVAS_DEFAULTS.DEFAULT_ZOOM,
-  onZoomChange,
   isPropertyPanelOpen = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,14 +27,11 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const childrenRef = useRef<HTMLDivElement>(null);
   
-  // 使用 Jotai 状态替换本地状态
   const [canvasPosition, setCanvasPosition] = useAtom(canvasPositionAtom);
+  const [zoom, setZoom] = useAtom(zoomAtom);
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  
-  // 实际画布尺寸，用于计算居中位置
-  const [canvasSize, setCanvasSize] = useState(CANVAS_DEFAULTS.SIZE);
   
   // 添加拖拽提示状态
   const [dragMessage, setDragMessage] = useState('按住鼠标拖拽画布 (可滚动查看更多)');
@@ -51,7 +47,6 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
           const width = rect.width;
           const height = rect.height;
           console.log('Real canvas size:', width, height);
-          setCanvasSize({ width, height });
         }
       }
     }, 100);
@@ -128,31 +123,6 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
       
       // 恢复拖拽提示
       setDragMessage('按住鼠标拖拽画布 (可滚动查看更多)');
-    }
-  };
-  
-  // 重置画布位置到中心
-  const handleCenterCanvas = () => {
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth;
-      const containerHeight = containerRef.current.clientHeight;
-      
-      const centerX = Math.max(0, (containerWidth - canvasSize.width * (zoom / 100)) / 2);
-      const centerY = Math.max(0, (containerHeight - canvasSize.height * (zoom / 100)) / 2);
-      
-      setCanvasPosition({
-        x: centerX,
-        y: centerY
-      });
-      
-      if (canvasWrapperRef.current) {
-        canvasWrapperRef.current.style.transition = 'all 0.3s ease-in-out';
-        setTimeout(() => {
-          if (canvasWrapperRef.current) {
-            canvasWrapperRef.current.style.transition = isDragging ? 'none' : 'all 0.1s ease';
-          }
-        }, 300);
-      }
     }
   };
   
@@ -252,19 +222,19 @@ const ZoomablePaneWithRulers: React.FC<ZoomablePaneWithRulersProps> = ({
   const handleZoomIn = () => {
     if (zoom < CANVAS_DEFAULTS.MAX_ZOOM) {
       const newZoom = Math.min(CANVAS_DEFAULTS.MAX_ZOOM, zoom + CANVAS_DEFAULTS.ZOOM_STEP);
-      onZoomChange?.(newZoom);
+      setZoom?.(newZoom);
     }
   };
   
   const handleZoomOut = () => {
     if (zoom > CANVAS_DEFAULTS.MIN_ZOOM) {
       const newZoom = Math.max(CANVAS_DEFAULTS.MIN_ZOOM, zoom - CANVAS_DEFAULTS.ZOOM_STEP);
-      onZoomChange?.(newZoom);
+      setZoom?.(newZoom);
     }
   };
   
   const handleZoomReset = () => {
-    onZoomChange?.(CANVAS_DEFAULTS.DEFAULT_ZOOM);
+    setZoom?.(CANVAS_DEFAULTS.DEFAULT_ZOOM);
   };
 
   // 计算缩放控制面板的位置
