@@ -5,7 +5,7 @@ import { Card, Input, Tag } from 'antd';
 import { SearchOutlined, AppstoreOutlined, ShoppingOutlined, FundViewOutlined, DragOutlined } from '@ant-design/icons';
 import { getComponentsByCategory } from '../core/components';
 import { useAtom } from 'jotai';
-import { componentsAtom, historyAtom, historyIndexAtom, canUndoAtom, canRedoAtom } from '../store/atoms';
+import { componentsAtom, historyAtom, canUndoAtom, canRedoAtom } from '../store/atoms';
 import { generateComplexId } from '../utils/store';
 
 // 组件分类
@@ -18,7 +18,6 @@ const componentCategories = [
 export default function ComponentPanel() {
   const [components, setComponents] = useAtom(componentsAtom);
   const [history, setHistory] = useAtom(historyAtom);
-  const [historyIndex, setHistoryIndex] = useAtom(historyIndexAtom);
   const [canUndo, setCanUndo] = useAtom(canUndoAtom);
   const [canRedo, setCanRedo] = useAtom(canRedoAtom);
   const [activeCategory, setActiveCategory] = useState('basic');
@@ -118,7 +117,11 @@ export default function ComponentPanel() {
           <DragOutlined className="mr-1" /> 提示: 拖拽组件到画布或点击添加
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {filteredComponents().map(component => renderComponentItem(component))}
+          {filteredComponents().map((component, index) => (
+            <div key={index}>
+              {renderComponentItem(component)}
+            </div>
+          ))}
           
           {filteredComponents().length === 0 && (
             <div className="col-span-2 text-center text-gray-400 py-8">
