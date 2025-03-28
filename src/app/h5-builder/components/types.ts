@@ -71,6 +71,25 @@ export interface ComponentType {
     remainingSeconds?: number;
     timeUpText?: string;
     
+    // 秒杀组件特有属性
+    originalPrice?: string;
+    salePrice?: string;
+    hours?: string;
+    minutes?: string; 
+    seconds?: string;
+    uiStyle?: 'jd' | 'taobao' | 'pdd';
+    layoutType?: 'horizontal' | 'vertical';
+    showDiscountPercent?: boolean;
+    showSavedAmount?: boolean;
+    buttonSize?: 'mini' | 'small' | 'normal';
+    customButtonColor?: boolean;
+    buttonColorHex?: string;
+    showBadges?: boolean;
+    badgeText?: string;
+    showStockInfo?: boolean;
+    stockInfo?: string;
+    soldCount?: string;
+    
     // 商品列表特有属性
     productIds?: string[];
     columns?: number;

@@ -1532,6 +1532,274 @@ export default function PropertyPanel() {
           </Form>
         );
       
+      case 'seckill':
+        return (
+          <Form layout="vertical">
+            <Collapse defaultActiveKey={['1']} ghost>
+              <Collapse.Panel header="基础设置" key="1">
+                <Form.Item label="标题">
+                  <Input
+                    defaultValue={selectedComponent.props?.title}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      title: e.target.value
+                    })}
+                  />
+                </Form.Item>
+                <Form.Item label="商品描述">
+                  <Input.TextArea
+                    rows={2}
+                    defaultValue={selectedComponent.props?.description}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      description: e.target.value
+                    })}
+                  />
+                </Form.Item>
+                <Form.Item label="UI风格">
+                  <Select
+                    defaultValue={selectedComponent.props?.uiStyle || 'jd'}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      uiStyle: value
+                    })}
+                    style={{ width: '100%' }}
+                  >
+                    <Select.Option value="jd">京东风格</Select.Option>
+                    <Select.Option value="taobao">淘宝风格</Select.Option>
+                    <Select.Option value="pdd">拼多多风格</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item label="布局方式">
+                  <Select
+                    defaultValue={selectedComponent.props?.layoutType || 'horizontal'}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      layoutType: value
+                    })}
+                    style={{ width: '100%' }}
+                  >
+                    <Select.Option value="horizontal">水平布局</Select.Option>
+                    <Select.Option value="vertical">垂直布局</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="商品价格" key="2">
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <div className="text-gray-500 mb-1">促销价</div>
+                    <Input
+                      defaultValue={selectedComponent.props?.salePrice || '9.9'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        salePrice: e.target.value
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">原价</div>
+                    <Input
+                      defaultValue={selectedComponent.props?.originalPrice || '99'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        originalPrice: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+                <Form.Item label="显示折扣率">
+                  <Switch
+                    defaultChecked={selectedComponent.props?.showDiscountPercent !== false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      showDiscountPercent: checked
+                    })}
+                  />
+                </Form.Item>
+                <Form.Item label="显示优惠金额">
+                  <Switch
+                    defaultChecked={selectedComponent.props?.showSavedAmount !== false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      showSavedAmount: checked
+                    })}
+                  />
+                </Form.Item>
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="倒计时设置" key="3">
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <div className="text-gray-500 mb-1">小时</div>
+                    <Input
+                      defaultValue={selectedComponent.props?.hours || '01'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        hours: e.target.value
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">分钟</div>
+                    <Input
+                      defaultValue={selectedComponent.props?.minutes || '45'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        minutes: e.target.value
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">秒数</div>
+                    <Input
+                      defaultValue={selectedComponent.props?.seconds || '37'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        seconds: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-3 mb-1 text-gray-500">快速设置</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      onUpdateComponent(selectedComponent.id, {
+                        hours: '00',
+                        minutes: '15',
+                        seconds: '00'
+                      });
+                    }}
+                  >
+                    15分钟
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      onUpdateComponent(selectedComponent.id, {
+                        hours: '00',
+                        minutes: '30',
+                        seconds: '00'
+                      });
+                    }}
+                  >
+                    30分钟
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      onUpdateComponent(selectedComponent.id, {
+                        hours: '01',
+                        minutes: '00',
+                        seconds: '00'
+                      });
+                    }}
+                  >
+                    1小时
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      onUpdateComponent(selectedComponent.id, {
+                        hours: '24',
+                        minutes: '00',
+                        seconds: '00'
+                      });
+                    }}
+                  >
+                    24小时
+                  </Button>
+                </div>
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="按钮设置" key="4">
+                <Form.Item label="按钮文字">
+                  <Input
+                    defaultValue={selectedComponent.props?.buttonText || '立即抢购'}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      buttonText: e.target.value
+                    })}
+                  />
+                </Form.Item>
+                <Form.Item label="按钮大小">
+                  <Select
+                    defaultValue={selectedComponent.props?.buttonSize || 'mini'}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      buttonSize: value
+                    })}
+                    style={{ width: '100%' }}
+                  >
+                    <Select.Option value="mini">小</Select.Option>
+                    <Select.Option value="small">中</Select.Option>
+                    <Select.Option value="normal">大</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item label="自定义按钮颜色">
+                  <Switch
+                    defaultChecked={selectedComponent.props?.customButtonColor === true}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      customButtonColor: checked
+                    })}
+                  />
+                </Form.Item>
+                {selectedComponent.props?.customButtonColor && (
+                  <Form.Item label="按钮颜色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.buttonColorHex || '#ff4d4f'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        buttonColorHex: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                )}
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="高级设置" key="5">
+                <Form.Item label="显示角标">
+                  <Switch
+                    defaultChecked={selectedComponent.props?.showBadges !== false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      showBadges: checked
+                    })}
+                  />
+                </Form.Item>
+                {selectedComponent.props?.showBadges !== false && (
+                  <Form.Item label="角标文本">
+                    <Input
+                      defaultValue={selectedComponent.props?.badgeText || '秒杀'}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        badgeText: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                )}
+                <Form.Item label="显示库存信息">
+                  <Switch
+                    defaultChecked={selectedComponent.props?.showStockInfo === true}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      showStockInfo: checked
+                    })}
+                  />
+                </Form.Item>
+                {selectedComponent.props?.showStockInfo && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-gray-500 mb-1">库存量</div>
+                      <Input
+                        defaultValue={selectedComponent.props?.stockInfo || '100'}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                          stockInfo: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-gray-500 mb-1">已售量</div>
+                      <Input
+                        defaultValue={selectedComponent.props?.soldCount || '45'}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                          soldCount: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </Collapse.Panel>
+            </Collapse>
+          </Form>
+        );
+      
       default:
         return <div>暂不支持该组件类型的内容设置</div>;
     }
