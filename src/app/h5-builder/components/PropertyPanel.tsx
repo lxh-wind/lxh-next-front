@@ -13,6 +13,7 @@ import {
 } from '@/src/app/h5-builder/store/atoms';
 import dayjs from 'dayjs';
 import { CouponComponentConfig } from '../materials/configs/CouponComponentConfig';
+import { ProductListConfig } from '../materials/configs/ProductListConfig';
 
 export default function PropertyPanel() {
   const setComponents = useSetAtom(componentsAtom);
@@ -1245,51 +1246,32 @@ export default function PropertyPanel() {
         
       case 'productList':
         return (
-          <Form layout="vertical">
-            <Form.Item label="商品列表标题">
-              <Input
-                defaultValue={selectedComponent.props?.title}
-                onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                  title: e.target.value
-                })}
-              />
-            </Form.Item>
-            <Form.Item label="列表类型">
-              <Select
-                defaultValue={selectedComponent.props?.viewMode || 'grid'}
-                onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                  viewMode: value
-                })}
-              >
-                <Select.Option value="grid">网格视图</Select.Option>
-                <Select.Option value="list">列表视图</Select.Option>
-                <Select.Option value="card">卡片视图</Select.Option>
-              </Select>
-            </Form.Item>
-            <Form.Item label="商品列数">
-              <InputNumber
-                min={1}
-                max={4}
-                defaultValue={selectedComponent.props?.columns || 2}
-                onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                  columns: value
-                })}
-              />
-            </Form.Item>
-            <Form.Item label="商品设置">
-              <Button onClick={() => {
-                Modal.info({
-                  title: '商品设置',
-                  width: 600,
-                  content: (
-                    <div>
-                      <p>商品编辑将在高级编辑器中提供</p>
-                    </div>
-                  ),
-                });
-              }}>选择商品</Button>
-            </Form.Item>
-          </Form>
+          <ProductListConfig 
+            component={selectedComponent} 
+            onChange={(updatedComponent) => {
+              // 更新组件
+              setComponents(prev => 
+                prev.map(comp => 
+                  comp.id === updatedComponent.id ? updatedComponent : comp
+                )
+              );
+              
+              // 更新选中的组件
+              setSelectedComponent(updatedComponent);
+              
+              // 记录到历史
+              setHistory(prev => ({
+                past: [...prev.past, prev.present],
+                present: prev.present.map(comp => 
+                  comp.id === updatedComponent.id ? updatedComponent : comp
+                ),
+                future: [],
+              }));
+              setHistoryIndex(prev => prev + 1);
+              setCanUndo(true);
+              setCanRedo(false);
+            }}
+          />
         );
         
       case 'countdown':

@@ -127,17 +127,52 @@ export const marketingComponents: ComponentType[] = [
     icon: ShoppingOutlined,
     category: 'marketing',
     defaultProps: {
-      productIds: [],
-      columns: 2,
-      showPrice: true,
+      title: '精选商品',
       viewMode: 'grid',
+      columns: 2,
+      showMore: true,
+      moreText: '查看更多 >',
+      padding: 12,
+      dataSource: 'mock',
+      limit: 4,
+      showPrice: true,
+      showSales: true,
+      showFavorite: true,
+      showBrand: true,
+      showPromotionTag: true,
+      showExpress: true,
+      priceColor: '#f56c6c',
       style: {
+        backgroundColor: '#ffffff',
         paddingTop: 0,
         paddingRight: 0,
         paddingBottom: 0,
-        paddingLeft: 0,
-        backgroundColor: '#f5f5f5'
-      }
+        paddingLeft: 0
+      },
+      mockProducts: [
+        {
+          id: '1',
+          name: 'IN SEASON 设季 版型超好！爆款瘦瘦T夏季显瘦百搭',
+          price: '31.80',
+          originalPrice: '158.00',
+          sales: '36',
+          image: 'https://placeholder.com/150',
+          source: '品牌代工13厂源',
+          isExpress: true,
+          isHot: true
+        },
+        {
+          id: '2',
+          name: 'IN SEASON 设季 净版磨毛叠穿百搭圆领休闲短袖T恤',
+          price: '43.75',
+          originalPrice: '175.00',
+          sales: '32',
+          image: 'https://placeholder.com/150',
+          source: '品牌代工13厂源',
+          isExpress: true,
+          isHot: true
+        }
+      ]
     }
   },
   {
