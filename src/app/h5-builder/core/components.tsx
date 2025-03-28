@@ -341,21 +341,26 @@ export const marketingComponents: ComponentType[] = [
       title: '会员专享礼遇',
       description: '开通会员即可享受多种特权',
       benefits: [
-        { icon: 'discount', name: '专属折扣', description: '会员专享8.5折起' },
-        { icon: 'gift', name: '生日礼品', description: '生日当月送惊喜礼品' },
-        { icon: 'priority', name: '优先购买', description: '新品抢先体验' },
-        { icon: 'service', name: '专属客服', description: '会员专线客服' }
+        { icon: 'discount', title: '专属折扣', description: '会员专享8.5折起' },
+        { icon: 'gift', title: '生日礼品', description: '生日当月送惊喜礼品' },
+        { icon: 'priority', title: '优先购买', description: '新品抢先体验' },
+        { icon: 'service', title: '专属客服', description: '会员专线客服' },
+        { icon: 'delivery', title: '免费配送', description: '订单满99元免运费' },
+        { icon: 'points', title: '积分加倍', description: '购物积分双倍累计' }
       ],
       buttonText: '立即开通',
       price: '30.00',
       period: 'month',
+      buttonColor: '#8c54ff',
+      columns: 3,
       style: {
-        paddingTop: 0,
-        paddingRight: 0,
-        paddingBottom: 0,
-        paddingLeft: 0,
+        paddingTop: 15,
+        paddingRight: 10,
+        paddingBottom: 15,
+        paddingLeft: 10,
         backgroundColor: '#f9f0ff',
-        textAlign: 'center'
+        textAlign: 'center',
+        borderRadius: 8
       }
     }
   },

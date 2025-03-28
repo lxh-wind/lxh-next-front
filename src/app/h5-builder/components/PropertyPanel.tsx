@@ -727,18 +727,222 @@ export default function PropertyPanel() {
                 })}
               />
             </Form.Item>
-            <Form.Item label="权益设置">
+            <Form.Item label="描述文字">
+              <Input.TextArea
+                rows={2}
+                defaultValue={selectedComponent.props?.description}
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  description: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="列数">
+              <Select
+                defaultValue={selectedComponent.props?.columns || 3}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  columns: value
+                })}
+              >
+                <Select.Option value={2}>2列</Select.Option>
+                <Select.Option value={3}>3列</Select.Option>
+                <Select.Option value={4}>4列</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="会员权益列表">
               <Button onClick={() => {
+                const benefits = (selectedComponent.props?.benefits || []).map((b: any) => ({...b}));
                 Modal.info({
                   title: '会员权益设置',
                   width: 600,
                   content: (
-                    <div>
-                      <p>会员权益编辑将在高级编辑器中提供</p>
+                    <div className="p-4">
+                      <div className="my-4">
+                        <Button type="primary" onClick={() => {
+                          benefits.push({
+                            icon: 'gift',
+                            title: '新权益',
+                            description: '会员专享权益'
+                          });
+                          onUpdateComponent(selectedComponent.id, {
+                            benefits: [...benefits]
+                          });
+                          Modal.destroyAll();
+                        }}>
+                          添加权益
+                        </Button>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {benefits.map((benefit: any, index: number) => (
+                          <div key={index} className="border p-3 my-2 rounded">
+                            <div className="flex justify-between mb-2">
+                              <div className="font-bold">{benefit.title || '未命名权益'}</div>
+                              <Button 
+                                type="text" 
+                                danger
+                                onClick={() => {
+                                  const newBenefits = benefits.filter((_: any, i: number) => i !== index);
+                                  onUpdateComponent(selectedComponent.id, {
+                                    benefits: newBenefits
+                                  });
+                                  Modal.destroyAll();
+                                }}
+                              >
+                                删除
+                              </Button>
+                            </div>
+                            <div className="mb-2">
+                              <div className="text-gray-500 mb-1">图标</div>
+                              <Select
+                                style={{ width: '100%' }}
+                                defaultValue={benefit.icon || 'gift'}
+                                onChange={(value) => {
+                                  benefits[index].icon = value;
+                                  onUpdateComponent(selectedComponent.id, {
+                                    benefits: [...benefits]
+                                  });
+                                }}
+                              >
+                                <Select.Option value="discount">💰 折扣</Select.Option>
+                                <Select.Option value="gift">🎁 礼品</Select.Option>
+                                <Select.Option value="priority">⭐ 优先</Select.Option>
+                                <Select.Option value="service">👨‍💼 服务</Select.Option>
+                                <Select.Option value="delivery">🚚 配送</Select.Option>
+                                <Select.Option value="return">↩️ 退换</Select.Option>
+                                <Select.Option value="points">🏆 积分</Select.Option>
+                                <Select.Option value="vip">👑 VIP</Select.Option>
+                              </Select>
+                            </div>
+                            <div className="mb-2">
+                              <div className="text-gray-500 mb-1">权益名称</div>
+                              <Input
+                                defaultValue={benefit.title}
+                                onChange={(e) => {
+                                  benefits[index].title = e.target.value;
+                                  onUpdateComponent(selectedComponent.id, {
+                                    benefits: [...benefits]
+                                  });
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <div className="text-gray-500 mb-1">权益描述</div>
+                              <Input
+                                defaultValue={benefit.description}
+                                onChange={(e) => {
+                                  benefits[index].description = e.target.value;
+                                  onUpdateComponent(selectedComponent.id, {
+                                    benefits: [...benefits]
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ),
                 });
               }}>编辑会员权益</Button>
+            </Form.Item>
+            <Form.Item label="按钮设置">
+              <div className="mb-2">
+                <div className="text-gray-500 mb-1">按钮文字</div>
+                <Input
+                  defaultValue={selectedComponent.props?.buttonText}
+                  onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                    buttonText: e.target.value
+                  })}
+                />
+              </div>
+              <div className="mb-2">
+                <div className="text-gray-500 mb-1">会员价格</div>
+                <InputNumber
+                  min={0}
+                  defaultValue={selectedComponent.props?.price || 30}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    price: value
+                  })}
+                  addonAfter="元"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="mb-2">
+                <div className="text-gray-500 mb-1">时间单位</div>
+                <Select
+                  defaultValue={selectedComponent.props?.period || 'month'}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    period: value
+                  })}
+                  style={{ width: '100%' }}
+                >
+                  <Select.Option value="day">天</Select.Option>
+                  <Select.Option value="week">周</Select.Option>
+                  <Select.Option value="month">月</Select.Option>
+                  <Select.Option value="quarter">季度</Select.Option>
+                  <Select.Option value="year">年</Select.Option>
+                </Select>
+              </div>
+              <div className="mt-2">
+                <div className="text-gray-500 mb-1">按钮颜色</div>
+                <ColorPicker
+                  defaultValue={selectedComponent.props?.buttonColor || '#8c54ff'}
+                  onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                    buttonColor: color
+                  })}
+                />
+              </div>
+            </Form.Item>
+            <Form.Item label="样式设置">
+              <div className="mb-2">
+                <div className="text-gray-500 mb-1">背景颜色</div>
+                <ColorPicker
+                  defaultValue={selectedComponent.props?.style?.backgroundColor || '#f9f0ff'}
+                  onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, backgroundColor: color }
+                  })}
+                />
+              </div>
+              <div className="mb-2">
+                <div className="text-gray-500 mb-1">圆角</div>
+                <InputNumber
+                  min={0}
+                  max={50}
+                  defaultValue={selectedComponent.props?.style?.borderRadius || 8}
+                  onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                    style: { ...selectedComponent.props?.style, borderRadius: value }
+                  })}
+                  addonAfter="px"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-gray-500 mb-1">上内边距</div>
+                  <InputNumber
+                    min={0}
+                    max={50}
+                    defaultValue={selectedComponent.props?.style?.paddingTop || 10}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      style: { ...selectedComponent.props?.style, paddingTop: value }
+                    })}
+                    addonAfter="px"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <div className="text-gray-500 mb-1">下内边距</div>
+                  <InputNumber
+                    min={0}
+                    max={50}
+                    defaultValue={selectedComponent.props?.style?.paddingBottom || 10}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      style: { ...selectedComponent.props?.style, paddingBottom: value }
+                    })}
+                    addonAfter="px"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
             </Form.Item>
           </Form>
         );

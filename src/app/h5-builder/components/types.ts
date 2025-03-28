@@ -91,7 +91,12 @@ export interface ComponentType {
       icon?: string;
       title: string;
       description?: string;
+      iconColor?: string;
+      bgColor?: string;
     }>;
+    buttonColor?: string;
+    price?: string | number;
+    period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
     
     // 团购组件特有属性
     rewardText?: string;

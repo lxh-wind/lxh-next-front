@@ -38,6 +38,10 @@ export interface ComponentType {
     columns?: number;
     // 倒计时属性
     endTime?: string;
+    // 会员专享属性
+    buttonColor?: string;
+    price?: string | number;
+    period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   };
   icon?: React.ElementType;
   name?: string;
