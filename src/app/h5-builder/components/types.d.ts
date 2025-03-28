@@ -42,6 +42,30 @@ export interface ComponentType {
     buttonColor?: string;
     price?: string | number;
     period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+    // 签到日历属性
+    subtitle?: string;
+    daysInMonth?: number;
+    currentDay?: number;
+    signedDays?: number[];
+    rewards?: Array<{ day: number; reward: string }>;
+    weekdayLabels?: string[];
+    titleColor?: string;
+    signedDayClass?: string;
+    unsignedDayClass?: string;
+    currentDayClass?: string;
+    signedBackground?: string;
+    signedColor?: string;
+    rewardColor?: string;
+    showSignedIcon?: boolean;
+    streakText?: string;
+    buttonSize?: 'large' | 'middle' | 'small';
+    signedButtonText?: string;
+    showRewardTips?: boolean;
+    rewardTips?: string;
+    // 淘宝/拼多多风格UI新增属性
+    headerBackground?: string;
+    headerTextColor?: string;
+    buttonBgColor?: string;
   };
   icon?: React.ElementType;
   name?: string;

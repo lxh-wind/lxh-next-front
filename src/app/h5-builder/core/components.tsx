@@ -314,6 +314,9 @@ export const marketingComponents: ComponentType[] = [
     defaultProps: {
       title: '每日签到',
       subtitle: '连续签到得好礼',
+      daysInMonth: 30,
+      currentDay: new Date().getDate(),
+      signedDays: Array.from({ length: new Date().getDate() - 1 }, (_, i) => i + 1),
       rewards: [
         { day: 1, reward: '5积分' },
         { day: 3, reward: '10积分' },
@@ -321,14 +324,34 @@ export const marketingComponents: ComponentType[] = [
         { day: 15, reward: '50积分' },
         { day: 30, reward: '100积分' }
       ],
+      weekdayLabels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      titleColor: '#333',
+      signedDayClass: 'bg-green-100 text-green-600',
+      unsignedDayClass: '',
+      currentDayClass: 'border-2 border-blue-500',
+      signedBackground: 'linear-gradient(135deg, #e6f7ff 0%, #d9f1ff 100%)',
+      signedColor: '#1890ff',
+      rewardColor: '#ff4d4f',
+      showSignedIcon: true,
+      streakText: '',
       buttonText: '立即签到',
+      buttonColor: 'primary',
+      buttonSize: 'middle',
+      signedButtonText: '今日已签到',
+      showRewardTips: true,
+      rewardTips: '提示：连续签到可获得更多奖励',
+      headerBackground: 'linear-gradient(135deg, #ff9500 0%, #ff6000 100%)',
+      headerTextColor: '#fff',
+      buttonBgColor: 'linear-gradient(135deg, #ff9500 0%, #ff6000 100%)',
       style: {
         paddingTop: 0,
         paddingRight: 0,
         paddingBottom: 0,
         paddingLeft: 0,
-        backgroundColor: '#f0f7ff',
-        textAlign: 'center'
+        backgroundColor: '#fff',
+        textAlign: 'center',
+        borderRadius: 12,
+        overflow: 'hidden'
       }
     }
   },

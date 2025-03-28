@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker, Table, Alert, Divider } from 'antd';
+import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker, Table, Alert, Divider, Collapse } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
@@ -643,21 +643,224 @@ export default function PropertyPanel() {
       case 'checkinCalendar':
         return (
           <Form layout="vertical">
-            <Form.Item label="签到标题">
-              <Input
-                defaultValue={selectedComponent.props?.title}
-                onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                  title: e.target.value
-                })}
-              />
+            <Form.Item label="基本设置">
+              <Collapse ghost>
+                <Collapse.Panel header="标题和文本设置" key="1">
+                  <Form.Item label="签到标题">
+                    <Input
+                      defaultValue={selectedComponent.props?.title}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        title: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="副标题">
+                    <Input
+                      defaultValue={selectedComponent.props?.subtitle}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        subtitle: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="标题颜色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.titleColor || '#333'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        titleColor: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="提示文本">
+                    <Input
+                      defaultValue={selectedComponent.props?.streakText}
+                      placeholder="已连续签到 X 天"
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        streakText: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="显示奖励提示">
+                    <Switch
+                      defaultChecked={selectedComponent.props?.showRewardTips}
+                      onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                        showRewardTips: checked
+                      })}
+                    />
+                  </Form.Item>
+                  {selectedComponent.props?.showRewardTips && (
+                    <Form.Item label="奖励提示文本">
+                      <Input
+                        defaultValue={selectedComponent.props?.rewardTips}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                          rewardTips: e.target.value
+                        })}
+                      />
+                    </Form.Item>
+                  )}
+                </Collapse.Panel>
+                
+                <Collapse.Panel header="日历设置" key="2">
+                  <Form.Item label="月份天数">
+                    <InputNumber
+                      min={28}
+                      max={31}
+                      defaultValue={selectedComponent.props?.daysInMonth || 30}
+                      onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                        daysInMonth: value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="当前天">
+                    <InputNumber
+                      min={1}
+                      max={selectedComponent.props?.daysInMonth || 30}
+                      defaultValue={selectedComponent.props?.currentDay || new Date().getDate()}
+                      onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                        currentDay: value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="签到标记显示">
+                    <Switch
+                      defaultChecked={selectedComponent.props?.showSignedIcon}
+                      onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                        showSignedIcon: checked
+                      })}
+                    />
+                  </Form.Item>
+                </Collapse.Panel>
+                
+                <Collapse.Panel header="样式设置" key="3">
+                  <Form.Item label="顶部背景色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.headerBackground || 'linear-gradient(135deg, #ff9500 0%, #ff6000 100%)'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        headerBackground: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="顶部文字颜色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.headerTextColor || '#fff'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        headerTextColor: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="已签到日期背景色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.signedBackground || 'linear-gradient(135deg, #e6f7ff 0%, #d9f1ff 100%)'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        signedBackground: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="已签到日期文字颜色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.signedColor || '#1890ff'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        signedColor: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="奖励文字颜色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.rewardColor || '#ff4d4f'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        rewardColor: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                </Collapse.Panel>
+                
+                <Collapse.Panel header="按钮设置" key="4">
+                  <Form.Item label="按钮文本">
+                    <Input
+                      defaultValue={selectedComponent.props?.buttonText}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        buttonText: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="已签到按钮文本">
+                    <Input
+                      defaultValue={selectedComponent.props?.signedButtonText}
+                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                        signedButtonText: e.target.value
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="按钮背景色">
+                    <ColorPicker
+                      defaultValue={selectedComponent.props?.buttonBgColor || 'linear-gradient(135deg, #ff9500 0%, #ff6000 100%)'}
+                      onChange={(color) => onUpdateComponent(selectedComponent.id, {
+                        buttonBgColor: color.toHexString()
+                      })}
+                    />
+                  </Form.Item>
+                  <Form.Item label="按钮颜色">
+                    <Select
+                      defaultValue={selectedComponent.props?.buttonColor || 'primary'}
+                      onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                        buttonColor: value
+                      })}
+                    >
+                      <Select.Option value="primary">主色</Select.Option>
+                      <Select.Option value="success">成功色</Select.Option>
+                      <Select.Option value="warning">警告色</Select.Option>
+                      <Select.Option value="danger">危险色</Select.Option>
+                    </Select>
+                  </Form.Item>
+                  <Form.Item label="按钮大小">
+                    <Select
+                      defaultValue={selectedComponent.props?.buttonSize || 'middle'}
+                      onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                        buttonSize: value
+                      })}
+                    >
+                      <Select.Option value="large">大</Select.Option>
+                      <Select.Option value="middle">中</Select.Option>
+                      <Select.Option value="small">小</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Collapse.Panel>
+              </Collapse>
             </Form.Item>
-            <Form.Item label="按钮文本">
-              <Input
-                defaultValue={selectedComponent.props?.buttonText}
-                onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                  buttonText: e.target.value
-                })}
-              />
+            
+            <Form.Item label="奖励设置">
+              <Button 
+                type="primary" 
+                onClick={() => {
+                  Modal.info({
+                    title: '签到奖励设置',
+                    width: 600,
+                    content: (
+                      <div className="p-4">
+                        <p className="mb-4">配置特定天数的奖励:</p>
+                        <Table
+                          dataSource={selectedComponent.props?.rewards || []}
+                          columns={[
+                            {
+                              title: '签到天数',
+                              dataIndex: 'day',
+                              key: 'day',
+                            },
+                            {
+                              title: '奖励内容',
+                              dataIndex: 'reward',
+                              key: 'reward',
+                            },
+                          ]}
+                          pagination={false}
+                        />
+                        <p className="mt-4 text-gray-500">注: 详细的奖励编辑功能将在高级编辑器中提供</p>
+                      </div>
+                    ),
+                  });
+                }}
+              >
+                编辑签到奖励
+              </Button>
             </Form.Item>
           </Form>
         );
