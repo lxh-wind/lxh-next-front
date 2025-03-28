@@ -50,15 +50,7 @@ export interface ComponentType {
     };
     
     // 优惠券组件特有属性
-    coupons?: Array<{
-      id: string;
-      name: string;
-      discount: string | number;
-      condition: string;
-      amount?: number;
-      title?: string;
-      buttonText?: string;
-    }>;
+    coupons?: Coupon[];
     
     // 轮播图特有属性
     images?: string[];
@@ -144,4 +136,27 @@ export interface ComponentDefinition {
   type: string;
   icon: React.ElementType;
   defaultProps: any;
+}
+
+// 优惠券类型
+export interface Coupon {
+  id?: string;
+  name?: string;
+  title?: string;
+  discount?: string | number;
+  amount: number;
+  minSpend?: number;
+  condition: string;
+  validPeriod?: string;
+  buttonText?: string;
+  shopName?: string;
+  tag?: string;
+  isNew?: boolean;
+  buttonColor?: string;
+}
+
+// 组件属性接口
+export interface ComponentProps {
+  coupons?: Coupon[];
+  // ... 其他属性
 } 

@@ -12,6 +12,7 @@ import {
   pageInfoAtom
 } from '@/src/app/h5-builder/store/atoms';
 import dayjs from 'dayjs';
+import { CouponComponentConfig } from '../materials/configs/CouponComponentConfig';
 
 export default function PropertyPanel() {
   const setComponents = useSetAtom(componentsAtom);
@@ -615,29 +616,32 @@ export default function PropertyPanel() {
         
       case 'coupon':
         return (
-          <Form layout="vertical">
-            <Form.Item label="优惠券标题">
-              <Input
-                defaultValue={selectedComponent.props?.title}
-                onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                  title: e.target.value
-                })}
-              />
-            </Form.Item>
-            <Form.Item label="优惠券设置">
-              <Button onClick={() => {
-                Modal.info({
-                  title: '优惠券设置',
-                  width: 600,
-                  content: (
-                    <div>
-                      <p>优惠券编辑将在高级编辑器中提供</p>
-                    </div>
-                  ),
-                });
-              }}>打开优惠券编辑器</Button>
-            </Form.Item>
-          </Form>
+          <CouponComponentConfig 
+            component={selectedComponent} 
+            onChange={(updatedComponent) => {
+              // 更新组件
+              setComponents(prev => 
+                prev.map(comp => 
+                  comp.id === updatedComponent.id ? updatedComponent : comp
+                )
+              );
+              
+              // 更新选中的组件
+              setSelectedComponent(updatedComponent);
+              
+              // 记录到历史
+              setHistory(prev => ({
+                past: [...prev.past, prev.present],
+                present: prev.present.map(comp => 
+                  comp.id === updatedComponent.id ? updatedComponent : comp
+                ),
+                future: [],
+              }));
+              setHistoryIndex(prev => prev + 1);
+              setCanUndo(true);
+              setCanRedo(false);
+            }}
+          />
         );
         
       case 'checkinCalendar':
