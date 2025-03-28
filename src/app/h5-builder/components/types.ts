@@ -63,6 +63,13 @@ export interface ComponentType {
     showHours?: boolean;
     showMinutes?: boolean;
     showSeconds?: boolean;
+    styleType?: 'basic' | 'taobao' | 'pinduoduo' | 'modern' | 'elegant';
+    timeMode?: 'endTime' | 'duration';
+    remainingDays?: number;
+    remainingHours?: number;
+    remainingMinutes?: number;
+    remainingSeconds?: number;
+    timeUpText?: string;
     
     // 商品列表特有属性
     productIds?: string[];

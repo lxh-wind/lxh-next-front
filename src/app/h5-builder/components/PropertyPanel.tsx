@@ -1303,13 +1303,206 @@ export default function PropertyPanel() {
                 })}
               />
             </Form.Item>
-            <Form.Item label="结束时间">
-              <DatePicker
-                showTime
-                placeholder="选择结束时间"
-                defaultValue={selectedComponent.props?.endTime ? dayjs(selectedComponent.props.endTime) : null}
-                onChange={(date) => onUpdateComponent(selectedComponent.id, {
-                  endTime: date ? date.toISOString() : null
+            
+            <Form.Item label="倒计时方式">
+              <Select
+                defaultValue={selectedComponent.props?.timeMode || 'endTime'}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  timeMode: value
+                })}
+                style={{ width: '100%' }}
+              >
+                <Select.Option value="endTime">结束时间</Select.Option>
+                <Select.Option value="duration">剩余时长</Select.Option>
+              </Select>
+            </Form.Item>
+            
+            {(!selectedComponent.props?.timeMode || selectedComponent.props?.timeMode === 'endTime') && (
+              <Form.Item label="结束时间">
+                <DatePicker
+                  showTime
+                  placeholder="选择结束时间"
+                  defaultValue={selectedComponent.props?.endTime ? dayjs(selectedComponent.props.endTime) : null}
+                  onChange={(date) => onUpdateComponent(selectedComponent.id, {
+                    endTime: date ? date.toISOString() : null
+                  })}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            )}
+            
+            {selectedComponent.props?.timeMode === 'duration' && (
+              <Form.Item label="剩余时长设置">
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {selectedComponent.props?.showDays && (
+                    <div>
+                      <div className="text-gray-500 mb-1">天数</div>
+                      <InputNumber 
+                        min={0}
+                        max={999}
+                        defaultValue={selectedComponent.props?.remainingDays || 0}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          remainingDays: value
+                        })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+                  {selectedComponent.props?.showHours && (
+                    <div>
+                      <div className="text-gray-500 mb-1">小时</div>
+                      <InputNumber 
+                        min={0}
+                        max={23}
+                        defaultValue={selectedComponent.props?.remainingHours || 0}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          remainingHours: value
+                        })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedComponent.props?.showMinutes && (
+                    <div>
+                      <div className="text-gray-500 mb-1">分钟</div>
+                      <InputNumber 
+                        min={0}
+                        max={59}
+                        defaultValue={selectedComponent.props?.remainingMinutes || 0}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          remainingMinutes: value
+                        })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+                  {selectedComponent.props?.showSeconds && (
+                    <div>
+                      <div className="text-gray-500 mb-1">秒钟</div>
+                      <InputNumber 
+                        min={0}
+                        max={59}
+                        defaultValue={selectedComponent.props?.remainingSeconds || 0}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          remainingSeconds: value
+                        })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-3 mb-1 text-gray-500">快速设置</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      const updates: any = { };
+                      if (selectedComponent.props?.showDays) updates.remainingDays = 0;
+                      if (selectedComponent.props?.showHours) updates.remainingHours = 0;
+                      if (selectedComponent.props?.showMinutes) updates.remainingMinutes = 30;
+                      if (selectedComponent.props?.showSeconds) updates.remainingSeconds = 0;
+                      onUpdateComponent(selectedComponent.id, updates);
+                    }}
+                  >
+                    30分钟
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      const updates: any = { };
+                      if (selectedComponent.props?.showDays) updates.remainingDays = 0;
+                      if (selectedComponent.props?.showHours) updates.remainingHours = 1;
+                      if (selectedComponent.props?.showMinutes) updates.remainingMinutes = 0;
+                      if (selectedComponent.props?.showSeconds) updates.remainingSeconds = 0;
+                      onUpdateComponent(selectedComponent.id, updates);
+                    }}
+                  >
+                    1小时
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      const updates: any = { };
+                      if (selectedComponent.props?.showDays) updates.remainingDays = 0;
+                      if (selectedComponent.props?.showHours) updates.remainingHours = 24;
+                      if (selectedComponent.props?.showMinutes) updates.remainingMinutes = 0;
+                      if (selectedComponent.props?.showSeconds) updates.remainingSeconds = 0;
+                      onUpdateComponent(selectedComponent.id, updates);
+                    }}
+                  >
+                    24小时
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      const updates: any = { };
+                      if (selectedComponent.props?.showDays) updates.remainingDays = 3;
+                      if (selectedComponent.props?.showHours) updates.remainingHours = 0;
+                      if (selectedComponent.props?.showMinutes) updates.remainingMinutes = 0;
+                      if (selectedComponent.props?.showSeconds) updates.remainingSeconds = 0;
+                      onUpdateComponent(selectedComponent.id, updates);
+                    }}
+                  >
+                    3天
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={() => {
+                      const updates: any = { };
+                      if (selectedComponent.props?.showDays) updates.remainingDays = 7;
+                      if (selectedComponent.props?.showHours) updates.remainingHours = 0;
+                      if (selectedComponent.props?.showMinutes) updates.remainingMinutes = 0;
+                      if (selectedComponent.props?.showSeconds) updates.remainingSeconds = 0;
+                      onUpdateComponent(selectedComponent.id, updates);
+                    }}
+                  >
+                    1周
+                  </Button>
+                </div>
+                
+                {(!selectedComponent.props?.showDays && 
+                  !selectedComponent.props?.showHours && 
+                  !selectedComponent.props?.showMinutes && 
+                  !selectedComponent.props?.showSeconds) && (
+                  <div className="text-orange-500 mt-2">
+                    请在下方"显示设置"中至少选择一个时间单位
+                  </div>
+                )}
+              </Form.Item>
+            )}
+            
+            <Form.Item label="UI 样式">
+              <Select
+                defaultValue={selectedComponent.props?.styleType || 'modern'}
+                onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                  styleType: value
+                })}
+                style={{ width: '100%' }}
+              >
+                <Select.Option value="modern">现代风格</Select.Option>
+                <Select.Option value="taobao">淘宝风格</Select.Option>
+                <Select.Option value="pinduoduo">拼多多风格</Select.Option>
+                <Select.Option value="elegant">优雅暗色风格</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="显示描述">
+              <Input
+                defaultValue={selectedComponent.props?.description}
+                placeholder="在倒计时下方显示的文本描述"
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  description: e.target.value
+                })}
+              />
+            </Form.Item>
+            <Form.Item label="时间结束文本">
+              <Input
+                defaultValue={selectedComponent.props?.timeUpText || '活动已结束，请关注下一场活动'}
+                placeholder="倒计时结束后显示的文本"
+                onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                  timeUpText: e.target.value
                 })}
               />
             </Form.Item>
