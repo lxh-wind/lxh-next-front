@@ -25,6 +25,7 @@ import { SurveyFormComponent } from './marketing/SurveyFormComponent';
 import { TeamBuyingComponent } from './marketing/TeamBuyingComponent';
 import { SeckillComponent } from './marketing/SeckillComponent';
 import { SocialShareComponent } from './marketing/SocialShareComponent';
+import { WorkoutResultComponent } from './marketing/WorkoutResultComponent';
 
 /**
  * 渲染不同类型的组件内容
@@ -46,6 +47,7 @@ import { SocialShareComponent } from './marketing/SocialShareComponent';
  * - qrcode: 二维码组件
  * - container: 容器组件
  * - socialShare: 社交分享组件
+ * - workoutResult: 运动结果组件
  */
 export function renderComponentContent(component: ComponentType) {
   switch(component.type) {
@@ -99,6 +101,9 @@ export function renderComponentContent(component: ComponentType) {
     
     case 'socialShare':
       return <SocialShareComponent component={component} />;
+    
+    case 'workoutResult':
+      return <WorkoutResultComponent component={component} />;
     
     default:
       return (

@@ -14,6 +14,7 @@ import {
 import dayjs from 'dayjs';
 import { CouponComponentConfig } from '../materials/configs/CouponComponentConfig';
 import { ProductListConfig } from '../materials/configs/ProductListConfig';
+import RouteEditor from './RouteEditor';
 
 export default function PropertyPanel() {
   const setComponents = useSetAtom(componentsAtom);
@@ -477,7 +478,7 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Form.Item label="标题">
               <Input
-                defaultValue={selectedComponent.props?.title}
+                defaultValue={selectedComponent.props?.title || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   title: e.target.value
                 })}
@@ -653,20 +654,22 @@ export default function PropertyPanel() {
                 <Collapse.Panel header="标题和文本设置" key="1">
                   <Form.Item label="签到标题">
                     <Input
-                      defaultValue={selectedComponent.props?.title}
+                      defaultValue={selectedComponent.props?.title || ''}
                       onChange={(e) => onUpdateComponent(selectedComponent.id, {
                         title: e.target.value
                       })}
                     />
                   </Form.Item>
-                  <Form.Item label="副标题">
-                    <Input
-                      defaultValue={selectedComponent.props?.subtitle}
-                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                        subtitle: e.target.value
-                      })}
-                    />
-                  </Form.Item>
+                  {selectedComponent.type === 'checkinCalendar' && (
+                    <Form.Item label="副标题">
+                      <Input
+                        defaultValue={selectedComponent.props?.subtitle || ''}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                          subtitle: e.target.value
+                        })}
+                      />
+                    </Form.Item>
+                  )}
                   <Form.Item label="标题颜色">
                     <ColorPicker
                       defaultValue={selectedComponent.props?.titleColor || '#333'}
@@ -677,7 +680,7 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="提示文本">
                     <Input
-                      defaultValue={selectedComponent.props?.streakText}
+                      defaultValue={selectedComponent.props?.streakText || '已连续签到 X 天'}
                       placeholder="已连续签到 X 天"
                       onChange={(e) => onUpdateComponent(selectedComponent.id, {
                         streakText: e.target.value
@@ -686,7 +689,7 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="显示奖励提示">
                     <Switch
-                      defaultChecked={selectedComponent.props?.showRewardTips}
+                      defaultChecked={selectedComponent.props?.showRewardTips || false}
                       onChange={(checked) => onUpdateComponent(selectedComponent.id, {
                         showRewardTips: checked
                       })}
@@ -695,7 +698,7 @@ export default function PropertyPanel() {
                   {selectedComponent.props?.showRewardTips && (
                     <Form.Item label="奖励提示文本">
                       <Input
-                        defaultValue={selectedComponent.props?.rewardTips}
+                        defaultValue={selectedComponent.props?.rewardTips || ''}
                         onChange={(e) => onUpdateComponent(selectedComponent.id, {
                           rewardTips: e.target.value
                         })}
@@ -727,7 +730,7 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="签到标记显示">
                     <Switch
-                      defaultChecked={selectedComponent.props?.showSignedIcon}
+                      defaultChecked={selectedComponent.props?.showSignedIcon || false}
                       onChange={(checked) => onUpdateComponent(selectedComponent.id, {
                         showSignedIcon: checked
                       })}
@@ -781,7 +784,7 @@ export default function PropertyPanel() {
                 <Collapse.Panel header="按钮设置" key="4">
                   <Form.Item label="按钮文本">
                     <Input
-                      defaultValue={selectedComponent.props?.buttonText}
+                      defaultValue={selectedComponent.props?.buttonText || '签到'}
                       onChange={(e) => onUpdateComponent(selectedComponent.id, {
                         buttonText: e.target.value
                       })}
@@ -789,7 +792,7 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="已签到按钮文本">
                     <Input
-                      defaultValue={selectedComponent.props?.signedButtonText}
+                      defaultValue={selectedComponent.props?.signedButtonText || '已签到'}
                       onChange={(e) => onUpdateComponent(selectedComponent.id, {
                         signedButtonText: e.target.value
                       })}
@@ -797,9 +800,9 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="按钮背景色">
                     <ColorPicker
-                      defaultValue={selectedComponent.props?.buttonBgColor || 'linear-gradient(135deg, #ff9500 0%, #ff6000 100%)'}
+                      defaultValue={selectedComponent.props?.buttonColor || '#ff4d4f'}
                       onChange={(color) => onUpdateComponent(selectedComponent.id, {
-                        buttonBgColor: color.toHexString()
+                        buttonColor: color.toHexString()
                       })}
                     />
                   </Form.Item>
@@ -818,9 +821,9 @@ export default function PropertyPanel() {
                   </Form.Item>
                   <Form.Item label="按钮大小">
                     <Select
-                      defaultValue={selectedComponent.props?.buttonSize || 'middle'}
+                      defaultValue={selectedComponent.props?.signButtonSize || 'middle'}
                       onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                        buttonSize: value
+                        signButtonSize: value
                       })}
                     >
                       <Select.Option value="large">大</Select.Option>
@@ -875,7 +878,7 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Form.Item label="拼团标题">
               <Input
-                defaultValue={selectedComponent.props?.title}
+                defaultValue={selectedComponent.props?.title || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   title: e.target.value
                 })}
@@ -884,7 +887,7 @@ export default function PropertyPanel() {
             <Form.Item label="描述">
               <Input.TextArea
                 rows={2}
-                defaultValue={selectedComponent.props?.description}
+                defaultValue={selectedComponent.props?.description || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   description: e.target.value
                 })}
@@ -902,7 +905,7 @@ export default function PropertyPanel() {
             </Form.Item>
             <Form.Item label="按钮文本">
               <Input
-                defaultValue={selectedComponent.props?.buttonText}
+                defaultValue={selectedComponent.props?.buttonText || '立即参团'}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   buttonText: e.target.value
                 })}
@@ -929,7 +932,7 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Form.Item label="会员权益标题">
               <Input
-                defaultValue={selectedComponent.props?.title}
+                defaultValue={selectedComponent.props?.title || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   title: e.target.value
                 })}
@@ -938,7 +941,7 @@ export default function PropertyPanel() {
             <Form.Item label="描述文字">
               <Input.TextArea
                 rows={2}
-                defaultValue={selectedComponent.props?.description}
+                defaultValue={selectedComponent.props?.description || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   description: e.target.value
                 })}
@@ -1056,7 +1059,7 @@ export default function PropertyPanel() {
               <div className="mb-2">
                 <div className="text-gray-500 mb-1">按钮文字</div>
                 <Input
-                  defaultValue={selectedComponent.props?.buttonText}
+                  defaultValue={selectedComponent.props?.buttonText || '会员权益'}
                   onChange={(e) => onUpdateComponent(selectedComponent.id, {
                     buttonText: e.target.value
                   })}
@@ -1160,7 +1163,7 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Form.Item label="问卷标题">
               <Input
-                defaultValue={selectedComponent.props?.title}
+                defaultValue={selectedComponent.props?.title || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   title: e.target.value
                 })}
@@ -1169,7 +1172,7 @@ export default function PropertyPanel() {
             <Form.Item label="问卷描述">
               <Input.TextArea
                 rows={2}
-                defaultValue={selectedComponent.props?.description}
+                defaultValue={selectedComponent.props?.description || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   description: e.target.value
                 })}
@@ -1177,7 +1180,7 @@ export default function PropertyPanel() {
             </Form.Item>
             <Form.Item label="提交按钮文本">
               <Input
-                defaultValue={selectedComponent.props?.buttonText}
+                defaultValue={selectedComponent.props?.buttonText || '提交'}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   buttonText: e.target.value
                 })}
@@ -1185,7 +1188,7 @@ export default function PropertyPanel() {
             </Form.Item>
             <Form.Item label="奖励提示文本">
               <Input
-                defaultValue={selectedComponent.props?.rewardText}
+                defaultValue={selectedComponent.props?.rewardText || '感谢您的参与！'}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   rewardText: e.target.value
                 })}
@@ -1279,7 +1282,7 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Form.Item label="倒计时标题">
               <Input
-                defaultValue={selectedComponent.props?.title}
+                defaultValue={selectedComponent.props?.title || ''}
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   title: e.target.value
                 })}
@@ -1472,7 +1475,7 @@ export default function PropertyPanel() {
             </Form.Item>
             <Form.Item label="显示描述">
               <Input
-                defaultValue={selectedComponent.props?.description}
+                defaultValue={selectedComponent.props?.description || ''}
                 placeholder="在倒计时下方显示的文本描述"
                 onChange={(e) => onUpdateComponent(selectedComponent.id, {
                   description: e.target.value
@@ -1521,7 +1524,7 @@ export default function PropertyPanel() {
               <Collapse.Panel header="基础设置" key="1">
                 <Form.Item label="标题">
                   <Input
-                    defaultValue={selectedComponent.props?.title}
+                    defaultValue={selectedComponent.props?.title || ''}
                     onChange={(e) => onUpdateComponent(selectedComponent.id, {
                       title: e.target.value
                     })}
@@ -1530,7 +1533,7 @@ export default function PropertyPanel() {
                 <Form.Item label="商品描述">
                   <Input.TextArea
                     rows={2}
-                    defaultValue={selectedComponent.props?.description}
+                    defaultValue={selectedComponent.props?.description || ''}
                     onChange={(e) => onUpdateComponent(selectedComponent.id, {
                       description: e.target.value
                     })}
@@ -1697,15 +1700,14 @@ export default function PropertyPanel() {
                 </Form.Item>
                 <Form.Item label="按钮大小">
                   <Select
-                    defaultValue={selectedComponent.props?.buttonSize || 'mini'}
+                    defaultValue={selectedComponent.props?.signButtonSize || 'middle'}
                     onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                      buttonSize: value
+                      signButtonSize: value
                     })}
-                    style={{ width: '100%' }}
                   >
-                    <Select.Option value="mini">小</Select.Option>
-                    <Select.Option value="small">中</Select.Option>
-                    <Select.Option value="normal">大</Select.Option>
+                    <Select.Option value="large">大</Select.Option>
+                    <Select.Option value="middle">中</Select.Option>
+                    <Select.Option value="small">小</Select.Option>
                   </Select>
                 </Form.Item>
                 <Form.Item label="自定义按钮颜色">
@@ -1738,14 +1740,16 @@ export default function PropertyPanel() {
                   />
                 </Form.Item>
                 {selectedComponent.props?.showBadges !== false && (
-                  <Form.Item label="角标文本">
-                    <Input
-                      defaultValue={selectedComponent.props?.badgeText || '秒杀'}
-                      onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                        badgeText: e.target.value
-                      })}
-                    />
-                  </Form.Item>
+                  <>
+                    <Form.Item label="角标文本">
+                      <Input
+                        defaultValue={selectedComponent.props?.badgeText || '秒杀'}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                          badgeText: e.target.value
+                        })}
+                      />
+                    </Form.Item>
+                  </>
                 )}
                 <Form.Item label="显示库存信息">
                   <Switch
@@ -1780,6 +1784,274 @@ export default function PropertyPanel() {
               </Collapse.Panel>
             </Collapse>
           </Form>
+        );
+      
+      case 'workoutResult':
+        return (
+          <div>
+            <Collapse defaultActiveKey={['basic', 'map', 'data', 'badge']} className="mb-3">
+              <Collapse.Panel header="基础信息" key="basic">
+                <Form.Item label="标题">
+                  <Input
+                    defaultValue={selectedComponent.props.title || ''}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { title: e.target.value })}
+                    placeholder="例如：户外跑步"
+                  />
+                </Form.Item>
+                <Form.Item label="区域名称">
+                  <Input
+                    defaultValue={selectedComponent.props.areaName || ''}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { areaName: e.target.value })}
+                    placeholder="例如：松江区"
+                  />
+                </Form.Item>
+                <Form.Item label="附加文本">
+                  <Input
+                    defaultValue={selectedComponent.props.extraText || ''}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { extraText: e.target.value })}
+                    placeholder="例如：最长跑步时间"
+                  />
+                </Form.Item>
+                <Form.Item label="分享按钮文本">
+                  <Input
+                    defaultValue={selectedComponent.props.shareButtonText || '分享'}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { shareButtonText: e.target.value })}
+                    placeholder="例如：发布动态到社区"
+                  />
+                </Form.Item>
+                <Form.Item label="用户名">
+                  <Input
+                    defaultValue={selectedComponent.props.username || ''}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { username: e.target.value })}
+                    placeholder="例如：来自未来的哦哟"
+                  />
+                </Form.Item>
+                <Form.Item label="头像URL">
+                  <Input
+                    defaultValue={selectedComponent.props.avatar || ''}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, { avatar: e.target.value })}
+                    placeholder="输入头像图片URL"
+                  />
+                </Form.Item>
+                <Form.Item label="显示隐私标志">
+                  <Switch
+                    checked={selectedComponent.props.isPrivate || false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { isPrivate: checked })}
+                  />
+                </Form.Item>
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="地图设置" key="map">
+                <Form.Item label="使用真实地图">
+                  <Switch
+                    checked={selectedComponent.props.useGoogleMaps || false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { useGoogleMaps: checked })}
+                  />
+                </Form.Item>
+                
+                {selectedComponent.props.useGoogleMaps ? (
+                  <>
+                    <Form.Item label="Google Maps API Key">
+                      <Input
+                        defaultValue={selectedComponent.props.googleMapsApiKey || ''}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, { googleMapsApiKey: e.target.value })}
+                        placeholder="输入Google Maps API Key"
+                      />
+                      <div className="text-xs text-gray-400 mt-1">
+                        需要启用 Maps JavaScript API 和 Geocoding API
+                      </div>
+                    </Form.Item>
+                    
+                    <Form.Item label="地图缩放级别">
+                      <InputNumber
+                        min={1}
+                        max={20}
+                        value={selectedComponent.props.mapZoom || 15}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, { mapZoom: value })}
+                      />
+                    </Form.Item>
+                    
+                    <Form.Item label="轨迹颜色">
+                      <ColorPicker
+                        value={selectedComponent.props.mapTrackColor || '#000000'}
+                        onChange={(color) => onUpdateComponent(selectedComponent.id, { mapTrackColor: color.toHexString() })}
+                      />
+                    </Form.Item>
+                    
+                    <Form.Item label="轨迹线宽">
+                      <InputNumber
+                        min={1}
+                        max={10}
+                        value={selectedComponent.props.mapTrackWidth || 2}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, { mapTrackWidth: value })}
+                      />
+                    </Form.Item>
+                    
+                    <Form.Item label="轨迹点">
+                      <div className="border rounded p-2 bg-gray-50">
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div className="text-xs text-gray-500">
+                            设置路线上的各个点，格式为"纬度,经度"，以分号分隔。
+                          </div>
+                          <Input.TextArea
+                            value={selectedComponent.props.routePoints || ''}
+                            onChange={(e) => onUpdateComponent(selectedComponent.id, { routePoints: e.target.value })}
+                            placeholder="31.033,121.211;31.036,121.214;..."
+                            autoSize={{ minRows: 3, maxRows: 6 }}
+                          />
+                          <Button 
+                            size="small" 
+                            type="primary"
+                            onClick={() => {
+                              // 打开路线编辑模态窗口的逻辑
+                              Modal.info({
+                                title: '轨迹点编辑',
+                                content: (
+                                  <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+                                    <RouteEditor
+                                      routePoints={selectedComponent.props.routePoints || ''}
+                                      trackColor={selectedComponent.props.mapTrackColor || '#000000'}
+                                      trackWidth={selectedComponent.props.mapTrackWidth || 2}
+                                      apiKey={selectedComponent.props.googleMapsApiKey || ''}
+                                      onChange={(routePoints) => onUpdateComponent(selectedComponent.id, { routePoints })}
+                                      onDistanceChange={(distance) => onUpdateComponent(selectedComponent.id, { distance })}
+                                    />
+                                  </div>
+                                ),
+                                width: 800,
+                                maskClosable: true,
+                                okText: '关闭',
+                                onOk() {}
+                              });
+                            }}
+                          >
+                            可视化编辑轨迹点
+                          </Button>
+                        </Space>
+                      </div>
+                    </Form.Item>
+                  </>
+                ) : (
+                  <>
+                    <Form.Item label="地图图片URL">
+                      <Input
+                        defaultValue={selectedComponent.props.mapImage || ''}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, { mapImage: e.target.value })}
+                        placeholder="输入地图图片URL"
+                      />
+                    </Form.Item>
+                    <Form.Item label="轨迹颜色">
+                      <ColorPicker
+                        value={selectedComponent.props.mapTrackColor || '#000000'}
+                        onChange={(color) => onUpdateComponent(selectedComponent.id, { mapTrackColor: color.toHexString() })}
+                      />
+                    </Form.Item>
+                    <Form.Item label="轨迹线宽">
+                      <InputNumber
+                        min={1}
+                        max={10}
+                        value={selectedComponent.props.mapTrackWidth || 2}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, { mapTrackWidth: value })}
+                      />
+                    </Form.Item>
+                  </>
+                )}
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="运动数据" key="data">
+                <Form.Item label="距离(千米)">
+                  <InputNumber
+                    value={selectedComponent.props.distance || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, { distance: value })}
+                    step={0.01}
+                    min={0}
+                  />
+                </Form.Item>
+                <Form.Item label="时间(分钟)">
+                  <InputNumber
+                    value={Number(selectedComponent.props.time) || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      time: value?.toString() || '0'
+                    })}
+                    step={1}
+                    min={0}
+                  />
+                </Form.Item>
+                <Form.Item label="卡路里(千卡)">
+                  <InputNumber
+                    value={selectedComponent.props.calories || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, { calories: value })}
+                    step={1}
+                    min={0}
+                  />
+                </Form.Item>
+                <Form.Item label="平均配速(分钟/千米)">
+                  <InputNumber
+                    value={selectedComponent.props.pace || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, { pace: value })}
+                    step={0.01}
+                    min={0}
+                  />
+                </Form.Item>
+                <Form.Item label="步数">
+                  <InputNumber
+                    value={selectedComponent.props.steps || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, { steps: value })}
+                    step={1}
+                    min={0}
+                  />
+                </Form.Item>
+                <Form.Item label="消耗能量">
+                  <InputNumber
+                    value={selectedComponent.props.energy || 0}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, { energy: value })}
+                    step={1}
+                    min={0}
+                  />
+                </Form.Item>
+              </Collapse.Panel>
+              
+              <Collapse.Panel header="徽章设置" key="badge">
+                <Form.Item label="显示徽章">
+                  <Switch
+                    checked={selectedComponent.props.showBadge || false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { showBadge: checked })}
+                  />
+                </Form.Item>
+                {selectedComponent.props.showBadge && (
+                  <>
+                    <Form.Item label="徽章类型">
+                      <Select
+                        value={selectedComponent.props.badgeType || 'medal'}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, { badgeType: value })}
+                      >
+                        <Select.Option value="medal">奖牌</Select.Option>
+                        <Select.Option value="christmas">圣诞</Select.Option>
+                        <Select.Option value="newyear">新年</Select.Option>
+                        <Select.Option value="custom">自定义</Select.Option>
+                      </Select>
+                    </Form.Item>
+                    {selectedComponent.props.badgeType === 'custom' && (
+                      <Form.Item label="自定义徽章图片">
+                        <Input
+                          value={selectedComponent.props.customBadgeImage || ''}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, { customBadgeImage: e.target.value })}
+                          placeholder="输入自定义徽章图片URL"
+                        />
+                      </Form.Item>
+                    )}
+                    <Form.Item label="徽章文字">
+                      <Input
+                        value={selectedComponent.props.badgeText || ''}
+                        onChange={(e) => onUpdateComponent(selectedComponent.id, { badgeText: e.target.value })}
+                        placeholder="例如：完成5公里"
+                      />
+                    </Form.Item>
+                  </>
+                )}
+              </Collapse.Panel>
+            </Collapse>
+          </div>
         );
       
       default:

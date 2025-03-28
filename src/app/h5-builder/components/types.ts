@@ -1,6 +1,6 @@
 export interface ComponentType {
   id: string;
-  type: 'text' | 'image' | 'video' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container' | 'socialShare';
+  type: 'text' | 'image' | 'video' | 'button' | 'carousel' | 'productList' | 'luckyWheel' | 'countdown' | 'coupon' | 'seckill' | 'qrcode' | 'checkinCalendar' | 'memberBenefits' | 'surveyForm' | 'teamBuying' | 'container' | 'socialShare' | 'workoutResult';
   name: string;
   // 添加位置信息，用于自由布局模式
   position?: {
@@ -89,6 +89,10 @@ export interface ComponentType {
     showStockInfo?: boolean;
     stockInfo?: string;
     soldCount?: string;
+    headerBackground?: string;
+    headerTextColor?: string;
+    buttonBgColor?: string;
+    buttonColor?: string;
     
     // 商品列表特有属性
     productIds?: string[];
@@ -112,7 +116,6 @@ export interface ComponentType {
       iconColor?: string;
       bgColor?: string;
     }>;
-    buttonColor?: string;
     price?: string | number;
     period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
     
@@ -124,6 +127,65 @@ export interface ComponentType {
       teamPrice: number;
       originalPrice: number;
     };
+    
+    // 运动结果组件特有属性
+    distance?: number;
+    unit?: string;
+    duration?: string;
+    pace?: string;
+    calories?: number;
+    caloriesUnit?: string;
+    heartRate?: number;
+    heartRateUnit?: string;
+    steps?: number;
+    stepsUnit?: string;
+    stride?: number;
+    strideUnit?: string;
+    elevation?: number;
+    elevationUnit?: string;
+    areaName?: string;
+    extraText?: string;
+    mapTrackColor?: string;
+    mapTrackWidth?: number;
+    mapImage?: string;
+    showBadge?: boolean;
+    badgeNumber?: number;
+    badgePosition?: 'left' | 'right';
+    shareButtonText?: string;
+    avatar?: string;
+    username?: string;
+    isPrivate?: boolean;
+    routePoints?: string; // 格式: "lat1,lng1;lat2,lng2;lat3,lng3..."
+    useGoogleMaps?: boolean;
+    googleMapsApiKey?: string;
+    mapZoom?: number;
+    
+    // 签到日历组件特有属性
+    subtitle?: string;
+    titleColor?: string;
+    streakText?: string;
+    showRewardTips?: boolean;
+    rewardTips?: string;
+    daysInMonth?: number;
+    currentDay?: number;
+    showSignedIcon?: boolean;
+    signedDays?: number[];
+    rewards?: Array<{ day: number; reward: string }>;
+    weekdayLabels?: string[];
+    signedDayClass?: string;
+    unsignedDayClass?: string;
+    currentDayClass?: string;
+    signedBackground?: string;
+    signedColor?: string;
+    rewardColor?: string;
+    signedButtonText?: string;
+    signButtonSize?: 'large' | 'middle' | 'small';
+    
+    // 运动结果组件特有属性
+    time?: number;
+    energy?: number;
+    badgeType?: 'medal' | 'christmas' | 'newyear' | 'custom';
+    customBadgeImage?: string;
   };
 }
 
