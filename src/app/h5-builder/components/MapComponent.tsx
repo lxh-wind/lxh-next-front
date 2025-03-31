@@ -116,12 +116,29 @@ const MapComponent: React.FC<MapComponentProps> = ({
         viewMode: '2D',
         resizeEnable: true,
         center: new AMapRef.current.LngLat(center.lng, center.lat),
-        zoom: zoom
+        zoom: zoom,
+        logoVisible: false,  // 隐藏高德地图 logo
+        zooms: [3, 20],
+        isHotspot: false,
+        defaultCursor: 'default',
+        touchZoom: true,
+        scrollWheel: true,
+        keyboardEnable: true,
+        doubleClickZoom: true,
+        animateEnable: true,
+        rotateEnable: false,
+        dragEnable: true,
+        zoomEnable: true,
+        showBuildingBlock: false,
+        pitchEnable: false,
+        buildingAnimation: false,
+        jogEnable: false,
+        showLabel: true,
+        labelzIndex: 120,
+        skyColor: '#1E1E1E',
+        mapStyle: 'amap://styles/normal',
+        features: ['bg', 'road', 'building', 'point']
       });
-
-      // 添加控件
-      map.addControl(new AMapRef.current.ToolBar());
-      map.addControl(new AMapRef.current.Scale());
 
       // 地图点击事件
       if (onMapClick) {
@@ -150,6 +167,30 @@ const MapComponent: React.FC<MapComponentProps> = ({
       mapInstance.current = map;
       setMapLoaded(true);
       console.log("地图初始化完成，已设置中心点:", center.lng, center.lat, "缩放级别:", zoom);
+      
+      // 通过CSS彻底隐藏logo和版权信息
+      const hideLogo = () => {
+        if (mapRef.current) {
+          // 查找logo和版权信息元素并隐藏它们
+          const logoEl = mapRef.current.querySelector('.amap-logo');
+          const copyrightEl = mapRef.current.querySelector('.amap-copyright');
+          
+          if (logoEl) {
+            (logoEl as HTMLElement).style.display = 'none';
+            (logoEl as HTMLElement).style.opacity = '0';
+          }
+          
+          if (copyrightEl) {
+            (copyrightEl as HTMLElement).style.opacity = '0';
+          }
+        }
+      };
+      
+      // 地图加载完成后执行隐藏
+      hideLogo();
+      // 以防地图加载较慢，添加延时执行
+      setTimeout(hideLogo, 500);
+      
     } catch (e) {
       console.error('初始化地图实例失败:', e);
       setError('初始化地图失败');
@@ -485,6 +526,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
   return (
     <div style={{ width, height, position: 'relative' }}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
+      <style jsx>{`
+        /* 全局CSS样式隐藏高德地图logo和版权信息 */
+        :global(.amap-logo) {
+          display: none !important;
+          opacity: 0 !important;
+        }
+        :global(.amap-copyright) {
+          opacity: 0 !important;
+        }
+      `}</style>
       {hoverCoordinates && editable && (
         <div style={{ 
           position: 'absolute', 
