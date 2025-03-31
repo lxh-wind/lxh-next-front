@@ -524,7 +524,15 @@ export const marketingComponents: ComponentType[] = [
       badgeText: '完成5公里',
       mapCenter: { lng: 113.239104, lat: 23.102069 },
       showDecoration: false,
-      decorationType: 'christmas'
+      decorationType: 'christmas',
+      trainingTime: '01:37:18',
+      totalTime: '01:37:28',
+      avgPace: "06'20\"",
+      avgHeartRate: 162,
+      elevationGain: 40,
+      avgStepFrequency: 168,
+      avgStepLength: 0.93,
+      showStats: true
     }
   }
 ];

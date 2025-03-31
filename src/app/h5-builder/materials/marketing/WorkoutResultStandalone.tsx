@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeftOutlined, LockOutlined, ShareAltOutlined, MoreOutlined, FullscreenOutlined, CameraOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { parseRouteString, generateSvgPath, calculateRouteDistance } from '../../utils/mapService';
 import MapComponent from '../../components/MapComponent';
+import WorkoutStatsComponent from './WorkoutStatsComponent';
 
 export interface WorkoutResultProps {
   title?: string;
@@ -30,6 +31,13 @@ export interface WorkoutResultProps {
   badgeText?: string;
   areaName?: string;
   mapCenter?: { lng: number; lat: number };
+  trainingTime?: string;
+  totalTime?: string;
+  avgPace?: string;
+  avgHeartRate?: number;
+  elevationGain?: number;
+  avgStepFrequency?: number;
+  avgStepLength?: number;
 }
 
 const WorkoutResultStandalone: React.FC<WorkoutResultProps> = ({
@@ -58,7 +66,14 @@ const WorkoutResultStandalone: React.FC<WorkoutResultProps> = ({
   badgeType = 'medal',
   customBadgeImage = '',
   badgeText = '完成5公里',
-  mapCenter = { lng: 113.23587, lat: 23.09857 }
+  mapCenter = { lng: 113.23587, lat: 23.09857 },
+  trainingTime = '01:37:18',
+  totalTime = '01:37:28',
+  avgPace = "06'20\"",
+  avgHeartRate = 162,
+  elevationGain = 40,
+  avgStepFrequency = 168,
+  avgStepLength = 0.93
 }) => {
   // State for showing map edit tooltip
   const [showMapEdit, setShowMapEdit] = useState(false);
@@ -264,6 +279,20 @@ const WorkoutResultStandalone: React.FC<WorkoutResultProps> = ({
               查看详情 &gt;
             </div>
           </div>
+        </div>
+
+        {/* Workout Stats Section */}
+        <div className="mt-2">
+          <WorkoutStatsComponent 
+            trainingTime={trainingTime}
+            totalTime={totalTime}
+            avgPace={avgPace}
+            avgHeartRate={avgHeartRate}
+            calories={calories}
+            elevationGain={elevationGain}
+            avgStepFrequency={avgStepFrequency}
+            avgStepLength={avgStepLength}
+          />
         </div>
 
         {/* Stats Section */}

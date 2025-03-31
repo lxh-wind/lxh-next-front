@@ -5,6 +5,7 @@ import { ComponentType } from '../../components/types';
 import { ArrowLeftOutlined, LockOutlined, ShareAltOutlined, MoreOutlined, FullscreenOutlined, CameraOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { parseRouteString, generateSvgPath, calculateRouteDistance } from '../../utils/mapService';
 import MapComponent from '../../components/MapComponent';
+import WorkoutStatsComponent from './WorkoutStatsComponent';
 
 
 interface WorkoutResultProps {
@@ -43,7 +44,15 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
     badgeText = '完成5公里',
     mapCenter = { lng: 113.23587, lat: 23.09857 },
     showDecoration = false,
-    decorationType = 'christmas'
+    decorationType = 'christmas',
+    trainingTime = '01:37:18',
+    totalTime = '01:37:28',
+    avgPace = "06'20\"",
+    avgHeartRate = 162,
+    elevationGain = 40,
+    avgStepFrequency = 168,
+    avgStepLength = 0.93,
+    showStats = true
   } = component.props as any; // Use type assertion to fix property access errors
 
   // State for showing map edit tooltip
@@ -257,44 +266,21 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="bg-white mt-2 px-4 py-4">
-          <div className="flex justify-between items-center mb-3">
-            <div className="text-gray-500 text-[13px]">训练时长</div>
-            <div className="text-gray-500 text-[13px]">总时长</div>
+        {/* Workout Stats Section */}
+        {showStats && (
+          <div className="mt-2">
+            <WorkoutStatsComponent 
+              trainingTime={trainingTime}
+              totalTime={totalTime}
+              avgPace={avgPace}
+              avgHeartRate={avgHeartRate}
+              calories={calories}
+              elevationGain={elevationGain}
+              avgStepFrequency={avgStepFrequency}
+              avgStepLength={avgStepLength}
+            />
           </div>
-          <div className="flex justify-between items-center mb-7">
-            <div className="font-medium text-[22px] tracking-[-0.01em]">01:05:00</div>
-            <div className="font-medium text-[22px] tracking-[-0.01em]">01:05:10</div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-x-12 gap-y-5">
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">平均配速</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">06'30"</div>
-            </div>
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">平均心率</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">155<span className="text-base font-normal ml-1">次/分</span></div>
-            </div>
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">运动消耗</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">850<span className="text-base font-normal ml-1">千卡</span></div>
-            </div>
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">爬升高度</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">35<span className="text-base font-normal ml-1">米</span></div>
-            </div>
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">平均步频</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">172</div>
-            </div>
-            <div>
-              <div className="text-gray-500 text-[13px] mb-1.5">平均步幅</div>
-              <div className="font-medium text-[22px] tracking-[-0.01em]">1.18<span className="text-base font-normal ml-1">米</span></div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Share Button */}
         <div className="fixed bottom-8 left-4 right-4">
