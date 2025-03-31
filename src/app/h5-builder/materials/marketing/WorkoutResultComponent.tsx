@@ -178,34 +178,44 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
       {/* Main Content */}
       <div className="pt-[96px] pb-24">
         {/* Runner Icon, Title, Area */}
-        <div className="bg-white px-4 py-3.5 flex items-start">
-          <div className="rounded-full bg-gray-50 p-2 mr-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2">
-              <path d="M13 4.8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm6 14.2c0 .6-.4 1-1 1H8c-.6 0-1-.4-1-1 0-3.9 3.1-7 7-7s7 3.1 7 7z"/>
+        <div className="bg-white px-4 py-3.5 flex items-center">
+          <div className="rounded-full bg-gray-50 p-2.5 mr-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M13 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-2 20c-.8 0-1.5-.7-1.5-1.5S10.2 21 11 21h5v-1.5c0-1.5-1.2-2.7-2.7-2.7h-3.5c-1.9 0-3.4-1.5-3.4-3.4 0-1.9 1.5-3.4 3.4-3.4h5.4c.6 0 1 .4 1 1s-.4 1-1 1h-5.4c-.8 0-1.4.6-1.4 1.4s.6 1.4 1.4 1.4h3.5c2.6 0 4.7 2.1 4.7 4.7V21h1c.8 0 1.5.7 1.5 1.5S19.8 24 19 24h-8z"/>
             </svg>
           </div>
-          <div>
-            <div className="text-[15px] text-gray-900">{title}</div>
-            <div className="text-gray-400 text-[13px] mt-0.5">{areaName} 最长跑步时间</div>
-          </div>
-          {showBadge && (
-            <div className="ml-auto">
-              <div className="w-[30px] h-[30px] rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-gray-500 font-medium text-[15px]">8</span>
-              </div>
-            </div>
-          )}
+          <div className="text-[17px] font-medium text-gray-900">{title}</div>
         </div>
 
         {/* Distance */}
-        <div className="bg-white px-4 pb-5 pt-1">
+        <div className="bg-white px-4 pb-5 pt-1 relative">
           <div className="flex items-baseline">
-            <div className="text-[64px] font-bold leading-none tracking-[-0.02em]" 
-              style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+            <div className="text-[72px] font-bold leading-none tracking-[-0.03em]" 
+              style={{ 
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                letterSpacing: '-0.02em'
+              }}>
               {displayDistance.toFixed(2)}
             </div>
-            <div className="text-[22px] ml-2 mb-1 font-medium">公里</div>
+            <div className="text-[24px] ml-2 mb-1 font-medium text-gray-900">公里</div>
           </div>
+
+          {showBadge && (
+            <div className="ml-auto absolute right-10 top-[-20px] flex justify-center flex-col items-center">
+              <div className="w-[68px] h-[68px] flex items-center justify-center">
+                <svg className="w-full h-full" viewBox="0 0 1063 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M72.545848 305.231337a31.389273 31.389273 0 0 0-2.402442 14.690338c0.511996 5.198725 2.166136 10.239913 4.804883 14.729721a33.004028 33.004028 0 0 0 21.779508-22.055198c4.68673-12.563586 7.089171-25.836089 7.089171-39.266129v-7.16794c-13.036197 10.594372-23.709338 23.906259-31.27112 39.029824zM31.428657 349.341733a31.349889 31.349889 0 0 0 2.402441 14.690337c1.732908 10.988215 7.876856 20.755517 16.935242 26.978234 4.489808-6.459022 6.931634-14.178342 7.08917-22.055198v-9.846071a136.978533 136.978533 0 0 0-21.740123-41.629186c-3.150743 10.318682-4.804882 21.031207-4.844267 31.861884h0.157537z m48.363899 14.690337a39.778125 39.778125 0 0 0-12.090975 26.978234v2.441825a30.837893 30.837893 0 0 0 28.986832-9.84607c11.027599-11.421442 20.007215-24.693945 26.58439-39.226745a88.929709 88.929709 0 0 0-43.480247 19.652756z" fill="#FFC936"/>
+                  <path d="M336.617459 382.463915l195.739883 198.614934 362.532317-370.369789a45.685767 45.685767 0 0 0 12.05159-29.420059L904.499423 39.072359A40.526426 40.526426 0 0 0 863.461001 0.003151h-135.324393c-10.830678 0.393843-21.14936 4.726114-29.026216 12.287896l-362.492933 370.212252z" fill="#D11111"/>
+                  <path d="M725.694783 382.463915l-195.739883 198.614934L167.422583 210.70906a45.567614 45.567614 0 0 1-12.05159-29.420059L157.812819 39.072359A42.180566 42.180566 0 0 1 198.85124 0.003151h135.324394c10.830678 0.393843 21.14936 4.726114 29.026216 12.287896l362.492933 370.212252z" fill="#F44336"/>
+                  <path d="M198.890625 632.59349c0 185.499969 148.242438 335.869158 331.064275 335.869158 182.861222 0 331.10366-150.369189 331.10366-335.869158 0-185.499969-148.242438-335.947927-331.10366-335.947926a327.677227 327.677227 0 0 0-234.415247 98.106247 337.365761 337.365761 0 0 0-96.649028 237.841679z" fill="#FFD138"/>
+                  <path d="M660.474411 517.315697l96.649029 129.968131v-12.248512c0.590764-120.39775-90.268775-220.945823-208.539774-230.791893-118.270999-9.885455-224.096565 74.278756-242.922252 193.140519-18.786303 118.901148 55.768144 232.406649 171.124706 260.605795l-94.285972-129.968131 277.974263-210.705909z" fill="#FF8900"/>
+                  <path d="M358.357583 632.475338a176.914195 176.914195 0 0 0 107.440322 163.641692 172.503156 172.503156 0 0 0 190.10793-38.281522 178.725872 178.725872 0 0 0 37.730142-192.86483 174.314833 174.314833 0 0 0-161.278635-109.015693 171.99116 171.99116 0 0 0-123.272803 51.475257A177.111117 177.111117 0 0 0 358.396967 632.475338z" fill="#FFCA28"/>
+                  <path d="M563.785999 755.157376h-55.571222v-144.619084a29.0656 29.0656 0 0 0-4.844267-17.171547c-4.844267-4.923035-12.090975-4.923035-21.740124-4.923035h-7.089171v-26.938849c12.209127-2.363057 23.748722-7.364861 33.791714-14.729721a98.854548 98.854548 0 0 0 24.18195-22.055198h33.870482v230.437434h-2.599362z" fill="#ED5B00"/>
+                </svg>
+              </div>
+              <div className="text-gray-400 text-[13px] mt-1">{areaName}</div>
+            </div>
+          )}
         </div>
 
         {/* Map Section */}
