@@ -498,7 +498,7 @@ export const marketingComponents: ComponentType[] = [
     category: 'marketing',
     defaultProps: {
       title: '户外跑步',
-      areaName: '广州越秀区二沙岛',
+      areaName: '广州荔湾区芳村',
       distance: 5.00,
       time: 65,
       calories: 850,

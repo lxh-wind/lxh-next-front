@@ -196,6 +196,7 @@ export interface ComponentType {
     avgStepFrequency?: number;
     avgStepLength?: number;
     showStats?: boolean;
+    badgeStyle?: 'gold' | 'silver' | 'bronze';
   };
 }
 
@@ -268,4 +269,6 @@ export interface ComponentProps {
   avgStepFrequency?: number;
   avgStepLength?: number;
   showStats?: boolean;
+  badgeNumber?: number;
+  badgeStyle?: 'gold' | 'silver' | 'bronze';
 } 

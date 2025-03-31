@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker, Table, Alert, Divider, Collapse } from 'antd';
+import { Form, Input, InputNumber, ColorPicker, Select, Tabs, Space, Tag, Button, Modal, Switch, Checkbox, DatePicker, Table, Alert, Divider, Collapse, Radio } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import {
   componentsAtom,
@@ -2008,39 +2008,30 @@ export default function PropertyPanel() {
               
               <Collapse.Panel header="徽章设置" key="badge">
                 <Form.Item label="显示徽章">
-                  <Switch
-                    checked={selectedComponent.props.showBadge || false}
-                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { showBadge: checked })}
+                  <Switch 
+                    checked={selectedComponent.props.showBadge} 
+                    onChange={value => onUpdateComponent(selectedComponent.id, { showBadge: value })} 
                   />
                 </Form.Item>
                 {selectedComponent.props.showBadge && (
                   <>
-                    <Form.Item label="徽章类型">
-                      <Select
-                        value={selectedComponent.props.badgeType || 'medal'}
-                        onChange={(value) => onUpdateComponent(selectedComponent.id, { badgeType: value })}
-                      >
-                        <Select.Option value="medal">奖牌</Select.Option>
-                        <Select.Option value="christmas">圣诞</Select.Option>
-                        <Select.Option value="newyear">新年</Select.Option>
-                        <Select.Option value="custom">自定义</Select.Option>
-                      </Select>
-                    </Form.Item>
-                    {selectedComponent.props.badgeType === 'custom' && (
-                      <Form.Item label="自定义徽章图片">
-                        <Input
-                          value={selectedComponent.props.customBadgeImage || ''}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, { customBadgeImage: e.target.value })}
-                          placeholder="输入自定义徽章图片URL"
-                        />
-                      </Form.Item>
-                    )}
-                    <Form.Item label="徽章文字">
-                      <Input
-                        value={selectedComponent.props.badgeText || ''}
-                        onChange={(e) => onUpdateComponent(selectedComponent.id, { badgeText: e.target.value })}
-                        placeholder="例如：完成5公里"
+                    <Form.Item label="徽章数字">
+                      <InputNumber 
+                        min={0} 
+                        max={99} 
+                        value={selectedComponent.props.badgeNumber} 
+                        onChange={value => onUpdateComponent(selectedComponent.id, { badgeNumber: value })} 
                       />
+                    </Form.Item>
+                    <Form.Item label="徽章样式">
+                      <Radio.Group 
+                        value={selectedComponent.props.badgeStyle || 'gold'} 
+                        onChange={e => onUpdateComponent(selectedComponent.id, { badgeStyle: e.target.value })}
+                      >
+                        <Radio.Button value="gold">金牌</Radio.Button>
+                        <Radio.Button value="silver">银牌</Radio.Button>
+                        <Radio.Button value="bronze">铜牌</Radio.Button>
+                      </Radio.Group>
                     </Form.Item>
                   </>
                 )}
