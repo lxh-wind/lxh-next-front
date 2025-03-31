@@ -20,6 +20,7 @@ import {
   CompassOutlined
 } from '@ant-design/icons';
 
+
 // 组件类型定义
 export interface ComponentType {
   // 组件类型标识
@@ -498,14 +499,14 @@ export const marketingComponents: ComponentType[] = [
     defaultProps: {
       title: '户外跑步',
       areaName: '松江区',
-      distance: 5.12,
-      time: 34,
-      calories: 356,
-      pace: 6.64,
-      steps: 7536,
-      energy: 42,
-      extraText: '已超越82%的跑步用户',
-      shareButtonText: '分享到社区',
+      distance: 10.00,
+      time: 65,
+      calories: 850,
+      pace: 6.5,
+      steps: 8500,
+      energy: 35,
+      extraText: '已超越75%的跑步用户',
+      shareButtonText: '发布动态到社区',
       username: '来自未来的哦哟',
       avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
       isPrivate: true,
@@ -514,13 +515,13 @@ export const marketingComponents: ComponentType[] = [
       mapApiKey: '',
       mapSecurityJsCode: '',
       mapZoom: 15,
-      mapTrackColor: '#2aab58',
+      mapTrackColor: '#4CAF50',
       mapTrackWidth: 4,
       routePoints: '31.203405,121.465353;31.205673,121.463164;31.207240,121.466168;31.209082,121.468271;31.206602,121.469816',
       showBadge: true,
       badgeType: 'medal',
       customBadgeImage: '',
-      badgeText: '完成5公里'
+      badgeText: '完成10公里'
     }
   }
 ];
