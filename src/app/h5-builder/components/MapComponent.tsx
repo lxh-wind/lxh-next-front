@@ -536,6 +536,27 @@ const MapComponent: React.FC<MapComponentProps> = ({
           opacity: 0 !important;
         }
       `}</style>
+      
+      {/* 直接使用图片显示右侧控件 */}
+      <div style={{
+        position: 'absolute',
+        right: '10px',
+        top: '10px',
+        zIndex: 1000,
+        width: '38px',
+        height: '50px'
+      }}>
+        <img 
+          src="https://static3.yishouapp.com/obs/tools/def/2025/3/31/88d411e98a519cbb7b1d2aec8279aee6.png" 
+          alt="地图控件"
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block'
+          }}
+        />
+      </div>
+      
       {hoverCoordinates && editable && (
         <div style={{ 
           position: 'absolute', 
