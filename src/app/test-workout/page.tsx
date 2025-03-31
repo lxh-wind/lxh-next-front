@@ -6,9 +6,7 @@ import WorkoutResultStandalone from '../h5-builder/materials/marketing/WorkoutRe
 
 const TestWorkoutPage = () => {
   // State for map settings
-  const [useRealMap, setUseRealMap] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [securityJsCode, setSecurityJsCode] = useState('');
+  const [useRealMap, setUseRealMap] = useState(true);
   const [trackColor, setTrackColor] = useState('#2aab58');
   const [trackWidth, setTrackWidth] = useState(4);
   const [routePoints, setRoutePoints] = useState('31.203405,121.465353;31.205673,121.463164;31.207240,121.466168;31.209082,121.468271;31.206602,121.469816');
@@ -32,27 +30,6 @@ const TestWorkoutPage = () => {
                       使用高德地图
                     </Checkbox>
                   </div>
-                  
-                  {useRealMap && (
-                    <>
-                      <div>
-                        <div className="mb-1">API Key</div>
-                        <Input 
-                          value={apiKey} 
-                          onChange={(e) => setApiKey(e.target.value)}
-                          placeholder="请输入高德地图 API Key"
-                        />
-                      </div>
-                      <div>
-                        <div className="mb-1">安全密钥</div>
-                        <Input 
-                          value={securityJsCode} 
-                          onChange={(e) => setSecurityJsCode(e.target.value)}
-                          placeholder="请输入高德地图安全密钥"
-                        />
-                      </div>
-                    </>
-                  )}
                   
                   <div>
                     <div className="mb-1">轨迹颜色</div>
@@ -132,8 +109,6 @@ const TestWorkoutPage = () => {
             <div className="border rounded overflow-hidden">
               <WorkoutResultStandalone
                 useRealMap={useRealMap}
-                mapApiKey={apiKey}
-                mapSecurityJsCode={securityJsCode}
                 mapTrackColor={trackColor}
                 mapTrackWidth={trackWidth}
                 routePoints={routePoints}

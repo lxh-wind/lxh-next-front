@@ -498,8 +498,8 @@ export const marketingComponents: ComponentType[] = [
     category: 'marketing',
     defaultProps: {
       title: '户外跑步',
-      areaName: '松江区',
-      distance: 10.00,
+      areaName: '广州越秀区二沙岛',
+      distance: 5.00,
       time: 65,
       calories: 850,
       pace: 6.5,
@@ -511,17 +511,20 @@ export const marketingComponents: ComponentType[] = [
       avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
       isPrivate: true,
       mapImage: 'https://mdn.alipayobjects.com/huamei_n0yi1n/afts/img/A*9Kf4SJA4XvMAAAAAAAAAAAAADrB8AQ/original',
-      useRealMap: false,
-      mapApiKey: '',
-      mapSecurityJsCode: '',
-      mapZoom: 15,
+      useRealMap: true,
+      mapApiKey: '7798b1134a46a58dbf25d7235afeaeba',
+      mapSecurityJsCode: '1280315c2614cae0726cb81bd60bf429',
+      mapZoom: 14,
       mapTrackColor: '#4CAF50',
       mapTrackWidth: 4,
-      routePoints: '31.203405,121.465353;31.205673,121.463164;31.207240,121.466168;31.209082,121.468271;31.206602,121.469816',
+      routePoints: '',
       showBadge: true,
       badgeType: 'medal',
       customBadgeImage: '',
-      badgeText: '完成10公里'
+      badgeText: '完成5公里',
+      mapCenter: { lng: 113.239104, lat: 23.102069 },
+      showDecoration: false,
+      decorationType: 'christmas'
     }
   }
 ];

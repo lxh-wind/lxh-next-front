@@ -1844,36 +1844,56 @@ export default function PropertyPanel() {
               <Collapse.Panel header="地图设置" key="map">
                 <Form.Item label="使用真实地图">
                   <Switch
-                    checked={selectedComponent.props.useGoogleMaps || false}
-                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { useGoogleMaps: checked })}
+                    checked={(selectedComponent.props as any).useRealMap || false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, { useRealMap: checked })}
                   />
                 </Form.Item>
                 
-                {selectedComponent.props.useGoogleMaps ? (
+                {(selectedComponent.props as any).useRealMap ? (
                   <>
-                    <Form.Item label="Google Maps API Key">
-                      <Input
-                        defaultValue={selectedComponent.props.googleMapsApiKey || ''}
-                        onChange={(e) => onUpdateComponent(selectedComponent.id, { googleMapsApiKey: e.target.value })}
-                        placeholder="输入Google Maps API Key"
-                      />
-                      <div className="text-xs text-gray-400 mt-1">
-                        需要启用 Maps JavaScript API 和 Geocoding API
-                      </div>
-                    </Form.Item>
-                    
                     <Form.Item label="地图缩放级别">
                       <InputNumber
                         min={1}
                         max={20}
-                        value={selectedComponent.props.mapZoom || 15}
+                        value={(selectedComponent.props as any).mapZoom || 14}
                         onChange={(value) => onUpdateComponent(selectedComponent.id, { mapZoom: value })}
                       />
                     </Form.Item>
                     
+                    <Form.Item label="地图中心点">
+                      <div className="flex space-x-2">
+                        <InputNumber
+                          min={-180}
+                          max={180}
+                          value={(selectedComponent.props as any).mapCenter?.lng || 113.23587}
+                          onChange={(value) => {
+                            const current = (selectedComponent.props as any).mapCenter || { lng: 113.23587, lat: 23.09857 };
+                            onUpdateComponent(selectedComponent.id, { 
+                              mapCenter: { ...current, lng: value } 
+                            });
+                          }}
+                          addonBefore="经度"
+                          style={{ width: '50%' }}
+                        />
+                        <InputNumber
+                          min={-90}
+                          max={90}
+                          value={(selectedComponent.props as any).mapCenter?.lat || 23.09857}
+                          onChange={(value) => {
+                            const current = (selectedComponent.props as any).mapCenter || { lng: 113.23587, lat: 23.09857 };
+                            onUpdateComponent(selectedComponent.id, { 
+                              mapCenter: { ...current, lat: value } 
+                            });
+                          }}
+                          addonBefore="纬度"
+                          style={{ width: '50%' }}
+                        />
+                      </div>
+                    </Form.Item>
+                    
                     <Form.Item label="轨迹颜色">
                       <ColorPicker
-                        value={selectedComponent.props.mapTrackColor || '#000000'}
+                        value={(selectedComponent.props as any).mapTrackColor || '#000000'}
                         onChange={(color) => onUpdateComponent(selectedComponent.id, { mapTrackColor: color.toHexString() })}
                       />
                     </Form.Item>
@@ -1882,10 +1902,29 @@ export default function PropertyPanel() {
                       <InputNumber
                         min={1}
                         max={10}
-                        value={selectedComponent.props.mapTrackWidth || 2}
+                        value={(selectedComponent.props as any).mapTrackWidth || 2}
                         onChange={(value) => onUpdateComponent(selectedComponent.id, { mapTrackWidth: value })}
                       />
                     </Form.Item>
+                    
+                    <Form.Item label="显示地图装饰">
+                      <Switch
+                        checked={(selectedComponent.props as any).showDecoration || false}
+                        onChange={(checked) => onUpdateComponent(selectedComponent.id, { showDecoration: checked })}
+                      />
+                    </Form.Item>
+                    
+                    {(selectedComponent.props as any).showDecoration && (
+                      <Form.Item label="装饰类型">
+                        <Select
+                          value={(selectedComponent.props as any).decorationType || 'christmas'}
+                          onChange={(value) => onUpdateComponent(selectedComponent.id, { decorationType: value })}
+                        >
+                          <Select.Option value="christmas">圣诞节(圣诞树+雪人)</Select.Option>
+                          <Select.Option value="newyear">新年(礼品)</Select.Option>
+                        </Select>
+                      </Form.Item>
+                    )}
                     
                     <Form.Item label="轨迹点">
                       <div className="border rounded p-2 bg-gray-50">
@@ -1894,7 +1933,7 @@ export default function PropertyPanel() {
                             设置路线上的各个点，格式为"纬度,经度"，以分号分隔。
                           </div>
                           <Input.TextArea
-                            value={selectedComponent.props.routePoints || ''}
+                            value={(selectedComponent.props as any).routePoints || ''}
                             onChange={(e) => onUpdateComponent(selectedComponent.id, { routePoints: e.target.value })}
                             placeholder="31.033,121.211;31.036,121.214;..."
                             autoSize={{ minRows: 3, maxRows: 6 }}
@@ -1909,10 +1948,9 @@ export default function PropertyPanel() {
                                 content: (
                                   <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
                                     <RouteEditor
-                                      routePoints={selectedComponent.props.routePoints || ''}
-                                      trackColor={selectedComponent.props.mapTrackColor || '#000000'}
-                                      trackWidth={selectedComponent.props.mapTrackWidth || 2}
-                                      apiKey={selectedComponent.props.googleMapsApiKey || ''}
+                                      routePoints={(selectedComponent.props as any).routePoints || ''}
+                                      trackColor={(selectedComponent.props as any).mapTrackColor || '#000000'}
+                                      trackWidth={(selectedComponent.props as any).mapTrackWidth || 2}
                                       onChange={(routePoints) => onUpdateComponent(selectedComponent.id, { routePoints })}
                                       onDistanceChange={(distance) => onUpdateComponent(selectedComponent.id, { distance })}
                                     />
@@ -1935,14 +1973,14 @@ export default function PropertyPanel() {
                   <>
                     <Form.Item label="地图图片URL">
                       <Input
-                        defaultValue={selectedComponent.props.mapImage || ''}
+                        defaultValue={(selectedComponent.props as any).mapImage || ''}
                         onChange={(e) => onUpdateComponent(selectedComponent.id, { mapImage: e.target.value })}
                         placeholder="输入地图图片URL"
                       />
                     </Form.Item>
                     <Form.Item label="轨迹颜色">
                       <ColorPicker
-                        value={selectedComponent.props.mapTrackColor || '#000000'}
+                        value={(selectedComponent.props as any).mapTrackColor || '#000000'}
                         onChange={(color) => onUpdateComponent(selectedComponent.id, { mapTrackColor: color.toHexString() })}
                       />
                     </Form.Item>

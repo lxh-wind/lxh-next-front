@@ -9,28 +9,9 @@ export interface RoutePoint {
   lng: number;
 }
 
-// 默认轨迹点
-export const DEFAULT_ROUTE_POINTS: RoutePoint[] = [
-  { lat: 31.033, lng: 121.211 }, // 起点
-  { lat: 31.036, lng: 121.214 },
-  { lat: 31.038, lng: 121.219 },
-  { lat: 31.042, lng: 121.223 },
-  { lat: 31.046, lng: 121.227 },
-  { lat: 31.049, lng: 121.230 },
-  { lat: 31.053, lng: 121.229 },
-  { lat: 31.056, lng: 121.226 },
-  { lat: 31.058, lng: 121.221 },
-  { lat: 31.055, lng: 121.218 },
-  { lat: 31.051, lng: 121.215 },
-  { lat: 31.047, lng: 121.211 },
-  { lat: 31.042, lng: 121.208 },
-  { lat: 31.037, lng: 121.208 },
-  { lat: 31.033, lng: 121.211 }, // 终点 (回到起点)
-];
-
 // 将轨迹字符串转换为轨迹点数组
 export const parseRouteString = (routeString: string): RoutePoint[] => {
-  if (!routeString) return DEFAULT_ROUTE_POINTS;
+  if (!routeString) return [];
   
   try {
     const points = routeString.split(';').map(point => {
@@ -40,14 +21,14 @@ export const parseRouteString = (routeString: string): RoutePoint[] => {
     
     // 验证点是否有效
     if (points.length < 2 || points.some(p => isNaN(p.lat) || isNaN(p.lng))) {
-      console.warn('Invalid route points, using default route');
-      return DEFAULT_ROUTE_POINTS;
+      console.warn('Invalid route points, returning empty array');
+      return [];
     }
     
     return points;
   } catch (error) {
     console.error('Error parsing route string:', error);
-    return DEFAULT_ROUTE_POINTS;
+    return [];
   }
 };
 
@@ -65,6 +46,93 @@ export const calculateRouteDistance = (points: RoutePoint[]): number => {
   }
   
   return parseFloat(distance.toFixed(2));
+};
+
+// 寻找最近的路线点
+export const findNearestRoutePoint = (
+  point: RoutePoint, 
+  routePoints: RoutePoint[], 
+  maxDistanceKm: number = 0.2
+): { index: number; point: RoutePoint; distance: number } | null => {
+  if (!routePoints || routePoints.length === 0) {
+    return null;
+  }
+
+  let nearestIndex = -1;
+  let nearestDistance = Infinity;
+
+  // 找到距离最近的路线点
+  for (let i = 0; i < routePoints.length; i++) {
+    const distance = calculateDistance(point, routePoints[i]);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = i;
+    }
+  }
+
+  // 如果最近的点超出了最大距离，返回null
+  if (nearestDistance > maxDistanceKm || nearestIndex === -1) {
+    return null;
+  }
+
+  return {
+    index: nearestIndex,
+    point: routePoints[nearestIndex],
+    distance: nearestDistance
+  };
+};
+
+// 自动连接到现有路线
+export const connectToNearbyRoute = (
+  startPoint: RoutePoint,
+  endPoint: RoutePoint,
+  existingRoute: RoutePoint[],
+  maxDistanceKm: number = 0.2
+): RoutePoint[] => {
+  // 找到起点和终点最近的路线点
+  const nearestStart = findNearestRoutePoint(startPoint, existingRoute, maxDistanceKm);
+  const nearestEnd = findNearestRoutePoint(endPoint, existingRoute, maxDistanceKm);
+
+  if (!nearestStart || !nearestEnd) {
+    // 如果起点或终点没有足够近的点，返回原始点
+    return [startPoint, endPoint];
+  }
+
+  // 确定两个点的顺序
+  const [lowerIndex, higherIndex] = 
+    nearestStart.index < nearestEnd.index 
+      ? [nearestStart.index, nearestEnd.index]
+      : [nearestEnd.index, nearestStart.index];
+
+  // 提取既有路线中的段落
+  const segmentPoints = existingRoute.slice(lowerIndex, higherIndex + 1);
+
+  // 如果起点索引大于终点索引，需要反转
+  return nearestStart.index > nearestEnd.index
+    ? segmentPoints.reverse()
+    : segmentPoints;
+};
+
+// 自动构建闭环路线（确保起点和终点是同一点）
+export const createClosedLoopRoute = (points: RoutePoint[]): RoutePoint[] => {
+  if (points.length < 2) return points;
+
+  const newPoints = [...points];
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+
+  // 计算第一个点和最后一个点之间的距离
+  const distance = calculateDistance(firstPoint, lastPoint);
+
+  // 如果距离已经很小，直接让最后一个点等于第一个点
+  if (distance < 0.02) { // 小于20米
+    newPoints[newPoints.length - 1] = { ...firstPoint };
+  } else {
+    // 否则添加第一个点作为终点
+    newPoints.push({ ...firstPoint });
+  }
+
+  return newPoints;
 };
 
 // 计算两点之间的距离（公里）

@@ -23,7 +23,7 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
     steps = 8500, // 根据10公里距离调整
     stepsUnit = '步',
     energy = 35,
-    areaName = '松江区',
+    areaName = '广州天河区',
     extraText = '已超越75%的跑步用户',
     mapTrackColor = '#4caf50',
     mapTrackWidth = 4,
@@ -33,14 +33,17 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
     avatar = 'https://randomuser.me/api/portraits/men/32.jpg',
     username = '来自未来的哦哟',
     isPrivate = true,
-    useRealMap = false,
+    useRealMap = true,
     mapApiKey = '7798b1134a46a58dbf25d7235afeaeba',
-    mapSecurityJsCode = '',
-    mapZoom = 15,
-    routePoints = '31.203405,121.465353;31.205673,121.463164;31.207240,121.466168;31.209082,121.468271;31.206602,121.469816',
+    mapSecurityJsCode = '1280315c2614cae0726cb81bd60bf429',
+    mapZoom = 14,
+    routePoints = '23.11056,113.30167;23.11122,113.30303;23.11239,113.30378;23.11384,113.30393;23.11488,113.30301;23.11511,113.30187;23.11456,113.30091;23.11362,113.30024;23.11241,113.29991;23.11135,113.30042;23.11071,113.30119;23.11056,113.30167',
     badgeType = 'medal',
     customBadgeImage = '',
-    badgeText = '完成5公里'
+    badgeText = '完成5公里',
+    mapCenter = { lng: 113.23587, lat: 23.09857 },
+    showDecoration = false,
+    decorationType = 'christmas'
   } = component.props as any; // Use type assertion to fix property access errors
 
   // State for showing map edit tooltip
@@ -203,10 +206,13 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
                 apiKey={mapApiKey}
                 securityJsCode={mapSecurityJsCode}
                 routePoints={routePoints}
-                trackColor="#4CAF50"
-                trackWidth={4}
+                trackColor={mapTrackColor}
+                trackWidth={mapTrackWidth}
                 zoom={mapZoom}
                 height="240px"
+                center={mapCenter}
+                showDecoration={showDecoration}
+                decorationType={decorationType}
               />
             ) : (
               <div className="relative h-full w-full bg-gray-50" onClick={handleMapClick}>
