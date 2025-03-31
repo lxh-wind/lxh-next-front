@@ -1791,6 +1791,16 @@ export default function PropertyPanel() {
           <Form layout="vertical">
             <Collapse defaultActiveKey={['basic', 'map', 'data', 'badge', 'workout_stats']} className="mb-3">
               <Collapse.Panel header="基础信息" key="basic">
+                <Form.Item label="状态栏时间">
+                  <Input
+                    value={selectedComponent.props?.statusBarTime || '15:33'}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      statusBarTime: e.target.value
+                    })}
+                    placeholder="格式: HH:MM"
+                  />
+                </Form.Item>
+
                 <Form.Item label="标题">
                   <Input
                     defaultValue={selectedComponent.props.title || ''}

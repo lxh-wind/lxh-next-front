@@ -52,7 +52,8 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
     elevationGain = 40,
     avgStepFrequency = 168,
     avgStepLength = 0.93,
-    showStats = true
+    showStats = true,
+    statusBarTime = '15:33'
   } = component.props as any; // Use type assertion to fix property access errors
 
   // State for showing map edit tooltip
@@ -121,7 +122,7 @@ export const WorkoutResultComponent: React.FC<WorkoutResultProps> = ({ component
       {/* iPhone Status Bar */}
       <div className="fixed top-0 left-0 right-0 z-20 bg-white h-[44px] px-5 flex items-center justify-between">
         <div className="flex-1 flex items-center">
-          <div className="text-black text-[16px] font-medium tracking-tight">15:33</div>
+          <div className="text-black text-[16px] font-medium tracking-tight">{statusBarTime}</div>
         </div>
         <div className="flex items-center gap-1">
           <div className="flex items-center h-4">
