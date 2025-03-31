@@ -1788,8 +1788,8 @@ export default function PropertyPanel() {
       
       case 'workoutResult':
         return (
-          <div>
-            <Collapse defaultActiveKey={['basic', 'map', 'data', 'badge']} className="mb-3">
+          <Form layout="vertical">
+            <Collapse defaultActiveKey={['basic', 'map', 'data', 'badge', 'workout_stats']} className="mb-3">
               <Collapse.Panel header="基础信息" key="basic">
                 <Form.Item label="标题">
                   <Input
@@ -1996,59 +1996,6 @@ export default function PropertyPanel() {
                 )}
               </Collapse.Panel>
               
-              <Collapse.Panel header="运动数据" key="data">
-                <Form.Item label="距离(千米)">
-                  <InputNumber
-                    value={selectedComponent.props.distance || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, { distance: value })}
-                    step={0.01}
-                    min={0}
-                  />
-                </Form.Item>
-                <Form.Item label="时间(分钟)">
-                  <InputNumber
-                    value={Number(selectedComponent.props.time) || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                      time: value?.toString() || '0'
-                    })}
-                    step={1}
-                    min={0}
-                  />
-                </Form.Item>
-                <Form.Item label="卡路里(千卡)">
-                  <InputNumber
-                    value={selectedComponent.props.calories || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, { calories: value })}
-                    step={1}
-                    min={0}
-                  />
-                </Form.Item>
-                <Form.Item label="平均配速(分钟/千米)">
-                  <InputNumber
-                    value={selectedComponent.props.pace || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, { pace: value })}
-                    step={0.01}
-                    min={0}
-                  />
-                </Form.Item>
-                <Form.Item label="步数">
-                  <InputNumber
-                    value={selectedComponent.props.steps || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, { steps: value })}
-                    step={1}
-                    min={0}
-                  />
-                </Form.Item>
-                <Form.Item label="消耗能量">
-                  <InputNumber
-                    value={selectedComponent.props.energy || 0}
-                    onChange={(value) => onUpdateComponent(selectedComponent.id, { energy: value })}
-                    step={1}
-                    min={0}
-                  />
-                </Form.Item>
-              </Collapse.Panel>
-              
               <Collapse.Panel header="徽章设置" key="badge">
                 <Form.Item label="显示徽章">
                   <Switch
@@ -2088,8 +2035,126 @@ export default function PropertyPanel() {
                   </>
                 )}
               </Collapse.Panel>
+              
+              <Collapse.Panel header="运动数据统计" key="workout_stats">
+                <Form.Item label="运动距离">
+                  <InputNumber
+                    value={selectedComponent.props?.distance || 5.00}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      distance: value
+                    })}
+                    min={0}
+                    max={1000}
+                    step={0.01}
+                    addonAfter="公里"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+
+                <Form.Item label="训练时长">
+                  <Input
+                    value={selectedComponent.props?.trainingTime || '01:37:18'}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      trainingTime: e.target.value
+                    })}
+                    placeholder="格式: HH:MM:SS"
+                  />
+                </Form.Item>
+                
+                <Form.Item label="总时长">
+                  <Input
+                    value={selectedComponent.props?.totalTime || '01:37:28'}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      totalTime: e.target.value
+                    })}
+                    placeholder="格式: HH:MM:SS"
+                  />
+                </Form.Item>
+                
+                <Form.Item label="平均配速">
+                  <Input
+                    value={selectedComponent.props?.avgPace || "06'20\""}
+                    onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                      avgPace: e.target.value
+                    })}
+                    placeholder={'格式: MM\'SS"'}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="平均心率">
+                  <InputNumber
+                    value={selectedComponent.props?.avgHeartRate || 162}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      avgHeartRate: value
+                    })}
+                    min={0}
+                    max={250}
+                    addonAfter="次/分"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="运动消耗">
+                  <InputNumber
+                    value={selectedComponent.props?.calories || 1535}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      calories: value
+                    })}
+                    min={0}
+                    addonAfter="千卡"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="爬升高度">
+                  <InputNumber
+                    value={selectedComponent.props?.elevationGain || 40}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      elevationGain: value
+                    })}
+                    min={0}
+                    addonAfter="米"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="平均步频">
+                  <InputNumber
+                    value={selectedComponent.props?.avgStepFrequency || 168}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      avgStepFrequency: value
+                    })}
+                    min={0}
+                    max={300}
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="平均步幅">
+                  <InputNumber
+                    value={selectedComponent.props?.avgStepLength || 0.93}
+                    onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                      avgStepLength: value
+                    })}
+                    min={0}
+                    max={3}
+                    step={0.01}
+                    addonAfter="米"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="显示运动数据">
+                  <Switch
+                    checked={selectedComponent.props?.showStats !== false}
+                    onChange={(checked) => onUpdateComponent(selectedComponent.id, {
+                      showStats: checked
+                    })}
+                  />
+                </Form.Item>
+              </Collapse.Panel>
             </Collapse>
-          </div>
+          </Form>
         );
       
       default:

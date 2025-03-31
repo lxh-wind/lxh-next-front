@@ -186,6 +186,16 @@ export interface ComponentType {
     energy?: number;
     badgeType?: 'medal' | 'christmas' | 'newyear' | 'custom';
     customBadgeImage?: string;
+    
+    // WorkoutStats related props
+    trainingTime?: string;
+    totalTime?: string;
+    avgPace?: string;
+    avgHeartRate?: number;
+    elevationGain?: number;
+    avgStepFrequency?: number;
+    avgStepLength?: number;
+    showStats?: boolean;
   };
 }
 
@@ -247,4 +257,15 @@ export interface Coupon {
 export interface ComponentProps {
   coupons?: Coupon[];
   // ... 其他属性
+  
+  // WorkoutStats related props
+  trainingTime?: string;
+  totalTime?: string;
+  avgPace?: string;
+  avgHeartRate?: number;
+  calories?: number;
+  elevationGain?: number;
+  avgStepFrequency?: number;
+  avgStepLength?: number;
+  showStats?: boolean;
 } 
