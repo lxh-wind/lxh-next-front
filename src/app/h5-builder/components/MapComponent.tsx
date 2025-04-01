@@ -58,11 +58,21 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const AMapRef = useRef<any>(null);
   const [isAMapLoaded, setIsAMapLoaded] = useState(false);
   const [hoverCoordinates, setHoverCoordinates] = useState<{lat: string, lng: string} | null>(null);
+  const [isBrowser, setIsBrowser] = useState(false);
+
+  // Check if code is running in browser
+  useEffect(() => {
+    setIsBrowser(typeof window !== 'undefined');
+  }, []);
 
   // 加载AMap JS API
   useEffect(() => {
-    if (!apiKey) {
-      setError('需要高德地图 API Key');
+    if (!isBrowser || !apiKey) {
+      if (!isBrowser) {
+        console.log("Running on server, skipping map initialization");
+      } else if (!apiKey) {
+        setError('需要高德地图 API Key');
+      }
       return;
     }
 
@@ -94,11 +104,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
       // 只清理AMap引用，不销毁地图实例
       // 地图实例在其他useEffect中销毁
     };
-  }, [apiKey, securityJsCode]);
+  }, [apiKey, securityJsCode, isBrowser]);
 
   // 初始化或重新初始化地图
   useEffect(() => {
-    if (!isAMapLoaded || !AMapRef.current || !mapRef.current) return;
+    if (!isBrowser || !isAMapLoaded || !AMapRef.current || !mapRef.current) return;
 
     console.log("初始化地图，中心点:", center.lng, center.lat, "缩放级别:", zoom);
 
@@ -204,11 +214,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
         mapInstance.current = null;
       }
     };
-  }, [isAMapLoaded]); // 只在AMap加载完成时初始化地图，不再依赖center和zoom
+  }, [isBrowser, isAMapLoaded]);
 
   // 当center或zoom变化时更新地图视图，而不是重新创建
   useEffect(() => {
-    if (!mapLoaded || !mapInstance.current) return;
+    if (!isBrowser || !mapLoaded || !mapInstance.current) return;
     
     try {
       // 仅更新地图中心点和缩放级别，不会刷新整个地图
@@ -218,11 +228,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
     } catch (e) {
       console.error('更新地图视图失败:', e);
     }
-  }, [center.lng, center.lat, zoom, mapLoaded]);
+  }, [center.lng, center.lat, zoom, mapLoaded, isBrowser]);
 
   // 当地图点击和编辑状态变化时，更新事件监听
   useEffect(() => {
-    if (!mapLoaded || !mapInstance.current) return;
+    if (!isBrowser || !mapLoaded || !mapInstance.current) return;
     
     // 清除所有相关事件
     mapInstance.current.clearEvents('click');
@@ -255,14 +265,35 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
     
     console.log("已更新地图事件处理函数");
-  }, [onMapClick, editable, mapLoaded]);
+  }, [onMapClick, editable, mapLoaded, isBrowser]);
 
   // 监听路线相关属性变化，更新路线
   useEffect(() => {
-    if (!mapLoaded || !mapInstance.current) return;
-    console.log("更新路线");
+    if (!isBrowser || !mapLoaded || !mapInstance.current || !AMapRef.current) return;
+    
+    // 更新路线
     updateMapRoute();
-  }, [routePoints, trackColor, trackWidth, editable, showDecoration, decorationType, selectedPointIndex, mapLoaded]);
+    
+    // 如果需要自动适应视图
+    if (autoFit && routePoints) {
+      const points = parseRouteString(routePoints);
+      if (points.length > 1) {
+        try {
+          const bounds = getRouteBounds(points);
+          // 创建高德地图边界对象
+          const amapBounds = new AMapRef.current.Bounds(
+            [bounds.west, bounds.south],
+            [bounds.east, bounds.north]
+          );
+          // 设置地图视图以包含所有点
+          mapInstance.current.setBounds(amapBounds, false, [50, 50, 50, 50]);
+          console.log("已自动适应路线视图");
+        } catch (e) {
+          console.error('设置地图视图边界失败:', e);
+        }
+      }
+    }
+  }, [routePoints, trackColor, trackWidth, mapLoaded, autoFit, showDecoration, decorationType, selectedPointIndex, isBrowser]);
 
   // Add midpoint markers for drag and drop if editable
   useEffect(() => {
@@ -505,23 +536,19 @@ const MapComponent: React.FC<MapComponentProps> = ({
       // 非编辑模式下，只添加路线，不添加起点和终点标记
       // 路线已经在之前添加了，这里不需要再添加额外的标记
     }
-
-    // 在处理完路线和标记后，仅在autoFit为true时才自动调整视图
-    if (autoFit && points.length >= 2) {
-      try {
-        // 创建边界对象
-        const bounds = getRouteBounds(points);
-        // 使用边界进行视图适配
-        mapInstance.current.setBounds([
-          new AMapRef.current.LngLat(bounds.west, bounds.south),
-          new AMapRef.current.LngLat(bounds.east, bounds.north)
-        ], false, [50, 50, 50, 50]); // 添加内边距
-        console.log("已自动适配路线视图");
-      } catch (e) {
-        console.error("自动适配视图失败:", e);
-      }
-    }
   };
+
+  // Let's use a simplified approach for now
+  const updateDecorations = () => {
+    if (!isBrowser || !mapLoaded || !mapInstance.current || !showDecoration) return;
+    console.log("Map decorations would be updated here:", decorationType);
+    // Actual implementation would go here
+  };
+
+  // Update decorations when needed
+  useEffect(() => {
+    updateDecorations();
+  }, [showDecoration, decorationType, mapLoaded, isBrowser]);
 
   return (
     <div style={{ width, height, position: 'relative' }}>

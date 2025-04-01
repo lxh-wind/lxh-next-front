@@ -18,6 +18,7 @@ export interface ComponentType {
     title?: string;
     description?: string;
     buttonText?: string;
+    statusBarTime?: string;
     
     // 视频组件特有属性
     poster?: string;
@@ -271,4 +272,5 @@ export interface ComponentProps {
   showStats?: boolean;
   badgeNumber?: number;
   badgeStyle?: 'gold' | 'silver' | 'bronze';
+  statusBarTime?: string;
 } 

@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 import { Row, Col, Card, Tabs, Checkbox, Input, InputNumber, ColorPicker, Radio } from 'antd';
-import WorkoutResultStandalone from '../h5-builder/materials/marketing/WorkoutResultStandalone';
+import dynamic from 'next/dynamic';
+
+// Use dynamic import with ssr:false to prevent window is not defined error
+const WorkoutResultStandalone = dynamic(
+  () => import('../h5-builder/materials/marketing/WorkoutResultStandalone'),
+  { ssr: false }
+);
 
 const TestWorkoutPage = () => {
   // State for map settings

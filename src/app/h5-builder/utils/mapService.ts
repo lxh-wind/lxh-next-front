@@ -9,6 +9,28 @@ export interface RoutePoint {
   lng: number;
 }
 
+// 确保仅在浏览器环境中运行相关代码
+const isBrowser = typeof window !== 'undefined';
+
+// 安全地记录控制台消息
+const safeConsoleLog = (message: string, ...args: any[]) => {
+  if (isBrowser) {
+    console.log(message, ...args);
+  }
+};
+
+const safeConsoleWarn = (message: string, ...args: any[]) => {
+  if (isBrowser) {
+    console.warn(message, ...args);
+  }
+};
+
+const safeConsoleError = (message: string, error?: any) => {
+  if (isBrowser) {
+    console.error(message, error);
+  }
+};
+
 // 将轨迹字符串转换为轨迹点数组
 export const parseRouteString = (routeString: string): RoutePoint[] => {
   if (!routeString) return [];
@@ -21,13 +43,13 @@ export const parseRouteString = (routeString: string): RoutePoint[] => {
     
     // 验证点是否有效
     if (points.length < 2 || points.some(p => isNaN(p.lat) || isNaN(p.lng))) {
-      console.warn('Invalid route points, returning empty array');
+      safeConsoleWarn('Invalid route points, returning empty array');
       return [];
     }
     
     return points;
   } catch (error) {
-    console.error('Error parsing route string:', error);
+    safeConsoleError('Error parsing route string:', error);
     return [];
   }
 };
