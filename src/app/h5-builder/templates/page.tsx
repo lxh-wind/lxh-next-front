@@ -33,43 +33,43 @@ const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
 // 模板数据
-const templates = [
-  {
-    id: 'template-1',
-    title: '优惠券模板',
-    description: '展示优惠券信息，适合促销活动',
-    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/优惠券模板',
-    category: '促销',
-    tags: ['优惠券', '促销'],
-    createdAt: '2023-12-01',
-  },
-  {
-    id: 'template-2',
-    title: '新品首发模板',
-    description: '展示新品信息，适合商品首发',
-    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/新品首发模板',
-    category: '商品',
-    tags: ['新品', '首发'],
-    createdAt: '2023-12-05',
-  },
-  {
-    id: 'template-3',
-    title: '秒杀活动模板',
-    description: '展示秒杀活动信息，适合限时抢购',
-    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/秒杀活动模板',
-    category: '促销',
-    tags: ['秒杀', '限时', '抢购'],
-    createdAt: '2023-12-10',
-  },
-  {
-    id: 'template-4',
-    title: '品牌故事模板',
-    description: '展示品牌故事信息，适合品牌介绍',
-    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/品牌故事模板',
-    category: '品牌',
-    tags: ['品牌', '故事'],
-    createdAt: '2023-12-15',
-  },
+const templates: any[] = [
+  // {
+  //   id: 'template-1',
+  //   title: '优惠券模板',
+  //   description: '展示优惠券信息，适合促销活动',
+  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/优惠券模板',
+  //   category: '促销',
+  //   tags: ['优惠券', '促销'],
+  //   createdAt: '2023-12-01',
+  // },
+  // {
+  //   id: 'template-2',
+  //   title: '新品首发模板',
+  //   description: '展示新品信息，适合商品首发',
+  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/新品首发模板',
+  //   category: '商品',
+  //   tags: ['新品', '首发'],
+  //   createdAt: '2023-12-05',
+  // },
+  // {
+  //   id: 'template-3',
+  //   title: '秒杀活动模板',
+  //   description: '展示秒杀活动信息，适合限时抢购',
+  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/秒杀活动模板',
+  //   category: '促销',
+  //   tags: ['秒杀', '限时', '抢购'],
+  //   createdAt: '2023-12-10',
+  // },
+  // {
+  //   id: 'template-4',
+  //   title: '品牌故事模板',
+  //   description: '展示品牌故事信息，适合品牌介绍',
+  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/品牌故事模板',
+  //   category: '品牌',
+  //   tags: ['品牌', '故事'],
+  //   createdAt: '2023-12-15',
+  // },
 ];
 
 export default function TemplatesPage() {
