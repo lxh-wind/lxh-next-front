@@ -178,7 +178,14 @@ export default function H5Builder() {
       messageApi.warning('请先保存页面');
       return;
     }
-    previewPage(pageInfo.id);
+    
+    const previewData = {
+      ...pageInfo,
+      components: components
+    };
+    
+    const previewUrl = previewPage(previewData);
+    window.open(previewUrl, '_blank');
   };
   
   // 显示保存模态框

@@ -310,8 +310,7 @@ export const duplicatePage = async (pageId: string): Promise<PageData | null> =>
 
 // 预览页面
 export const previewPage = (pageData: any) => {
-  // 实际实现可能会打开一个新窗口或弹出层
-  // 这里简单地保存到sessionStorage用于预览
+  // 保存页面数据到sessionStorage用于预览
   sessionStorage.setItem('h5_preview_data', JSON.stringify(pageData));
   
   // 返回预览URL
