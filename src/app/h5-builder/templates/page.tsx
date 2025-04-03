@@ -14,7 +14,8 @@ import {
   Spin, 
   Empty,
   message,
-  Tooltip
+  Tooltip,
+  Modal
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -82,6 +83,10 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicatePageTitle, setDuplicatePageTitle] = useState('');
+  const [currentPageId, setCurrentPageId] = useState('');
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   // 刷新页面列表的函数
   const fetchPages = async () => {
@@ -130,12 +135,23 @@ export default function TemplatesPage() {
 
   // 复制页面
   const handleDuplicatePage = async (pageId: string) => {
+    // 找到当前页面数据
+    const currentPage = myPages.find(page => page.id === pageId);
+    if (currentPage) {
+      setDuplicatePageTitle(`${currentPage.title} 的副本`);
+      setCurrentPageId(pageId);
+      setDuplicateModalVisible(true);
+    }
+  };
+
+  // 确认复制页面
+  const confirmDuplicatePage = async () => {
     try {
       // 显示加载状态
       const loadingMessage = messageApi.loading('正在复制页面...', 0);
       
       // 调用复制页面API
-      const duplicatedPage = await duplicatePage(pageId);
+      const duplicatedPage = await duplicatePage(currentPageId, duplicatePageTitle);
       
       // 关闭加载提示
       loadingMessage();
@@ -145,6 +161,9 @@ export default function TemplatesPage() {
         
         // 刷新页面列表
         fetchPages();
+        
+        // 关闭弹窗
+        setDuplicateModalVisible(false);
         
         // 跳转到复制后的页面进行编辑
         router.push(`/h5-builder?id=${duplicatedPage.id}`);
@@ -158,10 +177,16 @@ export default function TemplatesPage() {
   };
 
   const handleDeletePage = async (pageId: string) => {
+    setCurrentPageId(pageId);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeletePage = async () => {
     try {
-      await deletePage(pageId);
+      await deletePage(currentPageId);
       messageApi.success('删除成功');
       fetchPages();
+      setDeleteModalVisible(false);
     } catch (error) {
       messageApi.error('删除失败，请重试');
       console.error('删除页面出错:', error);
@@ -317,6 +342,40 @@ export default function TemplatesPage() {
             </List.Item>
           )}
         /> */}
+
+        {/* 复制页面的弹窗 */}
+        <Modal
+          title="复制页面"
+          open={duplicateModalVisible}
+          onOk={confirmDuplicatePage}
+          onCancel={() => setDuplicateModalVisible(false)}
+          okText="确认"
+          cancelText="取消"
+        >
+          <div className="py-4">
+            <p className="mb-2">请输入复制后的页面名称：</p>
+            <Input 
+              value={duplicatePageTitle} 
+              onChange={(e) => setDuplicatePageTitle(e.target.value)}
+              placeholder="请输入页面名称"
+            />
+          </div>
+        </Modal>
+
+        {/* 删除页面的弹窗 */}
+        <Modal
+          title="删除页面"
+          open={deleteModalVisible}
+          onOk={confirmDeletePage}
+          onCancel={() => setDeleteModalVisible(false)}
+          okText="确认"
+          cancelText="取消"
+          okButtonProps={{ danger: true }}
+        >
+          <div className="py-4">
+            <p>确定要删除此页面吗？删除后无法恢复。</p>
+          </div>
+        </Modal>
       </div>
     </>
   );

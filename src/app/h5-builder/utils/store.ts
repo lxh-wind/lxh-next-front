@@ -307,7 +307,7 @@ export const restoreVersion = async (versionId: string): Promise<PageData | null
 };
 
 // 复制页面
-export const duplicatePage = async (pageId: string): Promise<PageData | null> => {
+export const duplicatePage = async (pageId: string, customTitle?: string): Promise<PageData | null> => {
   try {
     const page = loadPage(pageId);
     if (!page) {
@@ -317,8 +317,8 @@ export const duplicatePage = async (pageId: string): Promise<PageData | null> =>
     // 创建副本
     const duplicatedPage: PageData = {
       ...page,
-      id: `page_${Date.now()}`,
-      title: `${page.title} (副本)`,
+      id: generateId(),
+      title: customTitle || `${page.title} (副本)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       published: false,
