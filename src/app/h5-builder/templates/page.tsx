@@ -13,7 +13,8 @@ import {
   Tag, 
   Spin, 
   Empty,
-  message
+  message,
+  Tooltip
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -23,53 +24,54 @@ import {
   ArrowLeftOutlined,
   EyeOutlined,
   CopyOutlined,
-  EditOutlined
+  EditOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getPageList } from '../utils/store';
+import { getPageList, duplicatePage, deletePage } from '../utils/store';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 // 模板数据
-const templates: any[] = [
-  // {
-  //   id: 'template-1',
-  //   title: '优惠券模板',
-  //   description: '展示优惠券信息，适合促销活动',
-  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/优惠券模板',
-  //   category: '促销',
-  //   tags: ['优惠券', '促销'],
-  //   createdAt: '2023-12-01',
-  // },
-  // {
-  //   id: 'template-2',
-  //   title: '新品首发模板',
-  //   description: '展示新品信息，适合商品首发',
-  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/新品首发模板',
-  //   category: '商品',
-  //   tags: ['新品', '首发'],
-  //   createdAt: '2023-12-05',
-  // },
-  // {
-  //   id: 'template-3',
-  //   title: '秒杀活动模板',
-  //   description: '展示秒杀活动信息，适合限时抢购',
-  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/秒杀活动模板',
-  //   category: '促销',
-  //   tags: ['秒杀', '限时', '抢购'],
-  //   createdAt: '2023-12-10',
-  // },
-  // {
-  //   id: 'template-4',
-  //   title: '品牌故事模板',
-  //   description: '展示品牌故事信息，适合品牌介绍',
-  //   coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/品牌故事模板',
-  //   category: '品牌',
-  //   tags: ['品牌', '故事'],
-  //   createdAt: '2023-12-15',
-  // },
+const templates = [
+  {
+    id: 'template-1',
+    title: '优惠券模板',
+    description: '展示优惠券信息，适合促销活动',
+    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/优惠券模板',
+    category: '促销',
+    tags: ['优惠券', '促销'],
+    createdAt: '2023-12-01',
+  },
+  {
+    id: 'template-2',
+    title: '新品首发模板',
+    description: '展示新品信息，适合商品首发',
+    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/新品首发模板',
+    category: '商品',
+    tags: ['新品', '首发'],
+    createdAt: '2023-12-05',
+  },
+  {
+    id: 'template-3',
+    title: '秒杀活动模板',
+    description: '展示秒杀活动信息，适合限时抢购',
+    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/秒杀活动模板',
+    category: '促销',
+    tags: ['秒杀', '限时', '抢购'],
+    createdAt: '2023-12-10',
+  },
+  {
+    id: 'template-4',
+    title: '品牌故事模板',
+    description: '展示品牌故事信息，适合品牌介绍',
+    coverImage: 'https://placeholder.pics/svg/300x600/DEDEDE/555555/品牌故事模板',
+    category: '品牌',
+    tags: ['品牌', '故事'],
+    createdAt: '2023-12-15',
+  },
 ];
 
 export default function TemplatesPage() {
@@ -81,21 +83,22 @@ export default function TemplatesPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
 
+  // 刷新页面列表的函数
+  const fetchPages = async () => {
+    setLoading(true);
+    try {
+      const pages = await getPageList();
+      setMyPages(pages as any[]);
+    } catch (error) {
+      console.error('加载页面失败', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 加载我的页面
   useEffect(() => {
-    const loadMyPages = async () => {
-      setLoading(true);
-      try {
-        const pages = await getPageList();
-        setMyPages(pages as any[]);
-      } catch (error) {
-        console.error('加载页面失败', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMyPages();
+    fetchPages();
   }, []);
 
   // 过滤模板
@@ -126,9 +129,43 @@ export default function TemplatesPage() {
   };
 
   // 复制页面
-  const handleDuplicatePage = (pageId: string) => {
-    messageApi.success('复制成功，即将跳转到编辑器');
-    router.push('/h5-builder');
+  const handleDuplicatePage = async (pageId: string) => {
+    try {
+      // 显示加载状态
+      const loadingMessage = messageApi.loading('正在复制页面...', 0);
+      
+      // 调用复制页面API
+      const duplicatedPage = await duplicatePage(pageId);
+      
+      // 关闭加载提示
+      loadingMessage();
+      
+      if (duplicatedPage) {
+        messageApi.success('复制成功，即将跳转到编辑器');
+        
+        // 刷新页面列表
+        fetchPages();
+        
+        // 跳转到复制后的页面进行编辑
+        router.push(`/h5-builder?id=${duplicatedPage.id}`);
+      } else {
+        messageApi.error('复制失败');
+      }
+    } catch (error) {
+      messageApi.error('复制失败，请重试');
+      console.error('复制页面出错:', error);
+    }
+  };
+
+  const handleDeletePage = async (pageId: string) => {
+    try {
+      await deletePage(pageId);
+      messageApi.success('删除成功');
+      fetchPages();
+    } catch (error) {
+      messageApi.error('删除失败，请重试');
+      console.error('删除页面出错:', error);
+    }
   };
 
   // 预览页面
@@ -195,22 +232,18 @@ export default function TemplatesPage() {
           </div>
         ) : myPages.length > 0 ? (
           <List
-            grid={displayMode === 'grid' ? { gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 4, xxl: 5 } : undefined}
+            grid={displayMode === 'grid' ? { gutter: 24, xs: 1, sm: 1, md: 2, lg: 3, xl: 3, xxl: 3.5 } : undefined}
             dataSource={myPages}
             renderItem={page => (
               <List.Item>
                 <Card
                   hoverable
+                  className="w-full"
                   cover={displayMode === 'grid' ? 
                     <div className="h-80 bg-gray-100 flex items-center justify-center">
                       <span>预览图</span>
                     </div> : undefined
                   }
-                  actions={[
-                    <Button key="edit" icon={<EditOutlined />} size="small" onClick={() => handleEditPage(page.id)}>编辑</Button>,
-                    <Button key="preview" icon={<EyeOutlined />} size="small" onClick={() => handlePreviewPage(page.id)}>预览</Button>,
-                    <Button key="duplicate" icon={<CopyOutlined />} size="small" onClick={() => handleDuplicatePage(page.id)}>复制</Button>,
-                  ]}
                 >
                   <Card.Meta
                     title={page.title}
@@ -219,7 +252,14 @@ export default function TemplatesPage() {
                         <p className="text-gray-500 text-sm">{page.description || '无描述'}</p>
                         <div className="mt-2">
                           {page.published && <Tag color="green">已发布</Tag>}
-                          <Tag color="blue">更新于: {new Date(page.updateTime).toLocaleDateString()}</Tag>
+                          <Tag color="blue">更新于: {new Date(page.updatedAt).toLocaleDateString()}</Tag>
+                        </div>
+                        <Divider className="my-2" />
+                        <div className="flex justify-between mt-3">
+                          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditPage(page.id)}>编辑</Button>
+                          <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => handlePreviewPage(page.id)}>预览</Button>
+                          <Button type="text" size="small" icon={<CopyOutlined />} onClick={() => handleDuplicatePage(page.id)}>复制</Button>
+                          <Button type="text" size="small" icon={<DeleteOutlined />} onClick={() => handleDeletePage(page.id)}>删除</Button>
                         </div>
                       </div>
                     }
@@ -235,7 +275,7 @@ export default function TemplatesPage() {
           />
         )}
 
-        <Divider orientation="left">模板</Divider>
+        {/* <Divider orientation="left">模板</Divider>
         
         <List
           grid={displayMode === 'grid' ? { gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 4, xxl: 5 } : undefined}
@@ -276,7 +316,7 @@ export default function TemplatesPage() {
               </Card>
             </List.Item>
           )}
-        />
+        /> */}
       </div>
     </>
   );
