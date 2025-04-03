@@ -399,6 +399,33 @@ export const exportHTML = (pageData: any) => {
   return htmlTemplate;
 };
 
+// 创建新页面
+export const createPage = async (pageData: { title: string; description?: string }): Promise<PageData> => {
+  try {
+    // 创建新页面数据
+    const newPage: PageData = {
+      id: generateId(),
+      title: pageData.title,
+      description: pageData.description || '',
+      components: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      published: false,
+      version: 1,
+      tags: []
+    };
+    
+    // 保存到 localStorage
+    localStorage.setItem(PAGE_KEY_PREFIX + newPage.id, JSON.stringify(newPage));
+    updatePageList(newPage);
+    
+    return newPage;
+  } catch (error) {
+    console.error('创建页面失败', error);
+    throw new Error('创建失败');
+  }
+};
+
 // 辅助函数：将样式对象转换为内联样式字符串
 function styleToString(styleObj: any) {
   return Object.entries(styleObj)
