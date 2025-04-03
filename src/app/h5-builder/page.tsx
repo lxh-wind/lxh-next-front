@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Suspense } from 'react';
 import { Layout, message, Modal, Button, Tooltip, Divider } from 'antd';
 import dynamic from 'next/dynamic';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   EyeOutlined,
   SaveOutlined,
@@ -16,7 +18,7 @@ import {
   RedoOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { publishPage, previewPage } from './utils/store';
+import { publishPage, previewPage, savePage, loadPage} from './utils/store';
 import { PageInfo } from './components/types';
 import CommonOperations from '@/components/CommonOperations';
 import { useAtom } from 'jotai';
@@ -33,8 +35,6 @@ import {
 import PageSettings from './components/PageSettings';
 import CanvasSizeSettings from './components/CanvasSizeSettings';
 import SaveModal from './components/SaveModal';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 
 // 使用动态导入避免SSR问题
 const ComponentPanel = dynamic(() => import('./components/ComponentPanel'), { ssr: false });
@@ -66,7 +66,10 @@ const convertPageDataToPageInfo = (pageData: any): PageInfo => {
   };
 };
 
-export default function H5Builder() {
+function H5Builder() {
+  const searchParams = useSearchParams();
+  const pageId = searchParams?.get("id") || "";
+ 
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
   const { Content, Sider } = Layout;
@@ -150,7 +153,20 @@ export default function H5Builder() {
   // 初始化布局相关方法
   useEffect(() => {
     // TODO: 从服务器加载页面数据
-  }, []);
+    if (pageId) {
+      loadPageData();
+    }
+  }, [pageId]);
+
+  const loadPageData = async () => {
+    console.log('loadPageData', pageId);
+    const pageData = await loadPage(pageId);
+    console.log('loadPageData', pageData);
+    if (pageData) {
+      setPageInfo(convertPageDataToPageInfo(pageData));
+      setComponents(pageData.components);
+    }
+  }
   
   // 发布页面
   const handlePublish = async () => {
@@ -160,6 +176,14 @@ export default function H5Builder() {
     }
 
     try {
+      // 首先保存当前页面状态，确保包含最新的组件
+      const updatedPageInfo = {
+        ...pageInfo,
+        components: components
+      };
+      await savePage(updatedPageInfo);
+      
+      // 然后发布页面
       const publishedData = await publishPage(pageInfo.id);
       messageApi.success('发布成功');
       setPageInfo(prev => ({
@@ -264,7 +288,7 @@ export default function H5Builder() {
 
   // 返回上一页
   const handleBack = () => {
-    router.push('/h5-list');
+    router.back();
   };
 
   // 处理下载JSON文件
@@ -429,3 +453,11 @@ export default function H5Builder() {
     </DndProvider>
   );
 } 
+
+export default function PageBuilder() {
+  return(
+    <Suspense fallback={<div>Loading...</div>}>
+      <H5Builder />
+    </Suspense>
+  )
+};

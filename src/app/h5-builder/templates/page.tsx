@@ -122,7 +122,7 @@ export default function TemplatesPage() {
   // 编辑页面
   const handleEditPage = (pageId: string) => {
     // 实际应该加载页面数据并跳转到编辑器
-    router.push('/h5-builder');
+    router.push(`/h5-builder?id=${pageId}`);
   };
 
   // 复制页面

@@ -54,6 +54,9 @@ const PAGE_KEY_PREFIX = 'h5_page_';
 const VERSION_KEY_PREFIX = 'h5_version_';
 const PAGE_LIST_KEY = 'h5_page_list';
 
+// 用于ID生成的计数器
+let idCounter = 0;
+
 // 页面列表管理
 export const getPageList = (): PageListItem[] => {
   try {
@@ -102,7 +105,31 @@ const updatePageList = (page: PageData) => {
 
 // 生成唯一ID
 const generateId = () => {
-  return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // 创建基于时间的部分
+  const timestamp = Date.now().toString(36);
+  
+  // 创建随机部分 (使用多个随机源结合)
+  const randomA = Math.random().toString(36).substring(2, 10);
+  const randomB = Math.random().toString(36).substring(2, 10);
+  
+  // 使用递增计数器
+  idCounter = (idCounter + 1) % 1000000;
+  const counterStr = idCounter.toString(36).padStart(4, '0');
+  
+  // 添加加密安全的随机部分 (如果可用)
+  let cryptoRandom = '';
+  if (typeof window !== 'undefined' && window.crypto) {
+    // 创建8字节的随机值
+    const array = new Uint8Array(8);
+    window.crypto.getRandomValues(array);
+    // 转换为16进制字符串
+    cryptoRandom = Array.from(array)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  
+  // 组合所有部分形成唯一ID
+  return `page_${timestamp}_${randomA}_${randomB}_${counterStr}${cryptoRandom ? `_${cryptoRandom}` : ''}`;
 };
 
 // 生成复杂ID的函数

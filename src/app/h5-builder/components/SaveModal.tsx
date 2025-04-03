@@ -3,7 +3,7 @@
 import React from 'react';
 import { Modal, Form, Input, Button, Select, message } from 'antd';
 import { useAtom } from 'jotai';
-import { pageInfoAtom } from '@/src/app/h5-builder/store/atoms';
+import { pageInfoAtom, componentsAtom } from '@/src/app/h5-builder/store/atoms';
 import { savePage } from '../utils/store';
 
 interface SaveModalProps {
@@ -17,6 +17,7 @@ const SaveModal: React.FC<SaveModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [pageInfo, setPageInfo] = useAtom(pageInfoAtom);
+  const [components] = useAtom(componentsAtom);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -34,10 +35,11 @@ const SaveModal: React.FC<SaveModalProps> = ({
     try {
       setLoading(true);
       
-      // 更新页面信息
+      // 更新页面信息，并包含components
       const updatedPageInfo = {
         ...pageInfo,
-        ...values
+        ...values,
+        components: components, // 保存当前组件列表
       };
       
       // 保存到服务器
